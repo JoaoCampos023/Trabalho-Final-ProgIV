@@ -22,7 +22,9 @@ export class ProducaoRepository {
           sexo: 'F',
           peso: 0,
           data_nascimento: new Date(),
-          ativo: true
+          ativo: true,
+          created_at: new Date(),
+          updated_at: new Date()
         });
       }
       return producao;
@@ -76,7 +78,9 @@ export class ProducaoRepository {
           sexo: 'F',
           peso: 0,
           data_nascimento: new Date(),
-          ativo: true
+          ativo: true,
+          created_at: new Date(),
+          updated_at: new Date()
         });
       }
       return producao;
@@ -105,7 +109,9 @@ export class ProducaoRepository {
         sexo: 'F',
         peso: 0,
         data_nascimento: new Date(),
-        ativo: true
+        ativo: true,
+        created_at: new Date(),
+        updated_at: new Date()
       });
     }
     return producao;
@@ -132,7 +138,9 @@ export class ProducaoRepository {
           sexo: 'F',
           peso: 0,
           data_nascimento: new Date(),
-          ativo: true
+          ativo: true,
+          created_at: new Date(),
+          updated_at: new Date()
         });
       }
       return producao;
@@ -160,7 +168,9 @@ export class ProducaoRepository {
           sexo: 'F',
           peso: 0,
           data_nascimento: new Date(),
-          ativo: true
+          ativo: true,
+          created_at: new Date(),
+          updated_at: new Date()
         });
       }
       return producao;

@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 // ============================================
 
 // Rotas públicas
-app.get('/api/health', (req: Request, res: Response) => {
+app.get('/api/health', (_req: Request, res: Response) => {
   res.json({
     status: 'OK',
     message: 'API Gestão de Gado funcionando!',
@@ -34,7 +34,7 @@ app.use('/api', routes);
 // ============================================
 // MIDDLEWARE DE ERRO (global)
 // ============================================
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error('❌ Erro:', err.stack);
   res.status(500).json({
     success: false,
@@ -42,6 +42,8 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
+
+app.use(express.static('public'));
 
 // ============================================
 // INICIAR SERVIDOR

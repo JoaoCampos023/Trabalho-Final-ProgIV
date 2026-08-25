@@ -1,6 +1,5 @@
 import pool from '../config/database';
 import { User, IUser } from '../models/User';
-import { PoolClient } from 'pg';
 
 export class UserRepository {
   /**

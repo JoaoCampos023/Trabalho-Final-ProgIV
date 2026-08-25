@@ -220,7 +220,7 @@ export class ProducaoService {
     periodo?: PeriodoProducao
   ): Promise<{
     producoes: ProducaoLeite[];
-    stats: Awaited<ReturnType<typeof this.getStats>>;
+    stats: Awaited<ReturnType<ProducaoService['getStats']>>;
     totalPorAnimal: { brinco: number; nome: string; total: number }[];
   }> {
     // Buscar produções com filtros

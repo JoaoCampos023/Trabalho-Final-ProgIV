@@ -3,10 +3,11 @@ import { AnimalService } from '../services/AnimalService';
 
 const animalService = new AnimalService();
 
-// Função auxiliar para garantir que o parâmetro é string
-function getParam(param: string | string[] | undefined): string {
-  if (!param) return '';
-  return Array.isArray(param) ? param[0] : param;
+// Função auxiliar para normalizar parâmetros do Express
+function getParam(param: unknown): string {
+  if (typeof param === 'string') return param;
+  if (Array.isArray(param)) return getParam(param[0]);
+  return '';
 }
 
 export class AnimalController {
@@ -17,11 +18,13 @@ export class AnimalController {
   async listarTodos(req: Request, res: Response): Promise<Response> {
     try {
       const searchNome = getParam(req.query.searchNome);
-      const sexo = getParam(req.query.sexo) as 'M' | 'F' | undefined;
+      const sexoParam = getParam(req.query.sexo);
+      const sexo = sexoParam === 'M' || sexoParam === 'F' ? sexoParam : undefined;
       const raca = getParam(req.query.raca);
       const faixaPeso = getParam(req.query.faixaPeso);
       const ordenarPor = getParam(req.query.ordenarPor) || 'brinco';
-      const ordem = getParam(req.query.ordem) as 'asc' | 'desc' || 'asc';
+      const ordemParam = getParam(req.query.ordem);
+      const ordem = ordemParam === 'desc' ? 'desc' : 'asc';
 
       const animais = await animalService.listarComFiltros(
         searchNome,
@@ -183,7 +186,8 @@ export class AnimalController {
    */
   async buscarMachosParaSelecao(req: Request, res: Response): Promise<Response> {
     try {
-      const excluir = req.query.excluir ? parseInt(getParam(req.query.excluir)) : undefined;
+      const excluirParam = getParam(req.query.excluir);
+      const excluir = excluirParam ? parseInt(excluirParam, 10) : undefined;
       const machos = await animalService.buscarMachosParaSelecao(excluir);
 
       return res.json({
@@ -210,7 +214,8 @@ export class AnimalController {
    */
   async buscarFemeasParaSelecao(req: Request, res: Response): Promise<Response> {
     try {
-      const excluir = req.query.excluir ? parseInt(getParam(req.query.excluir)) : undefined;
+      const excluirParam = getParam(req.query.excluir);
+      const excluir = excluirParam ? parseInt(excluirParam, 10) : undefined;
       const femeas = await animalService.buscarFemeasParaSelecao(excluir);
 
       return res.json({
@@ -395,7 +400,7 @@ export class AnimalController {
    * GET /api/animais/stats
    * Obter estatísticas do rebanho
    */
-  async getStats(req: Request, res: Response): Promise<Response> {
+  async getStats(_req: Request, res: Response): Promise<Response> {
     try {
       const stats = await animalService.getStats();
 

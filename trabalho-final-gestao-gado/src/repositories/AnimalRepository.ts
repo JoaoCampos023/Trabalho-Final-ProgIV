@@ -67,7 +67,9 @@ async findWithParents(brinco: number): Promise<Animal | null> {
       sexo: row.pai_sexo,
       peso: 0,
       data_nascimento: new Date(),
-      ativo: true
+      ativo: true,
+      created_at: new Date(),
+      updated_at: new Date()
     });
   }
 
@@ -78,7 +80,9 @@ async findWithParents(brinco: number): Promise<Animal | null> {
       sexo: row.mae_sexo,
       peso: 0,
       data_nascimento: new Date(),
-      ativo: true
+      ativo: true,
+      created_at: new Date(),
+      updated_at: new Date()
     });
   }
 

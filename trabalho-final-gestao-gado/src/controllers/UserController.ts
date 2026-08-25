@@ -3,12 +3,16 @@ import { UserService } from '../services/UserService';
 
 const userService = new UserService();
 
+function getParam(param: string | string[]): string {
+  return Array.isArray(param) ? param[0] : param;
+}
+
 export class UserController {
   /**
    * GET /api/users
    * Listar todos os usuários
    */
-  async listarTodos(req: Request, res: Response): Promise<Response> {
+  async listarTodos(_req: Request, res: Response): Promise<Response> {
     try {
       const users = await userService.listarTodos();
       return res.json({
@@ -73,7 +77,7 @@ export class UserController {
   async buscarPorId(req: Request, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
-      const user = await userService.buscarPorId(id);
+      const user = await userService.buscarPorId(getParam(id));
 
       if (!user) {
         return res.status(404).json({
@@ -148,7 +152,7 @@ export class UserController {
       const { id } = req.params;
       const { nome, cpf, role, ativo } = req.body;
 
-      const user = await userService.atualizarUsuario(id, {
+      const user = await userService.atualizarUsuario(getParam(id), {
         nome,
         cpf,
         role,
@@ -182,7 +186,7 @@ export class UserController {
   async toggleStatus(req: Request, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
-      const user = await userService.toggleStatus(id);
+      const user = await userService.toggleStatus(getParam(id));
 
       return res.json({
         success: true,
@@ -210,7 +214,7 @@ export class UserController {
   async resetarSenha(req: Request, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
-      const result = await userService.resetarSenha(id);
+      const result = await userService.resetarSenha(getParam(id));
 
       return res.json({
         success: true,
@@ -241,7 +245,7 @@ export class UserController {
   async excluir(req: Request, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
-      await userService.excluirUsuario(id);
+      await userService.excluirUsuario(getParam(id));
 
       return res.json({
         success: true,
@@ -265,7 +269,7 @@ export class UserController {
    * GET /api/users/stats
    * Obter estatísticas de usuários
    */
-  async getStats(req: Request, res: Response): Promise<Response> {
+  async getStats(_req: Request, res: Response): Promise<Response> {
     try {
       const stats = await userService.getStats();
 

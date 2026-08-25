@@ -4,6 +4,10 @@ import { PeriodoProducao } from '../models/ProducaoLeite';
 
 const producaoService = new ProducaoService();
 
+function getParam(param: string | string[]): string {
+  return Array.isArray(param) ? param[0] : param;
+}
+
 export class ProducaoController {
   /**
    * GET /api/producoes
@@ -52,7 +56,7 @@ export class ProducaoController {
   async buscarPorId(req: Request, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
-      const producao = await producaoService.buscarPorId(parseInt(id));
+      const producao = await producaoService.buscarPorId(parseInt(getParam(id), 10));
 
       if (!producao) {
         return res.status(404).json({
@@ -81,7 +85,7 @@ export class ProducaoController {
   async listarPorAnimal(req: Request, res: Response): Promise<Response> {
     try {
       const { brinco } = req.params;
-      const producoes = await producaoService.listarPorAnimal(parseInt(brinco));
+      const producoes = await producaoService.listarPorAnimal(parseInt(getParam(brinco), 10));
 
       // Calcular totais
       const totalLitros = producoes.reduce((sum, p) => sum + p.litros, 0);
@@ -118,7 +122,7 @@ export class ProducaoController {
   async listarUltimas(req: Request, res: Response): Promise<Response> {
     try {
       const { quantidade } = req.params;
-      const qtd = quantidade ? parseInt(quantidade) : 10;
+      const qtd = quantidade ? parseInt(getParam(quantidade), 10) : 10;
       const producoes = await producaoService.listarUltimas(qtd);
 
       return res.json({
@@ -188,7 +192,7 @@ export class ProducaoController {
       const { id } = req.params;
       const { animal_brinco, data_coleta, litros, periodo } = req.body;
 
-      const producao = await producaoService.atualizarProducao(parseInt(id), {
+      const producao = await producaoService.atualizarProducao(parseInt(getParam(id), 10), {
         animal_brinco: animal_brinco ? parseInt(animal_brinco) : undefined,
         data_coleta: data_coleta ? new Date(data_coleta) : undefined,
         litros: litros !== undefined ? parseFloat(litros) : undefined,
@@ -223,7 +227,7 @@ export class ProducaoController {
   async excluir(req: Request, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
-      await producaoService.excluirProducao(parseInt(id));
+      await producaoService.excluirProducao(parseInt(getParam(id), 10));
 
       return res.json({
         success: true,
