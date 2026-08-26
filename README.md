@@ -1,4 +1,4 @@
-\# <p align="center">🐄 Gestão de Gado</p>
+<p align="center">🐄 Gestão de Gado</p>
 
 
 
