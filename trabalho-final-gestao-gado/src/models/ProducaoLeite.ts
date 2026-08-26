@@ -1,66 +1,64 @@
 import { Animal } from './Animal';
 
 export enum PeriodoProducao {
-  Manha = 'Manha',
-  Tarde = 'Tarde',
-  Noite = 'Noite'
+    Manha = 'Manha',
+    Tarde = 'Tarde',
+    Noite = 'Noite'
 }
 
 export interface IProducaoLeite {
-  id: number;
-  animal_brinco: number;
-  data_coleta: Date;
-  litros: number;
-  periodo: PeriodoProducao;
-  created_at: Date;
-  updated_at: Date;
+    id: number;
+    animal_brinco: number;
+    data_coleta: Date;
+    litros: number;
+    periodo: PeriodoProducao;
+    created_at: Date;
+    updated_at: Date;
 }
 
 export class ProducaoLeite {
-  id: number;
-  animal_brinco: number;
-  data_coleta: Date;
-  litros: number;
-  periodo: PeriodoProducao;
-  created_at: Date;
-  updated_at: Date;
+    id: number;
+    animal_brinco: number;
+    data_coleta: Date;
+    litros: number;
+    periodo: PeriodoProducao;
+    created_at: Date;
+    updated_at: Date;
 
-  // Referência para o animal (preenchida pelo repository)
-  animal?: Animal;
+    animal?: Animal;
 
-  constructor(data: IProducaoLeite) {
-    this.id = data.id;
-    this.animal_brinco = data.animal_brinco;
-    this.data_coleta = data.data_coleta;
-    this.litros = data.litros;
-    this.periodo = data.periodo;
-    this.created_at = data.created_at || new Date();
-    this.updated_at = data.updated_at || new Date();
-  }
+    constructor(data: IProducaoLeite) {
+        this.id = data.id;
+        this.animal_brinco = data.animal_brinco;
+        this.data_coleta = data.data_coleta;
+        this.litros = data.litros;
+        this.periodo = data.periodo;
+        this.created_at = data.created_at || new Date();
+        this.updated_at = data.updated_at || new Date();
+    }
 
-  // Propriedades calculadas
-  get isManha(): boolean {
-    return this.periodo === PeriodoProducao.Manha;
-  }
+    get isManha(): boolean {
+        return this.periodo === PeriodoProducao.Manha;
+    }
 
-  get isTarde(): boolean {
-    return this.periodo === PeriodoProducao.Tarde;
-  }
+    get isTarde(): boolean {
+        return this.periodo === PeriodoProducao.Tarde;
+    }
 
-  get isNoite(): boolean {
-    return this.periodo === PeriodoProducao.Noite;
-  }
+    get isNoite(): boolean {
+        return this.periodo === PeriodoProducao.Noite;
+    }
 
-  get nomePeriodo(): string {
-    const map = {
-      [PeriodoProducao.Manha]: '🌅 Manhã',
-      [PeriodoProducao.Tarde]: '☀️ Tarde',
-      [PeriodoProducao.Noite]: '🌙 Noite'
-    };
-    return map[this.periodo];
-  }
+    get nomePeriodo(): string {
+        const map = {
+            [PeriodoProducao.Manha]: '🌅 Manhã',
+            [PeriodoProducao.Tarde]: '☀️ Tarde',
+            [PeriodoProducao.Noite]: '🌙 Noite'
+        };
+        return map[this.periodo];
+    }
 
-  get nomeAnimal(): string {
-    return this.animal?.nome || `Animal ${this.animal_brinco}`;
-  }
+    get nomeAnimal(): string {
+        return this.animal?.nome || `Animal ${this.animal_brinco}`;
+    }
 }

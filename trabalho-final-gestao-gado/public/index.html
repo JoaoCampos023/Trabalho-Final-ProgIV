@@ -3,220 +3,311 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🐄 Gestão de Gado</title>
+    <title>🐄 Gestão de Gado - Sistema de Manejo</title>
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/landing.css" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>" />
 </head>
 <body>
-    <div id="app">
-        <!-- Navbar -->
-        <nav class="navbar">
-            <div class="container">
-                <div class="navbar-brand">
-                    <span class="brand-icon">🐄</span>
-                    <span class="brand-text">Gestão<span>Gado</span></span>
-                </div>
-                <div class="navbar-menu" id="navMenu">
-                    <a href="#" class="nav-link active" data-page="dashboard">📊 Dashboard</a>
-                    <a href="#" class="nav-link" data-page="animais">🐮 Rebanho</a>
-                    <a href="#" class="nav-link" data-page="producoes">🥛 Produções</a>
-                    <a href="#" class="nav-link" data-page="usuarios" id="navUsuarios">👤 Usuários</a>
-                </div>
-                <div class="navbar-auth" id="navAuth">
-                    <div class="user-info" id="userInfo" style="display:none;">
-                        <span class="user-avatar" id="userAvatar">👤</span>
-                        <span class="user-name" id="userName">Usuário</span>
-                        <button class="btn btn-sm btn-danger" onclick="app.logout()">Sair</button>
-                    </div>
-                    <div class="auth-buttons" id="authButtons">
-                        <button class="btn btn-outline btn-sm" onclick="app.showModal('login')">Entrar</button>
-                        <button class="btn btn-primary btn-sm" onclick="app.showModal('register')">Registrar</button>
-                    </div>
-                </div>
-                <button class="mobile-toggle" id="mobileToggle">☰</button>
-            </div>
-        </nav>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <div class="container">
-                <!-- Páginas -->
-                <div id="page-dashboard" class="page active">Carregando dashboard...</div>
-                <div id="page-animais" class="page">Carregando rebanho...</div>
-                <div id="page-producoes" class="page">Carregando produções...</div>
-                <div id="page-usuarios" class="page">Carregando usuários...</div>
+    <!-- ======================================== -->
+    <!-- NAVBAR -->
+    <!-- ======================================== -->
+    <nav class="navbar-landing" id="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <span class="brand-icon">🐄</span>
+                <span class="brand-text">Gestão<span>Gado</span></span>
             </div>
-        </main>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <div class="container">
-                <p>🐄 Gestão de Gado &copy; 2026 - Trabalho Final</p>
+            <div class="navbar-menu">
+                <a href="#features">Funcionalidades</a>
+                <a href="#about">Sobre</a>
+                <a href="#contact">Contato</a>
             </div>
-        </footer>
+            <div class="navbar-auth">
+                <button class="btn btn-outline" onclick="openModal('login')">Entrar</button>
+                <button class="btn btn-primary" onclick="openModal('register')">Começar</button>
+            </div>
+            <button class="mobile-toggle" id="mobileToggle">☰</button>
+        </div>
+    </nav>
 
-        <!-- Modals -->
-        <div class="modal-overlay" id="modalLogin">
-            <div class="modal">
-                <div class="modal-header">
-                    <h3>🔐 Entrar</h3>
-                    <button class="modal-close" onclick="app.closeModal('login')">×</button>
+    <!-- ======================================== -->
+    <!-- HERO SECTION -->
+    <!-- ======================================== -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <span class="hero-badge">🚀 Sistema Completo</span>
+                    <h1>Gestão de <span>Gado</span><br />de forma <span>Inteligente</span></h1>
+                    <p>
+                        Controle todo o seu rebanho, produções de leite, árvore genealógica
+                        e muito mais. Tudo em um só lugar, com simplicidade e eficiência.
+                    </p>
+                    <div class="hero-buttons">
+                        <button class="btn btn-primary btn-lg" onclick="openModal('register')">
+                            🚀 Começar Agora
+                        </button>
+                        <button class="btn btn-outline btn-lg" onclick="openModal('login')">
+                            🔐 Já tenho conta
+                        </button>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="hero-stat">
+                            <span class="stat-number">100%</span>
+                            <span class="stat-label">Gratuito</span>
+                        </div>
+                        <div class="hero-stat">
+                            <span class="stat-number">24/7</span>
+                            <span class="stat-label">Disponível</span>
+                        </div>
+                        <div class="hero-stat">
+                            <span class="stat-number">🐄</span>
+                            <span class="stat-label">Rebanho Controlado</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="loginEmail" placeholder="seu@email.com" />
+                <div class="hero-image">
+                    <div class="hero-illustration">
+                        <div class="illustration-card">
+                            <div class="illustration-icon">🐄</div>
+                            <h4>Rebanho</h4>
+                            <p>Controle total</p>
+                        </div>
+                        <div class="illustration-card">
+                            <div class="illustration-icon">🥛</div>
+                            <h4>Produção</h4>
+                            <p>Leite diário</p>
+                        </div>
+                        <div class="illustration-card">
+                            <div class="illustration-icon">🌳</div>
+                            <h4>Genealogia</h4>
+                            <p>Árvore completa</p>
+                        </div>
+                        <div class="illustration-card">
+                            <div class="illustration-icon">📊</div>
+                            <h4>Relatórios</h4>
+                            <p>Análises detalhadas</p>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Senha</label>
-                        <input type="password" id="loginPassword" placeholder="******" />
-                    </div>
-                    <button class="btn btn-primary w-100" onclick="app.login()">Entrar</button>
                 </div>
             </div>
         </div>
+    </section>
 
-        <div class="modal-overlay" id="modalRegister">
-            <div class="modal">
-                <div class="modal-header">
-                    <h3>📝 Registrar</h3>
-                    <button class="modal-close" onclick="app.closeModal('register')">×</button>
+    <!-- ======================================== -->
+    <!-- FEATURES SECTION -->
+    <!-- ======================================== -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Funcionalidades</span>
+                <h2>Tudo que você precisa para <span>gerenciar seu rebanho</span></h2>
+                <p>Uma plataforma completa com todas as ferramentas necessárias para o manejo do seu gado.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🐮</div>
+                    <h3>Cadastro de Animais</h3>
+                    <p>Gerencie todo o seu rebanho com informações detalhadas de cada animal.</p>
+                    <ul>
+                        <li>✅ Identificação por brinco</li>
+                        <li>✅ Registro de peso e idade</li>
+                        <li>✅ Controle de linhagem</li>
+                    </ul>
                 </div>
-                <div class="modal-body">
+
+                <div class="feature-card">
+                    <div class="feature-icon">🥛</div>
+                    <h3>Produção de Leite</h3>
+                    <p>Registre e acompanhe a produção diária de leite de cada vaca.</p>
+                    <ul>
+                        <li>✅ Registro por período (manhã/tarde/noite)</li>
+                        <li>✅ Histórico completo</li>
+                        <li>✅ Estatísticas de produção</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🌳</div>
+                    <h3>Árvore Genealógica</h3>
+                    <p>Visualize a linhagem completa de cada animal com fácil navegação.</p>
+                    <ul>
+                        <li>✅ Pais e avós</li>
+                        <li>✅ Filhos e descendentes</li>
+                        <li>✅ Evita consanguinidade</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Relatórios e Dashboard</h3>
+                    <p>Acompanhe indicadores importantes em tempo real.</p>
+                    <ul>
+                        <li>✅ Produção diária/semanal</li>
+                        <li>✅ Top vacas produtoras</li>
+                        <li>✅ Alertas e notificações</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">👤</div>
+                    <h3>Gestão de Usuários</h3>
+                    <p>Controle de acesso com níveis de permissão.</p>
+                    <ul>
+                        <li>✅ Administradores e clientes</li>
+                        <li>✅ Controle de acesso</li>
+                        <li>✅ Segurança com JWT</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Responsivo</h3>
+                    <p>Acesse de qualquer dispositivo, em qualquer lugar.</p>
+                    <ul>
+                        <li>✅ Desktop</li>
+                        <li>✅ Tablet</li>
+                        <li>✅ Smartphone</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================================== -->
+    <!-- CTA SECTION -->
+    <!-- ======================================== -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Pronto para começar a <span>gerenciar seu rebanho</span>?</h2>
+                <p>Cadastre-se agora e tenha acesso completo ao sistema.</p>
+                <button class="btn btn-primary btn-lg" onclick="openModal('register')">
+                    🚀 Criar conta gratuita
+                </button>
+                <p class="cta-small">Já tem conta? <a href="#" onclick="openModal('login')">Faça login</a></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================================== -->
+    <!-- FOOTER -->
+    <!-- ======================================== -->
+    <footer class="footer-landing">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="brand-icon">🐄</span>
+                    <span class="brand-text">Gestão<span>Gado</span></span>
+                    <p>Sistema completo para gestão de rebanho e produção de leite.</p>
+                </div>
+                <div class="footer-links">
+                    <div>
+                        <h4>Navegação</h4>
+                        <a href="#home">Início</a>
+                        <a href="#features">Funcionalidades</a>
+                        <a href="#about">Sobre</a>
+                    </div>
+                    <div>
+                        <h4>Suporte</h4>
+                        <a href="#">Ajuda</a>
+                        <a href="#">Documentação</a>
+                        <a href="#">Contato</a>
+                    </div>
+                    <div>
+                        <h4>Legal</h4>
+                        <a href="#">Política de Privacidade</a>
+                        <a href="#">Termos de Uso</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Gestão de Gado. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ======================================== -->
+    <!-- MODALS (Login e Register) -->
+    <!-- ======================================== -->
+
+    <!-- Modal Login -->
+    <div class="modal-overlay" id="modalLogin">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>🔐 Entrar</h3>
+                <button class="modal-close" onclick="closeModal('login')">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm" onsubmit="event.preventDefault(); handleLogin();">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" placeholder="seu@email.com" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Senha</label>
+                        <input type="password" id="loginPassword" placeholder="******" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Entrar</button>
+                </form>
+                <p class="modal-footer-text">
+                    Não tem conta? <a href="#" onclick="switchModal('login', 'register')">Registrar-se</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Register -->
+    <div class="modal-overlay" id="modalRegister">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>📝 Criar Conta</h3>
+                <button class="modal-close" onclick="closeModal('register')">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="registerForm" onsubmit="event.preventDefault(); handleRegister();">
                     <div class="form-group">
                         <label>Nome Completo</label>
-                        <input type="text" id="regNome" placeholder="Seu nome" />
+                        <input type="text" id="regNome" placeholder="Seu nome" required />
                     </div>
                     <div class="form-group">
                         <label>Email</label>
-                        <input type="email" id="regEmail" placeholder="seu@email.com" />
+                        <input type="email" id="regEmail" placeholder="seu@email.com" required />
                     </div>
                     <div class="form-group">
                         <label>CPF</label>
-                        <input type="text" id="regCpf" placeholder="000.000.000-00" />
+                        <input type="text" id="regCpf" placeholder="000.000.000-00" required />
                     </div>
                     <div class="form-group">
                         <label>Senha</label>
-                        <input type="password" id="regPassword" placeholder="******" />
+                        <input type="password" id="regPassword" placeholder="******" required />
                     </div>
                     <div class="form-group">
                         <label>Confirmar Senha</label>
-                        <input type="password" id="regConfirmPassword" placeholder="******" />
+                        <input type="password" id="regConfirmPassword" placeholder="******" required />
                     </div>
-                    <button class="btn btn-success w-100" onclick="app.register()">Criar Conta</button>
-                </div>
+                    <button type="submit" class="btn btn-success w-100">Criar Conta</button>
+                </form>
+                <p class="modal-footer-text">
+                    Já tem conta? <a href="#" onclick="switchModal('register', 'login')">Fazer login</a>
+                </p>
             </div>
         </div>
-
-        <div class="modal-overlay" id="modalAnimal">
-            <div class="modal modal-lg">
-                <div class="modal-header">
-                    <h3 id="modalAnimalTitle">🐮 Novo Animal</h3>
-                    <button class="modal-close" onclick="app.closeModal('animal')">×</button>
-                </div>
-                <div class="modal-body">
-                    <form id="animalForm">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Brinco *</label>
-                                <input type="number" id="animalBrinco" required />
-                            </div>
-                            <div class="form-group">
-                                <label>Nome *</label>
-                                <input type="text" id="animalNome" required />
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Sexo *</label>
-                                <select id="animalSexo" required>
-                                    <option value="F">Fêmea</option>
-                                    <option value="M">Macho</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Raça</label>
-                                <input type="text" id="animalRaca" />
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Peso (kg) *</label>
-                                <input type="number" id="animalPeso" step="0.1" required />
-                            </div>
-                            <div class="form-group">
-                                <label>Data Nascimento *</label>
-                                <input type="date" id="animalDataNascimento" required />
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Brinco do Pai</label>
-                                <input type="number" id="animalBrincoPai" />
-                            </div>
-                            <div class="form-group">
-                                <label>Brinco da Mãe</label>
-                                <input type="number" id="animalBrincoMae" />
-                            </div>
-                        </div>
-                        <input type="hidden" id="animalEditBrinco" />
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" onclick="app.closeModal('animal')">Cancelar</button>
-                            <button type="submit" class="btn btn-primary" id="animalSubmitBtn">Salvar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal-overlay" id="modalProducao">
-            <div class="modal modal-lg">
-                <div class="modal-header">
-                    <h3 id="modalProducaoTitle">🥛 Nova Produção</h3>
-                    <button class="modal-close" onclick="app.closeModal('producao')">×</button>
-                </div>
-                <div class="modal-body">
-                    <form id="producaoForm">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Animal *</label>
-                                <select id="producaoAnimal" required></select>
-                            </div>
-                            <div class="form-group">
-                                <label>Data *</label>
-                                <input type="date" id="producaoData" required />
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Litros *</label>
-                                <input type="number" id="producaoLitros" step="0.1" required />
-                            </div>
-                            <div class="form-group">
-                                <label>Período *</label>
-                                <select id="producaoPeriodo" required>
-                                    <option value="Manha">🌅 Manhã</option>
-                                    <option value="Tarde">☀️ Tarde</option>
-                                    <option value="Noite">🌙 Noite</option>
-                                </select>
-                            </div>
-                        </div>
-                        <input type="hidden" id="producaoEditId" />
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" onclick="app.closeModal('producao')">Cancelar</button>
-                            <button type="submit" class="btn btn-primary" id="producaoSubmitBtn">Salvar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Toast Notification -->
-        <div id="toast" class="toast"></div>
     </div>
 
+    <!-- ======================================== -->
+    <!-- TOAST -->
+    <!-- ======================================== -->
+    <div id="toast" class="toast"></div>
+
+    <!-- ======================================== -->
+    <!-- SCRIPTS -->
+    <!-- ======================================== -->
     <script src="js/api.js"></script>
-    <script src="js/components.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/landing.js"></script>
+
 </body>
 </html>
