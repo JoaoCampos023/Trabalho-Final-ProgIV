@@ -1,64 +1,266 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import routes from './routes';
 import path from 'path';
+import http from 'http';
+
+// Importação das rotas
+import routes from './routes';
+import relatorioRoutes from './routes/relatorioRoutes';
+import notificacaoRoutes from './routes/notificacaoRoutes';
+import importacaoRoutes from './routes/importacaoRoutes';
+import externaRoutes from './routes/externaRoutes';
+
+// Importação do WebSocket
+import { WebSocketServer } from 'ws';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// ============================================
+// MIDDLEWARES
+// ============================================
+
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ============================================
 // SERVER ARQUIVOS ESTÁTICOS
 // ============================================
+
+// Landing Page e arquivos públicos (index.html, css, js)
 app.use(express.static('public'));
 
-// Rota para a landing page
-app.get('/', (req: Request, res: Response) => {
-    res.sendFile(path.join(__dirname, '../public/index.html'));
-});
-
-// Rota para o dashboard (protegida pelo frontend)
-app.get('/dashboard.html', (req: Request, res: Response) => {
-    res.sendFile(path.join(__dirname, '../public/dashboard.html'));
-});
+// Sistema (pasta app) - servir arquivos estáticos
+app.use('/app', express.static(path.join(__dirname, '../public/app')));
 
 // ============================================
-// API ROUTES
+// ROTAS DA API (DEVEM VIR ANTES DO FALLBACK)
 // ============================================
-app.get('/api/health', (req: Request, res: Response) => {
-    res.json({
-        status: 'OK',
-        message: 'API Gestão de Gado funcionando!',
-        timestamp: new Date().toISOString(),
-        version: '1.0.0'
-    });
+
+// Health Check
+app.get('/api/health', (_req: Request, res: Response) => {
+  res.json({
+    status: 'OK',
+    message: 'API Gestão de Gado funcionando!',
+    timestamp: new Date().toISOString(),
+    version: '2.0.0',
+    services: {
+      api: 'online',
+      websocket: 'online',
+      database: 'online'
+    }
+  });
 });
 
+// Rotas da API
 app.use('/api', routes);
+app.use('/api/relatorios', relatorioRoutes);
+app.use('/api/notificacoes', notificacaoRoutes);
+app.use('/api/importacao', importacaoRoutes);
+app.use('/api/externa', externaRoutes);
 
 // ============================================
-// MIDDLEWARE DE ERRO
+// ✅ FALLBACK PARA SPA
 // ============================================
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error('❌ Erro:', err.stack);
-    res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor',
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
+
+// Se a rota não for da API e não for um arquivo estático,
+// redireciona para o dashboard ou landing page
+app.use((req: Request, res: Response, next: NextFunction) => {
+  // Se for uma requisição para a API, passa para o próximo middleware
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  
+  // Se a requisição for para a raiz, envia a landing page
+  if (req.path === '/' || req.path === '') {
+    return res.sendFile(path.join(__dirname, '../public/index.html'));
+  }
+  
+  // Se a requisição for para /app ou subpastas, envia o dashboard
+  if (req.path.startsWith('/app')) {
+    return res.sendFile(path.join(__dirname, '../public/app/dashboard.html'));
+  }
+  
+  // Para qualquer outra rota, verifica se é um arquivo estático
+  // Se não for, redireciona para a landing page
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
-    console.log(`🏠 Landing Page: http://localhost:${PORT}/`);
-    console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard.html`);
-    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+// ============================================
+// MIDDLEWARE DE ERRO (GLOBAL)
+// ============================================
+
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('❌ Erro:', err.stack);
+  
+  const status = 
+    err.message.includes('não encontrado') ? 404 :
+    err.message.includes('inválido') ? 400 :
+    err.message.includes('não permitido') ? 403 :
+    err.message.includes('já cadastrado') ? 409 :
+    500;
+
+  res.status(status).json({
+    success: false,
+    message: err.message || 'Erro interno do servidor',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+});
+
+// ============================================
+// CRIAR SERVIDOR HTTP
+// ============================================
+
+const server = http.createServer(app);
+
+// ============================================
+// WEBSOCKET
+// ============================================
+
+const wss = new WebSocketServer({ 
+  server,
+  path: '/ws'
+});
+
+const clients = new Set<any>();
+
+wss.on('connection', (ws, req) => {
+  console.log('📡 Cliente conectado ao WebSocket');
+  
+  const url = new URL(req.url || '', `http://${req.headers.host}`);
+  const token = url.searchParams.get('token');
+  
+  if (!token) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      message: 'Token não fornecido'
+    }));
+    ws.close();
+    return;
+  }
+
+  clients.add(ws);
+  
+  sendDashboardData(ws);
+
+  ws.on('message', (message) => {
+    try {
+      const data = JSON.parse(message.toString());
+      console.log('📩 Mensagem recebida:', data);
+      
+      if (data.type === 'ping') {
+        ws.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
+      }
+    } catch (error) {
+      console.error('Erro ao processar mensagem:', error);
+    }
+  });
+
+  ws.on('close', () => {
+    clients.delete(ws);
+    console.log('📡 Cliente desconectado');
+  });
+});
+
+async function sendDashboardData(ws: any) {
+  try {
+    const prisma = (await import('./config/database')).default;
+    
+    const [totalAnimais, totalFemeas, totalMachos, producaoTotal, producoesDia] = await Promise.all([
+      prisma.animal.count({ where: { ativo: true } }),
+      prisma.animal.count({ where: { ativo: true, sexo: 'F' } }),
+      prisma.animal.count({ where: { ativo: true, sexo: 'M' } }),
+      prisma.producaoLeite.aggregate({ _sum: { litros: true } }),
+      prisma.producaoLeite.count({
+        where: {
+          data_coleta: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0))
+          }
+        }
+      })
+    ]);
+
+    ws.send(JSON.stringify({
+      type: 'dashboard',
+      data: {
+        totalAnimais,
+        totalFemeas,
+        totalMachos,
+        producaoTotal: Number(producaoTotal._sum.litros) || 0,
+        producoesHoje: producoesDia,
+        timestamp: new Date().toISOString()
+      }
+    }));
+  } catch (error) {
+    console.error('Erro ao enviar dados do dashboard:', error);
+    ws.send(JSON.stringify({
+      type: 'error',
+      message: 'Erro ao buscar dados do dashboard'
+    }));
+  }
+}
+
+setInterval(() => {
+  clients.forEach(client => {
+    if (client.readyState === 1) {
+      sendDashboardData(client);
+    }
+  });
+}, 30000);
+
+function broadcast(data: any) {
+  const message = JSON.stringify(data);
+  clients.forEach(client => {
+    if (client.readyState === 1) {
+      client.send(message);
+    }
+  });
+}
+
+export { broadcast, wss };
+
+// ============================================
+// INICIAR SERVIDOR
+// ============================================
+
+server.listen(PORT, () => {
+  console.log('========================================');
+  console.log('🐄 GESTÃO DE GADO - SERVIDOR INICIADO');
+  console.log('========================================');
+  console.log(`🚀 API: http://localhost:${PORT}/api`);
+  console.log(`📡 WebSocket: ws://localhost:${PORT}/ws`);
+  console.log(`🏠 Landing Page: http://localhost:${PORT}/`);
+  console.log(`📊 Dashboard: http://localhost:${PORT}/app/dashboard.html`);
+  console.log(`📋 Relatórios: http://localhost:${PORT}/app/relatorios.html`);
+  console.log(`📊 Health Check: http://localhost:${PORT}/api/health`);
+  console.log('========================================');
+});
+
+process.on('SIGINT', () => {
+  console.log('\n🛑 Encerrando servidor...');
+  wss.close();
+  server.close(() => {
+    console.log('✅ Servidor encerrado com sucesso');
+    process.exit(0);
+  });
+});
+
+process.on('SIGTERM', () => {
+  console.log('\n🛑 Encerrando servidor (SIGTERM)...');
+  wss.close();
+  server.close(() => {
+    console.log('✅ Servidor encerrado com sucesso');
+    process.exit(0);
+  });
 });
 
 export default app;

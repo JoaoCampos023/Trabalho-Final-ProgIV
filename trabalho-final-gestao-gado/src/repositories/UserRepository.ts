@@ -1,213 +1,241 @@
-import pool from '../config/database';
+import prisma from '../config/database';
 import { User, IUser } from '../models/User';
 
 export class UserRepository {
-  /**
-   * Buscar todos os usuários
-   */
   async findAll(): Promise<User[]> {
-    const result = await pool.query(
-      'SELECT * FROM users ORDER BY nome ASC'
-    );
-    return result.rows.map(row => new User(row));
+    const users = await prisma.user.findMany({
+      orderBy: { nome: 'asc' }
+    });
+    return users.map(u => new User({
+      id: u.id,
+      nome: u.nome,
+      email: u.email,
+      password_hash: u.password_hash,
+      cpf: u.cpf,
+      ativo: u.ativo,
+      role: u.role as 'Admin' | 'Cliente',
+      created_at: u.created_at,
+      updated_at: u.updated_at
+    }));
   }
 
-  /**
-   * Buscar usuário por ID
-   */
   async findById(id: string): Promise<User | null> {
-    const result = await pool.query(
-      'SELECT * FROM users WHERE id = $1',
-      [id]
-    );
-    if (result.rows.length === 0) return null;
-    return new User(result.rows[0]);
+    const user = await prisma.user.findUnique({
+      where: { id }
+    });
+    if (!user) return null;
+    return new User({
+      id: user.id,
+      nome: user.nome,
+      email: user.email,
+      password_hash: user.password_hash,
+      cpf: user.cpf,
+      ativo: user.ativo,
+      role: user.role as 'Admin' | 'Cliente',
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    });
   }
 
-  /**
-   * Buscar usuário por email
-   */
   async findByEmail(email: string): Promise<User | null> {
-    const result = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
-    );
-    if (result.rows.length === 0) return null;
-    return new User(result.rows[0]);
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+    if (!user) return null;
+    return new User({
+      id: user.id,
+      nome: user.nome,
+      email: user.email,
+      password_hash: user.password_hash,
+      cpf: user.cpf,
+      ativo: user.ativo,
+      role: user.role as 'Admin' | 'Cliente',
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    });
   }
 
-  /**
-   * Buscar usuário por CPF
-   */
   async findByCpf(cpf: string): Promise<User | null> {
-    const result = await pool.query(
-      'SELECT * FROM users WHERE cpf = $1',
-      [cpf]
-    );
-    if (result.rows.length === 0) return null;
-    return new User(result.rows[0]);
+    const user = await prisma.user.findUnique({
+      where: { cpf }
+    });
+    if (!user) return null;
+    return new User({
+      id: user.id,
+      nome: user.nome,
+      email: user.email,
+      password_hash: user.password_hash,
+      cpf: user.cpf,
+      ativo: user.ativo,
+      role: user.role as 'Admin' | 'Cliente',
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    });
   }
 
-  /**
-   * Buscar usuários ativos/inativos
-   */
   async findByStatus(ativo: boolean): Promise<User[]> {
-    const result = await pool.query(
-      'SELECT * FROM users WHERE ativo = $1 ORDER BY nome ASC',
-      [ativo]
-    );
-    return result.rows.map(row => new User(row));
+    const users = await prisma.user.findMany({
+      where: { ativo },
+      orderBy: { nome: 'asc' }
+    });
+    return users.map(u => new User({
+      id: u.id,
+      nome: u.nome,
+      email: u.email,
+      password_hash: u.password_hash,
+      cpf: u.cpf,
+      ativo: u.ativo,
+      role: u.role as 'Admin' | 'Cliente',
+      created_at: u.created_at,
+      updated_at: u.updated_at
+    }));
   }
 
-  /**
-   * Buscar usuários por role
-   */
   async findByRole(role: string): Promise<User[]> {
-    const result = await pool.query(
-      'SELECT * FROM users WHERE role = $1 ORDER BY nome ASC',
-      [role]
-    );
-    return result.rows.map(row => new User(row));
+    const users = await prisma.user.findMany({
+      where: { role },
+      orderBy: { nome: 'asc' }
+    });
+    return users.map(u => new User({
+      id: u.id,
+      nome: u.nome,
+      email: u.email,
+      password_hash: u.password_hash,
+      cpf: u.cpf,
+      ativo: u.ativo,
+      role: u.role as 'Admin' | 'Cliente',
+      created_at: u.created_at,
+      updated_at: u.updated_at
+    }));
   }
 
-  /**
-   * Criar um novo usuário
-   */
   async create(userData: Omit<IUser, 'id' | 'created_at' | 'updated_at'>): Promise<User> {
-    const result = await pool.query(
-      `INSERT INTO users (nome, email, password_hash, cpf, ativo, role)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
-      [
-        userData.nome,
-        userData.email,
-        userData.password_hash,
-        userData.cpf,
-        userData.ativo ?? true,
-        userData.role ?? 'Cliente'
-      ]
-    );
-    return new User(result.rows[0]);
+    const user = await prisma.user.create({
+      data: {
+        nome: userData.nome,
+        email: userData.email,
+        password_hash: userData.password_hash,
+        cpf: userData.cpf,
+        ativo: userData.ativo ?? true,
+        role: userData.role ?? 'Cliente'
+      }
+    });
+    return new User({
+      id: user.id,
+      nome: user.nome,
+      email: user.email,
+      password_hash: user.password_hash,
+      cpf: user.cpf,
+      ativo: user.ativo,
+      role: user.role as 'Admin' | 'Cliente',
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    });
   }
 
-  /**
-   * Atualizar um usuário
-   */
-  async update(id: string, userData: Partial<IUser>): Promise<User | null> {
-    const fields: string[] = [];
-    const values: any[] = [];
-    let paramCount = 1;
-
-    if (userData.nome !== undefined) {
-      fields.push(`nome = $${paramCount++}`);
-      values.push(userData.nome);
+  async update(id: string, data: Partial<IUser>): Promise<User | null> {
+    try {
+      const user = await prisma.user.update({
+        where: { id },
+        data: {
+          nome: data.nome,
+          email: data.email,
+          password_hash: data.password_hash,
+          cpf: data.cpf,
+          ativo: data.ativo,
+          role: data.role
+        }
+      });
+      if (!user) return null;
+      return new User({
+        id: user.id,
+        nome: user.nome,
+        email: user.email,
+        password_hash: user.password_hash,
+        cpf: user.cpf,
+        ativo: user.ativo,
+        role: user.role as 'Admin' | 'Cliente',
+        created_at: user.created_at,
+        updated_at: user.updated_at
+      });
+    } catch (error) {
+      return null;
     }
-    if (userData.email !== undefined) {
-      fields.push(`email = $${paramCount++}`);
-      values.push(userData.email);
-    }
-    if (userData.password_hash !== undefined) {
-      fields.push(`password_hash = $${paramCount++}`);
-      values.push(userData.password_hash);
-    }
-    if (userData.cpf !== undefined) {
-      fields.push(`cpf = $${paramCount++}`);
-      values.push(userData.cpf);
-    }
-    if (userData.ativo !== undefined) {
-      fields.push(`ativo = $${paramCount++}`);
-      values.push(userData.ativo);
-    }
-    if (userData.role !== undefined) {
-      fields.push(`role = $${paramCount++}`);
-      values.push(userData.role);
-    }
-
-    fields.push(`updated_at = CURRENT_TIMESTAMP`);
-
-    if (fields.length === 0) {
-      throw new Error('Nenhum campo para atualizar');
-    }
-
-    values.push(id);
-
-    const result = await pool.query(
-      `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramCount} RETURNING *`,
-      values
-    );
-
-    if (result.rows.length === 0) return null;
-    return new User(result.rows[0]);
   }
 
-  /**
-   * Desativar um usuário (soft delete)
-   */
   async deactivate(id: string): Promise<User | null> {
-    const result = await pool.query(
-      'UPDATE users SET ativo = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *',
-      [id]
-    );
-    if (result.rows.length === 0) return null;
-    return new User(result.rows[0]);
+    try {
+      const user = await prisma.user.update({
+        where: { id },
+        data: { ativo: false }
+      });
+      if (!user) return null;
+      return new User({
+        id: user.id,
+        nome: user.nome,
+        email: user.email,
+        password_hash: user.password_hash,
+        cpf: user.cpf,
+        ativo: user.ativo,
+        role: user.role as 'Admin' | 'Cliente',
+        created_at: user.created_at,
+        updated_at: user.updated_at
+      });
+    } catch (error) {
+      return null;
+    }
   }
 
-  /**
-   * Ativar um usuário
-   */
   async activate(id: string): Promise<User | null> {
-    const result = await pool.query(
-      'UPDATE users SET ativo = true, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *',
-      [id]
-    );
-    if (result.rows.length === 0) return null;
-    return new User(result.rows[0]);
+    try {
+      const user = await prisma.user.update({
+        where: { id },
+        data: { ativo: true }
+      });
+      if (!user) return null;
+      return new User({
+        id: user.id,
+        nome: user.nome,
+        email: user.email,
+        password_hash: user.password_hash,
+        cpf: user.cpf,
+        ativo: user.ativo,
+        role: user.role as 'Admin' | 'Cliente',
+        created_at: user.created_at,
+        updated_at: user.updated_at
+      });
+    } catch (error) {
+      return null;
+    }
   }
 
-  /**
-   * Deletar um usuário (físico)
-   */
   async delete(id: string): Promise<boolean> {
-    const result = await pool.query(
-      'DELETE FROM users WHERE id = $1 RETURNING id',
-      [id]
-    );
-    return result.rows.length > 0;
+    try {
+      await prisma.user.delete({
+        where: { id }
+      });
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
-  /**
-   * Contar total de usuários
-   */
   async count(): Promise<number> {
-    const result = await pool.query('SELECT COUNT(*) as total FROM users');
-    return parseInt(result.rows[0].total);
+    return await prisma.user.count();
   }
 
-  /**
-   * Contar usuários por status
-   */
   async countByStatus(ativo: boolean): Promise<number> {
-    const result = await pool.query(
-      'SELECT COUNT(*) as total FROM users WHERE ativo = $1',
-      [ativo]
-    );
-    return parseInt(result.rows[0].total);
+    return await prisma.user.count({
+      where: { ativo }
+    });
   }
 
-  /**
-   * Contar usuários por role
-   */
   async countByRole(role: string): Promise<number> {
-    const result = await pool.query(
-      'SELECT COUNT(*) as total FROM users WHERE role = $1',
-      [role]
-    );
-    return parseInt(result.rows[0].total);
+    return await prisma.user.count({
+      where: { role }
+    });
   }
 
-  /**
-   * Buscar com paginação
-   */
   async findWithPagination(
     page: number = 1,
     limit: number = 10,
@@ -218,41 +246,44 @@ export class UserRepository {
       ativo?: boolean;
     }
   ): Promise<{ users: User[]; total: number; page: number; totalPages: number }> {
-    const offset = (page - 1) * limit;
-    let query = 'SELECT * FROM users WHERE 1=1';
-    const values: any[] = [];
-    let paramCount = 1;
+    const skip = (page - 1) * limit;
+    const where: any = {};
 
     if (filters?.nome) {
-      query += ` AND nome ILIKE $${paramCount++}`;
-      values.push(`%${filters.nome}%`);
+      where.nome = { contains: filters.nome, mode: 'insensitive' };
     }
     if (filters?.email) {
-      query += ` AND email ILIKE $${paramCount++}`;
-      values.push(`%${filters.email}%`);
+      where.email = { contains: filters.email, mode: 'insensitive' };
     }
     if (filters?.role) {
-      query += ` AND role = $${paramCount++}`;
-      values.push(filters.role);
+      where.role = filters.role;
     }
     if (filters?.ativo !== undefined) {
-      query += ` AND ativo = $${paramCount++}`;
-      values.push(filters.ativo);
+      where.ativo = filters.ativo;
     }
 
-    // Contar total
-    const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total');
-    const countResult = await pool.query(countQuery, values);
-    const total = parseInt(countResult.rows[0].total);
-
-    // Buscar dados com paginação
-    query += ` ORDER BY nome ASC LIMIT $${paramCount++} OFFSET $${paramCount++}`;
-    values.push(limit, offset);
-
-    const result = await pool.query(query, values);
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { nome: 'asc' }
+      }),
+      prisma.user.count({ where })
+    ]);
 
     return {
-      users: result.rows.map(row => new User(row)),
+      users: users.map(u => new User({
+        id: u.id,
+        nome: u.nome,
+        email: u.email,
+        password_hash: u.password_hash,
+        cpf: u.cpf,
+        ativo: u.ativo,
+        role: u.role as 'Admin' | 'Cliente',
+        created_at: u.created_at,
+        updated_at: u.updated_at
+      })),
       total,
       page,
       totalPages: Math.ceil(total / limit)

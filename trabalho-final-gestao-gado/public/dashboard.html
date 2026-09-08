@@ -4,10 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🐄 Dashboard - Gestão de Gado</title>
-    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>" />
     <style>
-        /* ESTILOS GERAIS */
+        /* ============================================
+           ESTILOS COMPLETOS DO DASHBOARD
+           ============================================ */
         * {
             margin: 0;
             padding: 0;
@@ -30,7 +32,7 @@
             width: 100%;
         }
 
-        /* NAVBAR */
+        /* ---------- NAVBAR ---------- */
         .navbar {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             padding: 12px 0;
@@ -131,7 +133,7 @@
             cursor: pointer;
         }
 
-        /* BUTTONS */
+        /* ---------- BUTTONS ---------- */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -196,18 +198,28 @@
             font-size: 0.75rem;
         }
 
-        .btn-xs {
-            padding: 2px 8px;
-            font-size: 0.65rem;
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #e0e0e0;
+            color: #555;
+        }
+        .btn-outline:hover {
+            background: #f8f9fa;
+            border-color: #555;
         }
 
-        /* CARDS */
+        /* ---------- CARDS ---------- */
         .card {
             background: white;
             border-radius: 12px;
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
             padding: 24px;
             margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
         }
 
         .card-header {
@@ -235,7 +247,7 @@
             flex-wrap: wrap;
         }
 
-        /* STATS */
+        /* ---------- STATS GRID ---------- */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -250,6 +262,7 @@
             text-align: center;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             transition: all 0.3s ease;
+            cursor: default;
         }
 
         .stat-card:hover {
@@ -274,7 +287,20 @@
             margin-top: 2px;
         }
 
-        /* TABLE */
+        /* ---------- CHART CONTAINERS ---------- */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+        }
+
+        /* ---------- TABLES ---------- */
         .table-responsive {
             overflow-x: auto;
         }
@@ -310,7 +336,7 @@
             flex-wrap: wrap;
         }
 
-        /* BADGES */
+        /* ---------- BADGES ---------- */
         .badge {
             display: inline-block;
             padding: 2px 10px;
@@ -340,7 +366,94 @@
             color: #004085;
         }
 
-        /* PAGES */
+        /* ---------- FILTROS ---------- */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .filters .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .filters .filter-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filters .filter-group input,
+        .filters .filter-group select {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .filters .filter-group input:focus,
+        .filters .filter-group select:focus {
+            outline: none;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+        }
+
+        .filters .filter-actions {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            flex: 0 0 auto;
+        }
+
+        /* ---------- PAGINATION ---------- */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            padding: 8px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pagination button.active {
+            background: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+
+        /* ---------- PAGES ---------- */
         .page-content {
             display: none;
             animation: fadeIn 0.3s ease;
@@ -361,7 +474,64 @@
             }
         }
 
-        /* MODAL */
+        /* ---------- TOAST ---------- */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            background: #333;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 3000;
+            max-width: 400px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: #28a745;
+        }
+        .toast.error {
+            background: #dc3545;
+        }
+        .toast.warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        /* ---------- LOADING ---------- */
+        .loading {
+            text-align: center;
+            padding: 40px 0;
+            color: #6c757d;
+        }
+
+        .loading .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e0e0e0;
+            border-top-color: #0d6efd;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ---------- MODAL ---------- */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -440,7 +610,7 @@
             padding: 24px;
         }
 
-        /* FORMS */
+        /* ---------- FORMS ---------- */
         .form-group {
             margin-bottom: 16px;
         }
@@ -488,48 +658,7 @@
             border-top: 2px solid #f0f0f0;
         }
 
-        /* TOAST */
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            padding: 14px 24px;
-            border-radius: 12px;
-            background: #333;
-            color: white;
-            font-weight: 500;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s ease;
-            z-index: 3000;
-            max-width: 400px;
-        }
-
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .toast.success {
-            background: #28a745;
-        }
-        .toast.error {
-            background: #dc3545;
-        }
-        .toast.warning {
-            background: #ffc107;
-            color: #333;
-        }
-
-        .text-muted {
-            color: #6c757d;
-        }
-        .text-center {
-            text-align: center;
-        }
-
-        /* FOOTER */
+        /* ---------- FOOTER ---------- */
         .footer {
             background: #1a1a2e;
             color: rgba(255, 255, 255, 0.5);
@@ -539,7 +668,20 @@
             margin-top: auto;
         }
 
-        /* RESPONSIVE */
+        .text-muted {
+            color: #6c757d;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .mt-10 {
+            margin-top: 10px;
+        }
+        .mb-10 {
+            margin-bottom: 10px;
+        }
+
+        /* ---------- RESPONSIVE ---------- */
         @media (max-width: 768px) {
             .mobile-toggle {
                 display: block !important;
@@ -565,9 +707,26 @@
                 grid-template-columns: 1fr 1fr;
             }
 
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+
             .card-header {
                 flex-direction: column;
                 align-items: flex-start;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .filters .filter-group {
+                min-width: 100%;
+            }
+
+            .filters .filter-actions {
+                width: 100%;
+                justify-content: flex-end;
             }
 
             .table-responsive {
@@ -640,7 +799,12 @@
                         <button class="btn btn-secondary btn-sm" onclick="app.loadDashboard()">🔄 Atualizar</button>
                     </div>
                 </div>
-                <div id="dashboardContent">Carregando dashboard...</div>
+                <div id="dashboardContent">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando dashboard...</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -654,7 +818,12 @@
                         <button class="btn btn-secondary btn-sm" onclick="app.loadAnimais()">🔄 Atualizar</button>
                     </div>
                 </div>
-                <div id="animaisContent">Carregando animais...</div>
+                <div id="animaisContent">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando animais...</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -668,7 +837,12 @@
                         <button class="btn btn-secondary btn-sm" onclick="app.loadProducoes()">🔄 Atualizar</button>
                     </div>
                 </div>
-                <div id="producoesContent">Carregando produções...</div>
+                <div id="producoesContent">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando produções...</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -681,7 +855,12 @@
                         <button class="btn btn-secondary btn-sm" onclick="app.loadUsuarios()">🔄 Atualizar</button>
                     </div>
                 </div>
-                <div id="usuariosContent">Carregando usuários...</div>
+                <div id="usuariosContent">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando usuários...</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -868,7 +1047,6 @@
             async updateUser(id, data) { return this.request('PUT', `/users/${id}`, data); }
             async deleteUser(id) { return this.request('DELETE', `/users/${id}`); }
             async toggleUserStatus(id) { return this.request('PATCH', `/users/${id}/toggle-status`); }
-            async resetUserPassword(id) { return this.request('POST', `/users/${id}/reset-password`); }
 
             // ANIMAIS
             async getAnimais(filters = {}) {
@@ -910,6 +1088,7 @@
         const app = {
             currentPage: 'dashboard',
             user: null,
+            chartInstances: {},
 
             init() {
                 if (!api.isAuthenticated()) {
@@ -996,11 +1175,16 @@
             },
 
             // ============================================
-            // DASHBOARD
+            // DASHBOARD (COM GRÁFICOS)
             // ============================================
             async loadDashboard() {
                 const container = document.getElementById('dashboardContent');
-                container.innerHTML = '<p>Carregando dashboard...</p>';
+                container.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando dashboard...</p>
+                    </div>
+                `;
 
                 try {
                     const [statsRes, topRes, diaRes] = await Promise.all([
@@ -1013,6 +1197,7 @@
                     const topVacas = topRes.data?.data || [];
                     const producaoDia = diaRes.data?.data || [];
 
+                    // Stats Cards
                     let html = `
                         <div class="stats-grid">
                             <div class="stat-card">
@@ -1038,41 +1223,45 @@
                         </div>
                     `;
 
+                    // Gráficos
+                    html += `<div class="chart-grid">`;
+
+                    // Gráfico 1: Produção dos últimos 7 dias
+                    html += `
+                        <div class="card" style="padding:16px;margin:0;">
+                            <h4 style="margin-bottom:12px;">📈 Produção dos Últimos 7 Dias</h4>
+                            <div class="chart-container">
+                                <canvas id="chartProducaoDia"></canvas>
+                            </div>
+                        </div>
+                    `;
+
+                    // Gráfico 2: Top 5 Vacas
+                    html += `
+                        <div class="card" style="padding:16px;margin:0;">
+                            <h4 style="margin-bottom:12px;">🏆 Top 5 Vacas Produtoras</h4>
+                            <div class="chart-container">
+                                <canvas id="chartTopVacas"></canvas>
+                            </div>
+                        </div>
+                    `;
+
+                    html += `</div>`;
+
+                    // Top 5 Vacas (texto)
                     if (topVacas && topVacas.length > 0) {
                         html += `
-                            <div style="background:white;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);padding:20px;margin-bottom:20px;">
-                                <h4 style="margin-bottom:12px;">🏆 Top 5 Vacas Produtoras</h4>
-                                <ul style="list-style:none;padding:0;margin:0;">
+                            <div class="card" style="padding:16px;">
+                                <h4 style="margin-bottom:12px;">🥇 Ranking de Produção</h4>
+                                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;">
                         `;
                         topVacas.forEach((v, i) => {
                             const medal = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'][i] || '•';
                             html += `
-                                <li style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #f0f0f0;">
-                                    <span>${medal} <strong>${v.nome}</strong></span>
-                                    <span style="font-weight:700;color:#0d6efd;">${v.producao.toFixed(1)} L</span>
-                                </li>
-                            `;
-                        });
-                        html += `
-                                </ul>
-                            </div>
-                        `;
-                    }
-
-                    if (producaoDia && producaoDia.length > 0) {
-                        const max = Math.max(...producaoDia.map(d => d.total), 1);
-                        html += `
-                            <div style="background:white;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);padding:20px;">
-                                <h4 style="margin-bottom:12px;">📈 Produção dos Últimos 7 Dias</h4>
-                                <div style="display:flex;gap:8px;align-items:flex-end;height:150px;padding:8px 0;">
-                        `;
-                        producaoDia.forEach(d => {
-                            const height = (d.total / max) * 100;
-                            html += `
-                                <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
-                                    <div style="width:100%;background:#0d6efd;border-radius:4px 4px 0 0;height:${Math.max(height, 5)}%;min-height:10px;"></div>
-                                    <span style="font-size:0.7rem;margin-top:4px;">${d.data}</span>
-                                    <span style="font-size:0.7rem;font-weight:600;">${d.total.toFixed(1)}</span>
+                                <div style="background:#f8f9fa;padding:12px;border-radius:8px;text-align:center;">
+                                    <div style="font-size:1.5rem;">${medal}</div>
+                                    <div><strong>${v.nome}</strong></div>
+                                    <div style="color:#0d6efd;font-weight:700;">${v.producao.toFixed(1)} L</div>
                                 </div>
                             `;
                         });
@@ -1082,25 +1271,112 @@
                         `;
                     }
 
-                    container.innerHTML = html || '<p class="text-muted">Nenhum dado disponível.</p>';
+                    container.innerHTML = html;
+
+                    // Renderizar gráficos
+                    setTimeout(() => {
+                        this.renderCharts(producaoDia, topVacas);
+                    }, 100);
+
                 } catch (error) {
-                    container.innerHTML = `<p class="text-muted">Erro ao carregar dashboard: ${error.message}</p>`;
+                    container.innerHTML = `<p class="text-muted text-center">Erro ao carregar dashboard: ${error.message}</p>`;
+                }
+            },
+
+            renderCharts(producaoDia, topVacas) {
+                // Destruir gráficos anteriores
+                Object.values(this.chartInstances).forEach(chart => {
+                    if (chart) chart.destroy();
+                });
+                this.chartInstances = {};
+
+                // Gráfico 1: Produção por Dia
+                const ctx1 = document.getElementById('chartProducaoDia');
+                if (ctx1 && producaoDia && producaoDia.length > 0) {
+                    this.chartInstances.producaoDia = new Chart(ctx1, {
+                        type: 'line',
+                        data: {
+                            labels: producaoDia.map(d => d.data),
+                            datasets: [{
+                                label: 'Litros',
+                                data: producaoDia.map(d => d.total),
+                                borderColor: '#0d6efd',
+                                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                                tension: 0.3,
+                                fill: true,
+                                pointBackgroundColor: '#0d6efd'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: { display: true, text: 'Litros' }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Gráfico 2: Top 5 Vacas
+                const ctx2 = document.getElementById('chartTopVacas');
+                if (ctx2 && topVacas && topVacas.length > 0) {
+                    const cores = ['#0d6efd', '#28a745', '#ffc107', '#dc3545', '#6c757d'];
+                    this.chartInstances.topVacas = new Chart(ctx2, {
+                        type: 'bar',
+                        data: {
+                            labels: topVacas.map(v => v.nome),
+                            datasets: [{
+                                label: 'Litros',
+                                data: topVacas.map(v => v.producao),
+                                backgroundColor: cores.slice(0, topVacas.length),
+                                borderRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: { display: true, text: 'Litros' }
+                                }
+                            }
+                        }
+                    });
                 }
             },
 
             // ============================================
-            // ANIMAIS - CRUD (CORRIGIDO)
+            // ANIMAIS (COM FILTROS)
             // ============================================
             async loadAnimais() {
                 const container = document.getElementById('animaisContent');
-                container.innerHTML = '<p>Carregando animais...</p>';
+                container.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando animais...</p>
+                    </div>
+                `;
 
                 try {
-                    const response = await api.getAnimais();
+                    // Filtros
+                    const searchNome = document.getElementById('filterNome')?.value || '';
+                    const sexo = document.getElementById('filterSexo')?.value || '';
+                    const raca = document.getElementById('filterRaca')?.value || '';
+
+                    const response = await api.getAnimais({ searchNome, sexo, raca });
                     const data = response.data?.data;
                     let animais = data?.animais || [];
 
-                    // ✅ CORREÇÃO: Converter tipos para números
                     animais = animais.map(a => ({
                         ...a,
                         brinco: typeof a.brinco === 'number' ? a.brinco : parseInt(a.brinco) || 0,
@@ -1114,6 +1390,9 @@
                         totalMacho: data?.totalMacho || 0,
                         pesoMedio: data?.pesoMedio || 0
                     };
+
+                    // Lista de raças para o filtro
+                    const racas = [...new Set(animais.map(a => a.raca).filter(r => r))];
 
                     let html = `
                         <div class="stats-grid">
@@ -1136,6 +1415,33 @@
                                 <div class="stat-icon">⚖️</div>
                                 <div class="stat-value">${(stats.pesoMedio || 0).toFixed(0)} kg</div>
                                 <div class="stat-label">Peso Médio</div>
+                            </div>
+                        </div>
+
+                        <!-- Filtros -->
+                        <div class="filters">
+                            <div class="filter-group">
+                                <label>Nome</label>
+                                <input type="text" id="filterNome" placeholder="Buscar por nome..." value="${searchNome}" />
+                            </div>
+                            <div class="filter-group">
+                                <label>Sexo</label>
+                                <select id="filterSexo">
+                                    <option value="">Todos</option>
+                                    <option value="F" ${sexo === 'F' ? 'selected' : ''}>Fêmea</option>
+                                    <option value="M" ${sexo === 'M' ? 'selected' : ''}>Macho</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Raça</label>
+                                <select id="filterRaca">
+                                    <option value="">Todas</option>
+                                    ${racas.map(r => `<option value="${r}" ${raca === r ? 'selected' : ''}>${r}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="filter-actions">
+                                <button class="btn btn-primary btn-sm" onclick="app.loadAnimais()">🔍 Filtrar</button>
+                                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('filterNome').value='';document.getElementById('filterSexo').value='';document.getElementById('filterRaca').value='';app.loadAnimais();">✖️ Limpar</button>
                             </div>
                         </div>
                     `;
@@ -1161,14 +1467,14 @@
                                     <tbody>
                         `;
                         animais.forEach(a => {
-                            const sexo = a.sexo === 'F' ? '♀️ Fêmea' : '♂️ Macho';
+                            const sexoLabel = a.sexo === 'F' ? '♀️ Fêmea' : '♂️ Macho';
                             const status = a.ativo ? '<span class="badge badge-success">Ativo</span>' :
                                 '<span class="badge badge-danger">Inativo</span>';
                             html += `
                                 <tr>
                                     <td><strong>${a.brinco}</strong></td>
                                     <td>${a.nome}</td>
-                                    <td>${sexo}</td>
+                                    <td>${sexoLabel}</td>
                                     <td>${a.raca || 'N/A'}</td>
                                     <td>${a.peso.toFixed(1)} kg</td>
                                     <td>${a.idade || 0} anos</td>
@@ -1192,10 +1498,171 @@
 
                     container.innerHTML = html;
                 } catch (error) {
-                    container.innerHTML = `<p class="text-muted">Erro ao carregar animais: ${error.message}</p>`;
+                    container.innerHTML = `<p class="text-muted text-center">Erro ao carregar animais: ${error.message}</p>`;
                 }
             },
 
+            // ============================================
+            // PRODUÇÕES
+            // ============================================
+            async loadProducoes() {
+                const container = document.getElementById('producoesContent');
+                container.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando produções...</p>
+                    </div>
+                `;
+
+                try {
+                    const response = await api.getProducoes();
+                    const producoes = response.data?.data?.producoes || [];
+
+                    producoes.forEach(p => {
+                        p.litros = typeof p.litros === 'number' ? p.litros : parseFloat(p.litros) || 0;
+                    });
+
+                    if (!producoes || producoes.length === 0) {
+                        container.innerHTML = '<p class="text-muted text-center">Nenhuma produção registrada.</p>';
+                        return;
+                    }
+
+                    const totalLitros = producoes.reduce((sum, p) => sum + p.litros, 0);
+
+                    let html = `
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Animal</th>
+                                        <th>Data</th>
+                                        <th>Período</th>
+                                        <th>Litros</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+
+                    producoes.forEach(p => {
+                        const periodo = {
+                            'Manha': '🌅 Manhã',
+                            'Tarde': '☀️ Tarde',
+                            'Noite': '🌙 Noite'
+                        } [p.periodo] || p.periodo;
+
+                        html += `
+                            <tr>
+                                <td>${p.id}</td>
+                                <td>${p.animal?.nome || p.animal_brinco}</td>
+                                <td>${new Date(p.data_coleta).toLocaleDateString()}</td>
+                                <td>${periodo}</td>
+                                <td><strong>${p.litros.toFixed(1)} L</strong></td>
+                                <td>
+                                    <div class="actions">
+                                        <button class="btn btn-sm btn-primary" onclick="app.editarProducao(${p.id})">✏️</button>
+                                        <button class="btn btn-sm btn-danger" onclick="app.deletarProducao(${p.id})">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="4" style="text-align:right;font-weight:600;">Total:</td>
+                                        <td style="font-weight:700;color:#0d6efd;">${totalLitros.toFixed(1)} L</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    `;
+
+                    container.innerHTML = html;
+                } catch (error) {
+                    container.innerHTML = `<p class="text-muted text-center">Erro ao carregar produções: ${error.message}</p>`;
+                }
+            },
+
+            // ============================================
+            // USUÁRIOS
+            // ============================================
+            async loadUsuarios() {
+                const container = document.getElementById('usuariosContent');
+                container.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando usuários...</p>
+                    </div>
+                `;
+
+                try {
+                    const response = await api.getUsers();
+                    const users = response.data?.data || [];
+
+                    if (!users || users.length === 0) {
+                        container.innerHTML = '<p class="text-muted text-center">Nenhum usuário cadastrado.</p>';
+                        return;
+                    }
+
+                    let html = `
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Email</th>
+                                        <th>Perfil</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+
+                    users.forEach(u => {
+                        const role = u.role === 'Admin' ?
+                            '<span class="badge badge-danger">Admin</span>' :
+                            '<span class="badge badge-info">Cliente</span>';
+                        const status = u.ativo ?
+                            '<span class="badge badge-success">Ativo</span>' :
+                            '<span class="badge badge-danger">Inativo</span>';
+
+                        html += `
+                            <tr>
+                                <td><strong>${u.nome}</strong></td>
+                                <td>${u.email}</td>
+                                <td>${role}</td>
+                                <td>${status}</td>
+                                <td>
+                                    <div class="actions">
+                                        <button class="btn btn-sm btn-warning" onclick="app.toggleUserStatus('${u.id}')">🔄</button>
+                                        <button class="btn btn-sm btn-danger" onclick="app.deletarUsuario('${u.id}')">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+
+                    container.innerHTML = html;
+                } catch (error) {
+                    container.innerHTML = `<p class="text-muted text-center">Erro ao carregar usuários: ${error.message}</p>`;
+                }
+            },
+
+            // ============================================
+            // ANIMAIS - CRUD
+            // ============================================
             novoAnimal() {
                 document.getElementById('modalAnimalTitle').textContent = '🐮 Novo Animal';
                 document.getElementById('animalSubmitBtn').textContent = 'Salvar';
@@ -1327,85 +1794,6 @@
             // ============================================
             // PRODUÇÕES - CRUD
             // ============================================
-            async loadProducoes() {
-                const container = document.getElementById('producoesContent');
-                container.innerHTML = '<p>Carregando produções...</p>';
-
-                try {
-                    const response = await api.getProducoes();
-                    const producoes = response.data?.data?.producoes || [];
-
-                    // ✅ CORREÇÃO: Converter litros para número
-                    producoes.forEach(p => {
-                        p.litros = typeof p.litros === 'number' ? p.litros : parseFloat(p.litros) || 0;
-                    });
-
-                    if (!producoes || producoes.length === 0) {
-                        container.innerHTML = '<p class="text-muted text-center">Nenhuma produção registrada.</p>';
-                        return;
-                    }
-
-                    const totalLitros = producoes.reduce((sum, p) => sum + p.litros, 0);
-
-                    let html = `
-                        <div class="table-responsive">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Animal</th>
-                                        <th>Data</th>
-                                        <th>Período</th>
-                                        <th>Litros</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                    `;
-
-                    producoes.forEach(p => {
-                        const periodo = {
-                            'Manha': '🌅 Manhã',
-                            'Tarde': '☀️ Tarde',
-                            'Noite': '🌙 Noite'
-                        } [p.periodo] || p.periodo;
-
-                        html += `
-                            <tr>
-                                <td>${p.id}</td>
-                                <td>${p.animal?.nome || p.animal_brinco}</td>
-                                <td>${new Date(p.data_coleta).toLocaleDateString()}</td>
-                                <td>${periodo}</td>
-                                <td><strong>${p.litros.toFixed(1)} L</strong></td>
-                                <td>
-                                    <div class="actions">
-                                        <button class="btn btn-sm btn-primary" onclick="app.editarProducao(${p.id})">✏️</button>
-                                        <button class="btn btn-sm btn-danger" onclick="app.deletarProducao(${p.id})">🗑️</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    });
-
-                    html += `
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="4" style="text-align:right;font-weight:600;">Total:</td>
-                                        <td style="font-weight:700;color:#0d6efd;">${totalLitros.toFixed(1)} L</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    `;
-
-                    container.innerHTML = html;
-                } catch (error) {
-                    container.innerHTML = `<p class="text-muted">Erro ao carregar produções: ${error.message}</p>`;
-                }
-            },
-
             async novaProducao() {
                 try {
                     const response = await api.getAnimais();
@@ -1502,70 +1890,6 @@
             // ============================================
             // USUÁRIOS - Admin
             // ============================================
-            async loadUsuarios() {
-                const container = document.getElementById('usuariosContent');
-                container.innerHTML = '<p>Carregando usuários...</p>';
-
-                try {
-                    const response = await api.getUsers();
-                    const users = response.data?.data || [];
-
-                    if (!users || users.length === 0) {
-                        container.innerHTML = '<p class="text-muted text-center">Nenhum usuário cadastrado.</p>';
-                        return;
-                    }
-
-                    let html = `
-                        <div class="table-responsive">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Nome</th>
-                                        <th>Email</th>
-                                        <th>Perfil</th>
-                                        <th>Status</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                    `;
-
-                    users.forEach(u => {
-                        const role = u.role === 'Admin' ?
-                            '<span class="badge badge-danger">Admin</span>' :
-                            '<span class="badge badge-info">Cliente</span>';
-                        const status = u.ativo ?
-                            '<span class="badge badge-success">Ativo</span>' :
-                            '<span class="badge badge-danger">Inativo</span>';
-
-                        html += `
-                            <tr>
-                                <td><strong>${u.nome}</strong></td>
-                                <td>${u.email}</td>
-                                <td>${role}</td>
-                                <td>${status}</td>
-                                <td>
-                                    <div class="actions">
-                                        <button class="btn btn-sm btn-warning" onclick="app.toggleUserStatus('${u.id}')">🔄</button>
-                                        <button class="btn btn-sm btn-danger" onclick="app.deletarUsuario('${u.id}')">🗑️</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    });
-
-                    html += `
-                                </tbody>
-                            </table>
-                        </div>
-                    `;
-
-                    container.innerHTML = html;
-                } catch (error) {
-                    container.innerHTML = `<p class="text-muted">Erro ao carregar usuários: ${error.message}</p>`;
-                }
-            },
-
             async toggleUserStatus(id) {
                 try {
                     const response = await api.toggleUserStatus(id);
