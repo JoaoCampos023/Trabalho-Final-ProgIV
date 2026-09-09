@@ -1,432 +1,463 @@
-<p align="center">🐄 Gestão de Gado</p>
-
-
-
 <p align="center">
-
-&#x20; <strong>Sistema inteligente e completo para controle de rebanho e gestão da produção leiteira.</strong>
-
+  <img src="https://img.shields.io/badge/status-em%20desenvolvimento-yellow?style=for-the-badge&logo=git" alt="Status">
+  <img src="https://img.shields.io/badge/Node.js-18%2B-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js">
+  <img src="https://img.shields.io/badge/TypeScript-5.0%2B-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/PostgreSQL-15%2B-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Express.js-4.x-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express.js">
+  <img src="https://img.shields.io/badge/Prisma-5.x-2D3748?style=for-the-badge&logo=prisma&logoColor=white" alt="Prisma">
 </p>
 
-
-
 <p align="center">
-
-&#x20; <img src="https://img.shields.io/badge/status-em%20desenvolvimento-yellow?style=for-the-badge\&logo=git" alt="Status">
-
-&#x20; <img src="https://img.shields.io/badge/Node.js-18%2B-339933?style=for-the-badge\&logo=nodedotjs\&logoColor=white" alt="Node.js">
-
-&#x20; <img src="https://img.shields.io/badge/TypeScript-5.0%2B-3178C6?style=for-the-badge\&logo=typescript\&logoColor=white" alt="TypeScript">
-
-&#x20; <img src="https://img.shields.io/badge/PostgreSQL-15%2B-4169E1?style=for-the-badge\&logo=postgresql\&logoColor=white" alt="PostgreSQL">
-
-&#x20; <img src="https://img.shields.io/badge/Express.js-4.x-000000?style=for-the-badge\&logo=express\&logoColor=white" alt="Express.js">
-
+  <h1 align="center">🐄 Gestão de Gado</h1>
+  <p align="center">
+    <strong>Sistema inteligente e completo para controle de rebanho e gestão da produção leiteira.</strong>
+  </p>
 </p>
 
-
-
 <p align="center">
-
-&#x20; <a href="#-sobre-o-projeto">Sobre</a> •
-
-&#x20; <a href="#-tecnologias-utilizadas">Tecnologias</a> •
-
-&#x20; <a href="#-estrutura-do-projeto">Estrutura</a> •
-
-&#x20; <a href="#-instalação-e-configuração">Instalação</a> •
-
-&#x20; <a href="#-endpoints-da-api">Endpoints API</a> •
-
-&#x20; <a href="#-contribuição">Contribuição</a>
-
+  <a href="#-sobre-o-projeto">Sobre</a> •
+  <a href="#-tecnologias-utilizadas">Tecnologias</a> •
+  <a href="#-estrutura-do-projeto">Estrutura</a> •
+  <a href="#-instalação-e-configuração">Instalação</a> •
+  <a href="#-endpoints-da-api">Endpoints API</a> •
+  <a href="#-contribuição">Contribuição</a>
 </p>
 
+---
 
+## 📋 Sobre o Projeto
 
-\---
+O **Gestão de Gado** é uma plataforma web desenvolvida para otimizar o manejo pecuário, facilitando o acompanhamento detalhado da saúde do rebanho, genealogia e produtividade leiteira diária.
 
+Desenvolvido com foco em **simplicidade**, **eficiência** e **segurança**, o sistema oferece uma interface intuitiva para produtores rurais e uma arquitetura backend escalável.
 
+### ✨ Principais Funcionalidades
 
-\## 📋 Sobre o Projeto
+| Funcionalidade | Descrição |
+|----------------|-----------|
+| 🐮 **Controle de Rebanho** | Cadastro centralizado, histórico individual e ficha técnica completa de cada animal |
+| 🥛 **Gestão de Produção** | Monitoramento e histórico diário da ordenha com registro por período (manhã/tarde/noite) |
+| 🧬 **Árvore Genealógica** | Rastreamento estruturado de ascendência com visualização de pais, avós e filhos |
+| 📊 **Dashboards & Relatórios** | Visualização analítica de métricas vitais, rankings de produtividade e gráficos interativos |
+| 🔐 **Controle de Acesso (RBAC)** | Autenticação segura via JWT com níveis de permissão (Admin e Usuário) |
+| 📱 **Responsivo** | Interface adaptada para desktop, tablet e dispositivos móveis |
 
+---
 
+## 🚀 Tecnologias Utilizadas
 
-O \*\*Gestão de Gado\*\* é uma plataforma web desenvolvida para otimizar o manejo pecuário, facilitando o acompanhamento detalhado da saúde do rebanho, genealogia e produtividade leiteira diária. 
+### Backend
+| Tecnologia | Versão | Descrição |
+|------------|--------|-----------|
+| **Node.js** | v18+ | Runtime JavaScript |
+| **TypeScript** | 5.0+ | Linguagem com tipagem estática |
+| **Express.js** | 4.x | Framework web |
+| **PostgreSQL** | 15+ | Banco de dados relacional |
+| **Prisma ORM** | 5.x | ORM para acesso ao banco de dados |
+| **JWT** | - | Autenticação e autorização |
+| **bcryptjs** | - | Hash de senhas |
 
+### Frontend
+| Tecnologia | Descrição |
+|------------|-----------|
+| **HTML5 Semântico** | Estruturação das páginas |
+| **CSS3 Moderno** | Estilização com Flexbox e Grid |
+| **JavaScript Vanilla (ES6+)** | Interatividade e consumo de API |
+| **Chart.js** | Gráficos interativos no dashboard |
+| **Bootstrap Icons** | Biblioteca de ícones |
 
+### Ferramentas de Desenvolvimento
+| Ferramenta | Descrição |
+|------------|-----------|
+| **tsx** | Execução rápida de TypeScript sem compilação prévia |
+| **Nodemon** | Live reload durante desenvolvimento |
+| **Dotenv** | Gerenciamento seguro de variáveis de ambiente |
+| **Multer** | Upload de arquivos (importação CSV) |
 
-Designed para prover uma interface intuitiva aos produtores rurais aliada a uma arquitetura backend escalável e segura.
+---
 
-
-
-\### ✨ Principais Funcionalidades
-
-
-
-\- 🐮 \*\*Controle de Rebanho:\*\* Cadastro centralizado, histórico individual e ficha técnica do animal.
-
-\- 🥛 \*\*Gestão de Produção:\*\* Monitoramento e histórico diário da ordenha e volume produzido.
-
-\- 🧬 \*\*Árvore Genealógica:\*\* Rastreamento estruturado de ascendência e linhagem genético-reprodutiva.
-
-\- 📊 \*\*Dashboards \& Relatórios:\*\* Visualização analítica de métricas vitais e rankings de produtividade.
-
-\- 🔐 \*\*Controle de Acesso (RBAC):\*\* Autenticação segura via JWT com níveis de permissão (Admin e Usuário).
-
-
-
-\---
-
-
-
-\## 🚀 Tecnologias Utilizadas
-
-
-
-<details>
-
-<summary><strong>🔍 Clique para ver a stack completa</strong></summary>
-
-
-
-\### Backend
-
-\* \*\*Runtime:\*\* Node.js (v18+)
-
-\* \*\*Linguagem:\*\* TypeScript 5.0+
-
-\* \*\*Framework Web:\*\* Express.js
-
-\* \*\*Banco de Dados:\*\* PostgreSQL 15+ (Driver Native `pg`)
-
-\* \*\*Autenticação \& Segurança:\*\* JWT (JSON Web Tokens), `bcryptjs`, CORS
-
-
-
-\### Frontend
-
-\* \*\*Core:\*\* HTML5 Semântico, CSS3 Moderno, JavaScript Vanilla (ES6+)
-
-\* \*\*UI Components \& Icons:\*\* Bootstrap Icons
-
-
-
-\### Tooling \& Dev Environment
-
-\* \*\*tsx\*\* — Execução rápida de TypeScript sem compilação prévia
-
-\* \*\*Nodemon\*\* — Live reload durante desenvolvimento
-
-\* \*\*Dotenv\*\* — Gerenciamento seguro de variáveis de ambiente
-
-
-
-</details>
-
-
-
-\---
-
-
-
-\## 📂 Estrutura do Projeto
-
-
+## 📂 Estrutura do Projeto
 
 ```
-
 trabalho-final-gestao-gado/
-
-├── 🌐 public/                     # Frontend estático e assets
-
-│   ├── index.html                 # Landing Page \& Portal de Acesso
-
-│   ├── dashboard.html             # Painel Principal de Operações
-
-│   ├── css/                       # Estilização global e componentes
-
-│   └── js/                        # Camada de integração API e componentes JS
-
-├── 🛠️ src/                        # Código-fonte do Backend
-
-│   ├── config/                    # Configurações do banco e serviços
-
-│   ├── controllers/               # Camada de controle e resposta HTTP
-
-│   ├── database/                  # Scripts SQL e Migrations
-
-│   ├── middlewares/               # Autenticação, autorização e validações
-
-│   ├── models/                    # Entidades e interfaces do domínio
-
-│   ├── repositories/              # Camada de persistência de dados (Data Access)
-
-│   ├── routes/                    # Definição das rotas e endpoints
-
-│   ├── services/                  # Regras de negócio e lógica da aplicação
-
-│   ├── utils/                     # Helpers, geradores e validadores
-
-│   └── app.ts                     # Ponto de entrada da aplicação Express
-
-├── ⚙️ .env.example                 # Exemplo de variáveis de ambiente
-
-├── ⚙️ tsconfig.json                # Configurações do compilador TypeScript
-
-└── 📦 package.json                # Dependências e scripts do projeto
-
+│
+├── 📁 public/                         # 📂 FRONTEND (Arquivos públicos)
+│   ├── 📁 app/                        # 📂 SISTEMA (páginas protegidas)
+│   │   ├── dashboard.html             # ✅ Dashboard principal
+│   │   ├── relatorios.html            # ✅ Página de relatórios
+│   │   ├── animais.html               # ✅ Página do rebanho
+│   │   ├── producoes.html             # ✅ Página de produções
+│   │   └── usuarios.html              # ✅ Página de usuários (Admin)
+│   │
+│   ├── 📁 css/
+│   │   └── style.css                  # ✅ Estilos globais
+│   │
+│   ├── 📁 js/
+│   │   ├── api.js                     # ✅ Comunicação com a API
+│   │   ├── app.js                     # ✅ Lógica do dashboard
+│   │   └── landing.js                 # ✅ Lógica da landing page
+│   │
+│   └── index.html                     # ✅ Landing Page (página inicial)
+│
+├── 📁 src/                            # 📂 BACKEND (Node.js + TypeScript)
+│   ├── 📁 config/                     # ✅ Configurações
+│   │   ├── database.ts                # ✅ Conexão com Prisma
+│   │   └── prisma.ts                  # ✅ Cliente Prisma
+│   │
+│   ├── 📁 controllers/                # ✅ Controladores
+│   │   ├── AnimalController.ts
+│   │   ├── ProducaoController.ts
+│   │   ├── UserController.ts
+│   │   ├── RelatorioController.ts
+│   │   ├── NotificacaoController.ts
+│   │   ├── ImportacaoController.ts
+│   │   ├── ExternaController.ts
+│   │   └── index.ts
+│   │
+│   ├── 📁 middlewares/                # ✅ Middlewares
+│   │   ├── auth.ts
+│   │   ├── role.ts
+│   │   ├── validation.ts
+│   │   ├── errorHandler.ts
+│   │   └── index.ts
+│   │
+│   ├── 📁 models/                     # ✅ Models (Entidades)
+│   │   ├── Animal.ts
+│   │   ├── ProducaoLeite.ts
+│   │   ├── User.ts
+│   │   └── index.ts
+│   │
+│   ├── 📁 repositories/               # ✅ Repositories (Acesso a dados)
+│   │   ├── AnimalRepository.ts
+│   │   ├── ProducaoRepository.ts
+│   │   ├── UserRepository.ts
+│   │   └── index.ts
+│   │
+│   ├── 📁 routes/                     # ✅ Rotas da API
+│   │   ├── index.ts
+│   │   ├── authRoutes.ts
+│   │   ├── userRoutes.ts
+│   │   ├── animalRoutes.ts
+│   │   ├── producaoRoutes.ts
+│   │   ├── relatorioRoutes.ts
+│   │   ├── notificacaoRoutes.ts
+│   │   ├── importacaoRoutes.ts
+│   │   └── externaRoutes.ts
+│   │
+│   ├── 📁 services/                   # ✅ Services (Regras de negócio)
+│   │   ├── AnimalService.ts
+│   │   ├── ProducaoService.ts
+│   │   ├── UserService.ts
+│   │   ├── RelatorioService.ts
+│   │   ├── NotificacaoService.ts
+│   │   └── index.ts
+│   │
+│   ├── 📁 utils/                      # ✅ Utilitários
+│   │   ├── cpfValidator.ts
+│   │   ├── dateUtils.ts
+│   │   ├── passwordGenerator.ts
+│   │   └── index.ts
+│   │
+│   ├── 📁 websocket/                  # ✅ WebSocket
+│   │   └── server.ts
+│   │
+│   └── app.ts                         # ✅ Ponto de entrada
+│
+├── 📁 prisma/                         # 📂 Prisma ORM
+│   └── schema.prisma                  # ✅ Schema do banco de dados
+│
+├── 📁 uploads/                        # 📂 Uploads (arquivos importados)
+│
+├── 📄 .env.example                    # ✅ Exemplo de variáveis de ambiente
+├── 📄 .gitignore
+├── 📄 package.json
+├── 📄 tsconfig.json
+├── 📄 README.md
+└── 📄 Procfile                        # ✅ Configuração para deploy
 ```
 
+---
 
+## 🛠️ Instalação e Configuração
 
-\---
+### Pré-requisitos
 
+- [Node.js](https://nodejs.org/) (versão 18 ou superior)
+- [PostgreSQL](https://www.postgresql.org/) (versão 15 ou superior)
+- [pgAdmin](https://www.pgadmin.org/) (opcional, para gerenciar o banco)
 
+### Passo a Passo
 
+#### 1. Clone o repositório
 
+```bash
+git clone https://github.com/seu-usuario/gestao-gado.git
+cd gestao-gado
+```
 
-\## 🔐 Autenticação \& Permissões
+#### 2. Instale as dependências
 
+```bash
+npm install
+```
 
+#### 3. Configure o banco de dados
 
-\### 🔑 Credenciais Padrão (Seed Inicial)
+Crie um banco de dados no PostgreSQL:
 
+```sql
+CREATE DATABASE gestao_gado;
+```
 
+#### 4. Configure as variáveis de ambiente
+
+Crie um arquivo `.env` na raiz do projeto baseado no `.env.example`:
+
+```env
+# Servidor
+PORT=3000
+
+# PostgreSQL
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=gestao_gado
+
+# Prisma ORM
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/gestao_gado?schema=public"
+
+# JWT
+JWT_SECRET=seu_secret_aqui_mude_isso
+
+# SMTP (para notificações por email - opcional)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=seu_email@gmail.com
+SMTP_PASS=sua_senha
+SMTP_FROM=seu_email@gmail.com
+
+# Twilio (para WhatsApp - opcional)
+TWILIO_SID=seu_sid
+TWILIO_TOKEN=seu_token
+TWILIO_PHONE=+5511999999999
+```
+
+#### 5. Execute as migrações do Prisma
+
+```bash
+npx prisma migrate dev --name init
+```
+
+#### 6. Inicie o servidor
+
+```bash
+npm run dev
+```
+
+#### 7. Acesse a aplicação
+
+| Página | URL |
+|--------|-----|
+| **Landing Page** | `http://localhost:3000/` |
+| **Dashboard** | `http://localhost:3000/app/dashboard.html` |
+| **Rebanho** | `http://localhost:3000/app/animais.html` |
+| **Produções** | `http://localhost:3000/app/producoes.html` |
+| **Relatórios** | `http://localhost:3000/app/relatorios.html` |
+| **Usuários (Admin)** | `http://localhost:3000/app/usuarios.html` |
+| **Health Check** | `http://localhost:3000/api/health` |
+
+---
+
+## 🔐 Autenticação & Permissões
+
+### 🔑 Credenciais Padrão (Seed Inicial)
 
 | E-mail | Senha | Perfil de Acesso |
-
 | :--- | :--- | :--- |
+| `admin@admin.com` | `123456` | **Admin** |
 
-| `admin@admin.com` | `123456` | \*\*Admin\*\* |
+### Níveis de Acesso
 
+| Perfil | Descrição |
+|--------|-----------|
+| **Admin** | Acesso total ao sistema, incluindo gerenciamento de usuários |
+| **Cliente** | Acesso às funcionalidades principais (animais, produções, relatórios) |
 
+---
 
-\---
-
-
-
-\## 📡 Endpoints da API
-
-
+## 📡 Endpoints da API
 
 <details>
-
 <summary><strong>📑 Expandir Tabela de Rotas</strong></summary>
 
-
-
-\### 🔑 Autenticação (`/api/auth`)
+### 🔑 Autenticação (`/api/auth`)
 
 | Método | Endpoint | Descrição |
-
 | :---: | :--- | :--- |
-
 | `POST` | `/api/auth/register` | Registrar novo usuário na plataforma |
-
 | `POST` | `/api/auth/login` | Autenticar usuário e gerar token JWT |
 
+---
 
-
-\---
-
-
-
-\### 🐮 Gestão do Rebanho (`/api/animais`)
+### 🐮 Gestão do Rebanho (`/api/animais`)
 
 | Método | Endpoint | Descrição | Auth |
-
 | :---: | :--- | :--- | :---: |
-
-| `GET` | `/` | Listar todos os animais | 🔒 |
-
+| `GET` | `/` | Listar todos os animais (com filtros) | 🔒 |
 | `GET` | `/:brinco` | Buscar dados do animal pelo brinco | 🔒 |
-
-| `GET` | `/:brinco/tree` | Obter árvore genealógica | 🔒 |
-
+| `GET` | `/:brinco/tree` | Obter árvore genealógica completa | 🔒 |
 | `GET` | `/stats` | Estatísticas consolidadas do rebanho | 🔒 |
-
 | `POST` | `/` | Cadastrar novo animal | 🔒 |
-
 | `PUT` | `/:brinco` | Atualizar cadastro do animal | 🔒 |
+| `DELETE` | `/:brinco` | Remover animal do sistema (soft delete) | 🔒 |
 
-| `DELETE` | `/:brinco` | Remover animal do sistema | 🔒 |
+---
 
-
-
-\---
-
-
-
-\### 🥛 Produção Leiteira (`/api/producoes`)
+### 🥛 Produção Leiteira (`/api/producoes`)
 
 | Método | Endpoint | Descrição | Auth |
-
 | :---: | :--- | :--- | :---: |
-
 | `GET` | `/` | Listar registros de produção | 🔒 |
-
 | `GET` | `/:id` | Obter registro específico | 🔒 |
-
 | `GET` | `/animal/:brinco` | Histórico de produções por animal | 🔒 |
-
+| `GET` | `/ultimas/:quantidade` | Últimos N registros de produção | 🔒 |
 | `GET` | `/top-vacas` | Ranking das vacas mais produtoras | 🔒 |
-
 | `GET` | `/stats` | Estatísticas globais de produção | 🔒 |
-
 | `GET` | `/relatorio` | Relatório consolidado para exportação | 🔒 |
-
 | `POST` | `/` | Registrar ordenha/produção diária | 🔒 |
-
 | `PUT` | `/:id` | Editar registro de produção | 🔒 |
-
 | `DELETE` | `/:id` | Excluir registro de produção | 🔒 |
 
+---
 
-
-\---
-
-
-
-\### 👤 Gerenciamento de Usuários (`/api/users`)
+### 👤 Gerenciamento de Usuários (`/api/users`)
 
 | Método | Endpoint | Descrição | Auth |
-
 | :---: | :--- | :--- | :---: |
-
 | `GET` | `/` | Listar usuários do sistema | 👑 Admin |
-
 | `GET` | `/:id` | Buscar usuário por ID | 👑 Admin |
-
 | `POST` | `/` | Criar usuário via painel | 👑 Admin |
-
 | `PUT` | `/:id` | Atualizar perfil do usuário | 👑 Admin |
-
 | `PATCH` | `/:id/toggle-status` | Ativar/Desativar usuário | 👑 Admin |
-
 | `DELETE` | `/:id` | Excluir usuário | 👑 Admin |
 
+---
 
+### 📊 Relatórios (`/api/relatorios`)
+
+| Método | Endpoint | Descrição | Auth |
+| :---: | :--- | :--- | :---: |
+| `GET` | `/producao` | Relatório detalhado de produção | 🔒 |
+| `GET` | `/producao/pdf` | Exportar relatório em PDF | 🔒 |
+| `GET` | `/producao/excel` | Exportar relatório em Excel | 🔒 |
+| `GET` | `/rebanho` | Relatório do rebanho | 🔒 |
+| `GET` | `/graficos/producao` | Dados para gráfico de produção | 🔒 |
+| `GET` | `/graficos/rebanho` | Dados para gráfico do rebanho | 🔒 |
+| `GET` | `/dashboard` | Dados para dashboard em tempo real | 🔒 |
+
+---
+
+### 🔔 Notificações (`/api/notificacoes`)
+
+| Método | Endpoint | Descrição | Auth |
+| :---: | :--- | :--- | :---: |
+| `GET` | `/alertas` | Listar alertas ativos | 🔒 |
+| `PUT` | `/alertas/:id` | Marcar alerta como lido | 🔒 |
+| `POST` | `/email` | Enviar notificação por email | 🔒 |
+| `POST` | `/whatsapp` | Enviar notificação por WhatsApp | 🔒 |
+| `GET` | `/config` | Obter configurações de notificação | 🔒 |
+| `PUT` | `/config` | Atualizar configurações de notificação | 🔒 |
+
+---
+
+### 📥 Importação/Exportação (`/api/importacao`)
+
+| Método | Endpoint | Descrição | Auth |
+| :---: | :--- | :--- | :---: |
+| `GET` | `/exportar/animais` | Exportar animais em CSV | 🔒 |
+| `GET` | `/exportar/producoes` | Exportar produções em CSV | 🔒 |
+| `POST` | `/importar/animais` | Importar animais via CSV | 🔒 |
+| `POST` | `/importar/producoes` | Importar produções via CSV | 🔒 |
+| `GET` | `/modelos/animais` | Baixar modelo CSV de animais | 🔒 |
+| `GET` | `/modelos/producoes` | Baixar modelo CSV de produções | 🔒 |
+
+---
+
+### 🌐 Serviços Externos (`/api/externa`)
+
+| Método | Endpoint | Descrição | Auth |
+| :---: | :--- | :--- | :---: |
+| `GET` | `/cep/:cep` | Buscar endereço por CEP (ViaCEP) | ❌ |
+| `POST` | `/validar/cpf` | Validar CPF | ❌ |
+| `GET` | `/endereco/:cep` | Buscar endereço (autenticado) | 🔒 |
 
 </details>
 
+---
 
-
-\---
-
-
-
-\## 📦 Scripts do Projeto
-
-
+## 📦 Scripts do Projeto
 
 | Script | Comando | Descrição |
-
 | :--- | :--- | :--- |
+| **Dev** | `npm run dev` | Inicia servidor com Hot-Reload (TSX/Nodemon) |
+| **Build** | `npm run build` | Compila arquivos TypeScript para JavaScript (`/dist`) |
+| **Start** | `npm start` | Executa a versão compilada em produção |
+| **Migrate** | `npm run migrate` | Executa migrações do Prisma |
+| **Prisma Generate** | `npm run prisma:generate` | Gera o cliente Prisma |
+| **Prisma Studio** | `npx prisma studio` | Abre interface visual do banco de dados |
 
-| \*\*Dev\*\* | `npm run dev` | Inicia servidor com Hot-Reload (TSX/Nodemon) |
+---
 
-| \*\*Build\*\* | `npm run build` | Compila arquivos TypeScript para JavaScript (`/dist`) |
+## 🔄 Roadmap & Próximas Melhorias
 
-| \*\*Start\*\* | `npm start` | Executa a versão compilada em produção |
+- [x] ✅ CRUD completo de animais, produções e usuários
+- [x] ✅ Árvore genealógica
+- [x] ✅ Dashboard com gráficos
+- [x] ✅ Relatórios e estatísticas
+- [x] ✅ Importação/Exportação CSV
+- [x] ✅ APIs externas (ViaCEP, validação CPF)
+- [ ] 🔄 Suporte a contêineres com **Docker** e **Docker Compose**
+- [ ] 🔄 Cobertura de testes unitários e de integração com **Jest**
+- [ ] 🔄 Módulo de exportação automática de relatórios em **PDF**
+- [ ] 🔄 Notificações e alertas em tempo real via WebSockets
+- [ ] 🔄 Microsserviço em .NET para relatórios
 
-| \*\*Migrate\*\* | `npm run migrate` | Executa scripts de criação de tabelas no banco |
+---
 
+## 🤝 Contribuição
 
+Contribuições tornam a comunidade open-source um lugar incrível para aprender, inspirar e criar. Qualquer contribuição é **muito apreciada**!
 
-\---
+1. Faça um **Fork** do projeto
+2. Crie uma Branch para sua Feature (`git checkout -b feature/IncrivelFeature`)
+3. Adicione suas alterações (`git commit -m 'feat: adiciona nova incrível feature'`)
+4. Envie a Branch (`git push origin feature/IncrivelFeature`)
+5. Abra um **Pull Request**
 
+---
 
-
-\## 🔄 Roadmap \& Próximas Melhorias
-
-
-
-\- \[ ] Suporte a contêineres com \*\*Docker\*\* e \*\*Docker Compose\*\*
-
-\- \[ ] Cobertura de testes unitários e de integração com \*\*Jest\*\*
-
-\- \[ ] Módulo de exportação automática de relatórios em \*\*PDF\*\* e \*\*Excel\*\*
-
-\- \[ ] Notificações e alertas em tempo real via WebSockets
-
-\- \[ ] Dashboard responsivo com suporte a PWA (Progressive Web App)
-
-
-
-\---
-
-
-
-\## 🤝 Contribuição
-
-
-
-Contribuições tornam a comunidade open-source um lugar incrível para aprender, inspirar e criar. Qualquer contribuição é \*\*muito apreciada\*\*!
-
-
-
-1\. Faça um \*\*Fork\*\* do projeto
-
-2\. Crie uma Branch para sua Feature (`git checkout -b feature/IncrivelFeature`)
-
-3\. Adicione suas alterações (`git commit -m 'feat: adiciona nova incrível feature'`)
-
-4\. Envie a Branch (`git push origin feature/IncrivelFeature`)
-
-5\. Abra um \*\*Pull Request\*\*
-
-
-
-\---
-
-
-
-\## 📝 Licença
-
-
+## 📝 Licença
 
 Este projeto foi desenvolvido como trabalho acadêmico. Todos os direitos reservados.
 
+---
 
-
-\---
-
-
-
-\## 👨‍💻 Autor
-
-
+## 👨‍💻 Autor
 
 <p align="center">
-
-&#x20; <strong>João Vitor Tibes de Campos</strong><br>
-
-&#x20; Engenharia de Software / Engenharia de Requisitos
-
+  <strong>João Vitor Tibes de Campos</strong><br>
+  Engenharia de Software / Programação IV
 </p>
-
-
 
 <p align="center">
-
-&#x20; <a href="https://github.com/seu-usuario">
-
-&#x20;   <img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge\&logo=github\&logoColor=white" alt="GitHub">
-
-&#x20; </a>
-
+  <a href="https://github.com/seu-usuario">
+    <img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
+  </a>
 </p>
 
-
-
-\---
-
-
+---
 
 <div align="center">
-
-&#x20; <sub>🐄 <strong>Gestão de Gado</strong> — Simplificando e modernizando o manejo do seu rebanho.</sub>
-
+  <sub>🐄 <strong>Gestão de Gado</strong> — Simplificando e modernizando o manejo do seu rebanho.</sub>
 </div>
-
