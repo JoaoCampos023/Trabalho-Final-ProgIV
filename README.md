@@ -427,13 +427,7 @@ Este projeto foi desenvolvido como trabalho acadêmico. Todos os direitos reserv
   <strong>Kalil Massignani da Rosa</strong><br>
   <strong>Silvio Bolzani</strong><br>
   <strong>Matheus Henrique Friebel</strong><br>
-  Ciencias da Cmputação / Programação IV
-</p>
-
-<p align="center">
-  <a href="https://github.com/JoaoCampos023">
-    <img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
-  </a>
+  Ciencias da Computação / Programação IV
 </p>
 
 ---
