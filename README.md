@@ -81,30 +81,32 @@ Desenvolvido com foco em **simplicidade**, **eficiência** e **segurança**, o s
 ```
 trabalho-final-gestao-gado/
 │
-├── 📁 public/                         # 📂 FRONTEND (Arquivos públicos)
-│   ├── 📁 app/                        # 📂 SISTEMA (páginas protegidas)
-│   │   ├── dashboard.html             # ✅ Dashboard principal
-│   │   ├── relatorios.html            # ✅ Página de relatórios
-│   │   ├── animais.html               # ✅ Página do rebanho
-│   │   ├── producoes.html             # ✅ Página de produções
-│   │   └── usuarios.html              # ✅ Página de usuários (Admin)
+├── 📁 public/                         
+│   ├── 📁 app/                        
+│   │   ├── dashboard.html             
+│   │   ├── relatorios.html            
+│   │   ├── animais.html               
+│   │   ├── producoes.html            
+│   │   └── usuarios.html              
 │   │
 │   ├── 📁 css/
-│   │   └── style.css                  # ✅ Estilos globais
+│   │   ├── style.css            
+│   │   └── landing.css     
 │   │
 │   ├── 📁 js/
-│   │   ├── api.js                     # ✅ Comunicação com a API
-│   │   ├── app.js                     # ✅ Lógica do dashboard
-│   │   └── landing.js                 # ✅ Lógica da landing page
+│   │   ├── api.js                     
+│   │   ├── app.js
+│   │   ├── components.js                    
+│   │   └── landing.js                 
 │   │
-│   └── index.html                     # ✅ Landing Page (página inicial)
+│   └── index.html                     
 │
-├── 📁 src/                            # 📂 BACKEND (Node.js + TypeScript)
-│   ├── 📁 config/                     # ✅ Configurações
-│   │   ├── database.ts                # ✅ Conexão com Prisma
-│   │   └── prisma.ts                  # ✅ Cliente Prisma
+├── 📁 src/                            
+│   ├── 📁 config/                    
+│   │   ├── database.ts                
+│   │   └── prisma.ts                  
 │   │
-│   ├── 📁 controllers/                # ✅ Controladores
+│   ├── 📁 controllers/                
 │   │   ├── AnimalController.ts
 │   │   ├── ProducaoController.ts
 │   │   ├── UserController.ts
@@ -114,26 +116,26 @@ trabalho-final-gestao-gado/
 │   │   ├── ExternaController.ts
 │   │   └── index.ts
 │   │
-│   ├── 📁 middlewares/                # ✅ Middlewares
+│   ├── 📁 middlewares/                
 │   │   ├── auth.ts
 │   │   ├── role.ts
 │   │   ├── validation.ts
 │   │   ├── errorHandler.ts
 │   │   └── index.ts
 │   │
-│   ├── 📁 models/                     # ✅ Models (Entidades)
+│   ├── 📁 models/                     
 │   │   ├── Animal.ts
 │   │   ├── ProducaoLeite.ts
 │   │   ├── User.ts
 │   │   └── index.ts
 │   │
-│   ├── 📁 repositories/               # ✅ Repositories (Acesso a dados)
+│   ├── 📁 repositories/               
 │   │   ├── AnimalRepository.ts
 │   │   ├── ProducaoRepository.ts
 │   │   ├── UserRepository.ts
 │   │   └── index.ts
 │   │
-│   ├── 📁 routes/                     # ✅ Rotas da API
+│   ├── 📁 routes/                     
 │   │   ├── index.ts
 │   │   ├── authRoutes.ts
 │   │   ├── userRoutes.ts
@@ -144,7 +146,7 @@ trabalho-final-gestao-gado/
 │   │   ├── importacaoRoutes.ts
 │   │   └── externaRoutes.ts
 │   │
-│   ├── 📁 services/                   # ✅ Services (Regras de negócio)
+│   ├── 📁 services/                   
 │   │   ├── AnimalService.ts
 │   │   ├── ProducaoService.ts
 │   │   ├── UserService.ts
@@ -152,28 +154,28 @@ trabalho-final-gestao-gado/
 │   │   ├── NotificacaoService.ts
 │   │   └── index.ts
 │   │
-│   ├── 📁 utils/                      # ✅ Utilitários
+│   ├── 📁 utils/                      
 │   │   ├── cpfValidator.ts
 │   │   ├── dateUtils.ts
 │   │   ├── passwordGenerator.ts
 │   │   └── index.ts
 │   │
-│   ├── 📁 websocket/                  # ✅ WebSocket
+│   ├── 📁 websocket/                  
 │   │   └── server.ts
 │   │
-│   └── app.ts                         # ✅ Ponto de entrada
+│   └── app.ts                         
 │
-├── 📁 prisma/                         # 📂 Prisma ORM
-│   └── schema.prisma                  # ✅ Schema do banco de dados
+├── 📁 prisma/                         
+│   └── schema.prisma                  
 │
-├── 📁 uploads/                        # 📂 Uploads (arquivos importados)
 │
-├── 📄 .env.example                    # ✅ Exemplo de variáveis de ambiente
+├── 📄 .env                    
 ├── 📄 .gitignore
+├── 📄 nodemon.json
+├── 📄 package-lock.json
 ├── 📄 package.json
 ├── 📄 tsconfig.json
-├── 📄 README.md
-└── 📄 Procfile                        # ✅ Configuração para deploy
+└── 📄 README.md
 ```
 
 ---
@@ -442,7 +444,7 @@ Este projeto foi desenvolvido como trabalho acadêmico. Todos os direitos reserv
 </p>
 
 <p align="center">
-  <a href="https://github.com/seu-usuario">
+  <a href="https://github.com/JoaoCampos023">
     <img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
   </a>
 </p>
