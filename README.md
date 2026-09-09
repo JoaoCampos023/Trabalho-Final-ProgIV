@@ -217,30 +217,18 @@ Crie um arquivo `.env` na raiz do projeto baseado no `.env.example`:
 # Servidor
 PORT=3000
 
-# PostgreSQL
+# PostgreSQL (mantido)
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
-DB_PASSWORD=postgres
+DB_PASSWORD=123456
 DB_NAME=gestao_gado
 
 # Prisma ORM
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/gestao_gado?schema=public"
+DATABASE_URL="postgresql://postgres:123456@localhost:5432/gestao_gado?schema=public"
 
 # JWT
-JWT_SECRET=seu_secret_aqui_mude_isso
-
-# SMTP (para notificações por email - opcional)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=seu_email@gmail.com
-SMTP_PASS=sua_senha
-SMTP_FROM=seu_email@gmail.com
-
-# Twilio (para WhatsApp - opcional)
-TWILIO_SID=seu_sid
-TWILIO_TOKEN=seu_token
-TWILIO_PHONE=+5511999999999
+JWT_SECRET=123456
 ```
 
 #### 5. Execute as migrações do Prisma
@@ -443,11 +431,14 @@ Este projeto foi desenvolvido como trabalho acadêmico. Todos os direitos reserv
 
 ---
 
-## 👨‍💻 Autor
+## 👨‍💻 Autores
 
 <p align="center">
   <strong>João Vitor Tibes de Campos</strong><br>
-  Engenharia de Software / Programação IV
+  <strong>Kalil Massignani da Rosa</strong><br>
+  <strong>Silvio Bolzani</strong><br>
+  <strong>Matheus Henrique Friebel</strong><br>
+  Ciencias da Cmputação / Programação IV
 </p>
 
 <p align="center">
