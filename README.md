@@ -415,18 +415,6 @@ npm run dev
 
 ---
 
-## 🤝 Contribuição
-
-Contribuições tornam a comunidade open-source um lugar incrível para aprender, inspirar e criar. Qualquer contribuição é **muito apreciada**!
-
-1. Faça um **Fork** do projeto
-2. Crie uma Branch para sua Feature (`git checkout -b feature/IncrivelFeature`)
-3. Adicione suas alterações (`git commit -m 'feat: adiciona nova incrível feature'`)
-4. Envie a Branch (`git push origin feature/IncrivelFeature`)
-5. Abra um **Pull Request**
-
----
-
 ## 📝 Licença
 
 Este projeto foi desenvolvido como trabalho acadêmico. Todos os direitos reservados.
