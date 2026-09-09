@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🐄 Dashboard - Gestão de Gado</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>" />
+    <style>
+        /* ============================================
+           ESTILOS COMPLETOS DO DASHBOARD
+           ============================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; min-height: 100vh; display: flex; flex-direction: column; }
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 20px; width: 100%; }
+
+        /* ---------- NAVBAR ---------- */
+        .navbar { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 12px 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+        .navbar .container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+        .navbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; font-size: 1.4rem; font-weight: 700; }
+        .navbar-brand span { color: #0dcaf0; }
+        .navbar-menu { display: flex; gap: 4px; flex-wrap: wrap; }
+        .nav-link { color: rgba(255,255,255,0.7); text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; transition: all 0.3s ease; cursor: pointer; background: transparent; border: none; }
+        .nav-link:hover { color: white; background: rgba(255,255,255,0.1); }
+        .nav-link.active { color: white; background: linear-gradient(135deg, #0d6efd, #0dcaf0); }
+        .navbar-auth { display: flex; align-items: center; gap: 10px; }
+        .user-info { display: flex; align-items: center; gap: 8px; color: white; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0d6efd, #0dcaf0); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .user-name { font-size: 0.9rem; font-weight: 500; }
+        .mobile-toggle { display: none; background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; font-size: 1.5rem; padding: 4px 12px; border-radius: 8px; cursor: pointer; }
+
+        /* ---------- BUTTONS ---------- */
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease; text-decoration: none; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .btn-primary { background: #0d6efd; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-sm { padding: 4px 10px; font-size: 0.75rem; }
+        .btn-outline { background: transparent; border: 2px solid #e0e0e0; color: #555; }
+        .btn-outline:hover { background: #f8f9fa; border-color: #555; }
+
+        /* ---------- CARDS ---------- */
+        .card { background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 24px; margin-bottom: 20px; transition: all 0.3s ease; }
+        .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; flex-wrap: wrap; gap: 10px; }
+        .card-header h2 { font-size: 1.2rem; display: flex; align-items: center; gap: 8px; margin: 0; }
+        .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        /* ---------- STATS GRID ---------- */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: all 0.3s ease; cursor: default; }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+        .stat-card .stat-icon { font-size: 2rem; margin-bottom: 6px; }
+        .stat-card .stat-value { font-size: 1.8rem; font-weight: 700; color: #0d6efd; }
+        .stat-card .stat-label { font-size: 0.8rem; color: #6c757d; margin-top: 2px; }
+
+        /* ---------- CHART CONTAINERS ---------- */
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        .chart-container { position: relative; height: 280px; }
+
+        /* ---------- TABLES ---------- */
+        .table-responsive { overflow-x: auto; }
+        .table-responsive table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .table-responsive th { background: #f8f9fa; text-align: left; padding: 12px 16px; font-weight: 600; border-bottom: 2px solid #e9ecef; white-space: nowrap; }
+        .table-responsive td { padding: 10px 16px; border-bottom: 1px solid #e9ecef; vertical-align: middle; }
+        .table-responsive tr:hover { background: #f8f9fa; }
+        .table-responsive .actions { display: flex; gap: 4px; flex-wrap: wrap; }
+
+        /* ---------- BADGES ---------- */
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-info { background: #d1ecf1; color: #0c5460; }
+        .badge-primary { background: #cce5ff; color: #004085; }
+
+        /* ---------- FILTROS ---------- */
+        .filters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; padding: 16px; background: #f8f9fa; border-radius: 8px; }
+        .filters .filter-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 150px; }
+        .filters .filter-group label { font-size: 0.75rem; font-weight: 600; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; }
+        .filters .filter-group input, .filters .filter-group select { padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 0.9rem; transition: all 0.3s ease; background: white; }
+        .filters .filter-group input:focus, .filters .filter-group select:focus { outline: none; border-color: #0d6efd; box-shadow: 0 0 0 3px rgba(13,110,253,0.15); }
+        .filters .filter-actions { display: flex; align-items: flex-end; gap: 8px; flex: 0 0 auto; }
+
+        /* ---------- PAGES ---------- */
+        .page-content { display: none; animation: fadeIn 0.3s ease; }
+        .page-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ---------- TOAST ---------- */
+        .toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 24px; border-radius: 12px; background: #333; color: white; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.2); transform: translateY(100px); opacity: 0; transition: all 0.3s ease; z-index: 3000; max-width: 400px; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: #28a745; }
+        .toast.error { background: #dc3545; }
+        .toast.warning { background: #ffc107; color: #333; }
+
+        /* ---------- LOADING ---------- */
+        .loading { text-align: center; padding: 40px 0; color: #6c757d; }
+        .loading .spinner { display: inline-block; width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: #0d6efd; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ---------- MODAL ---------- */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: white; border-radius: 12px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease; }
+        .modal-lg { max-width: 720px; }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 2px solid #f0f0f0; }
+        .modal-header h3 { display: flex; align-items: center; gap: 8px; margin: 0; }
+        .modal-close { background: transparent; border: none; font-size: 1.8rem; cursor: pointer; color: #999; transition: all 0.3s ease; line-height: 1; }
+        .modal-close:hover { color: #333; transform: rotate(90deg); }
+        .modal-body { padding: 24px; }
+
+        /* ---------- FORMS ---------- */
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: #555; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 0.95rem; transition: all 0.3s ease; font-family: inherit; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #0d6efd; box-shadow: 0 0 0 3px rgba(13,110,253,0.15); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 2px solid #f0f0f0; }
+
+        /* ---------- FOOTER ---------- */
+        .footer { background: #1a1a2e; color: rgba(255,255,255,0.5); padding: 16px 0; text-align: center; font-size: 0.85rem; margin-top: auto; }
+        .text-muted { color: #6c757d; }
+        .text-center { text-align: center; }
+        .mt-10 { margin-top: 10px; }
+        .mb-10 { margin-bottom: 10px; }
+
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 768px) {
+            .mobile-toggle { display: block !important; }
+            .navbar-menu { display: none; width: 100%; flex-direction: column; padding: 12px 0; }
+            .navbar-menu.open { display: flex; }
+            .navbar-menu .nav-link { text-align: center; padding: 10px 16px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .chart-grid { grid-template-columns: 1fr; }
+            .card-header { flex-direction: column; align-items: flex-start; }
+            .filters { flex-direction: column; }
+            .filters .filter-group { min-width: 100%; }
+            .filters .filter-actions { width: 100%; justify-content: flex-end; }
+            .table-responsive { font-size: 0.8rem; }
+            .table-responsive th, .table-responsive td { padding: 6px 10px; }
+            .stat-card .stat-value { font-size: 1.4rem; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================ -->
+    <!-- NAVBAR -->
+    <!-- ============================================ -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="navbar-brand"><span style="font-size:1.8rem;">🐄</span> Gestão<span>Gado</span></a>
+            <div class="navbar-menu" id="navMenu">
+                <button class="nav-link active" data-page="dashboard">📊 Dashboard</button>
+                <button class="nav-link" data-page="animais">🐮 Rebanho</button>
+                <button class="nav-link" data-page="producoes">🥛 Produções</button>
+                <button class="nav-link" data-page="relatorios">📋 Relatórios</button>
+                <button class="nav-link" data-page="usuarios" id="navUsuarios" style="display:none;">👤 Usuários</button>
+            </div>
+            <div class="navbar-auth">
+                <div class="user-info" id="userInfo" style="display:none;">
+                    <span class="user-avatar" id="userAvatar">👤</span>
+                    <span class="user-name" id="userName">Usuário</span>
+                    <button class="btn btn-sm btn-danger" onclick="app.logout()">Sair</button>
+                </div>
+            </div>
+            <button class="mobile-toggle" id="mobileToggle">☰</button>
+        </div>
+    </nav>
+
+    <!-- ============================================ -->
+    <!-- MAIN CONTENT -->
+    <!-- ============================================ -->
+    <main style="flex:1;padding:24px 20px;max-width:1280px;margin:0 auto;width:100%;">
+
+        <!-- PÁGINA: DASHBOARD -->
+        <div id="page-dashboard" class="page-content active">
+            <div class="card">
+                <div class="card-header">
+                    <h2>📊 Dashboard</h2>
+                    <div class="card-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="app.loadDashboard()">🔄 Atualizar</button>
+                    </div>
+                </div>
+                <div id="dashboardContent">
+                    <div class="loading"><div class="spinner"></div><p>Carregando dashboard...</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PÁGINA: ANIMAIS -->
+        <div id="page-animais" class="page-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>🐮 Rebanho</h2>
+                    <div class="card-actions">
+                        <button class="btn btn-primary btn-sm" onclick="app.novoAnimal()">➕ Novo Animal</button>
+                        <button class="btn btn-secondary btn-sm" onclick="app.loadAnimais()">🔄 Atualizar</button>
+                    </div>
+                </div>
+                <div id="animaisContent"><div class="loading"><div class="spinner"></div><p>Carregando animais...</p></div></div>
+            </div>
+        </div>
+
+        <!-- PÁGINA: PRODUÇÕES -->
+        <div id="page-producoes" class="page-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>🥛 Produções de Leite</h2>
+                    <div class="card-actions">
+                        <button class="btn btn-primary btn-sm" onclick="app.novaProducao()">➕ Nova Produção</button>
+                        <button class="btn btn-secondary btn-sm" onclick="app.loadProducoes()">🔄 Atualizar</button>
+                    </div>
+                </div>
+                <div id="producoesContent"><div class="loading"><div class="spinner"></div><p>Carregando produções...</p></div></div>
+            </div>
+        </div>
+
+        <!-- PÁGINA: RELATÓRIOS -->
+        <div id="page-relatorios" class="page-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>📋 Relatórios</h2>
+                    <div class="card-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="app.loadRelatorios()">🔄 Atualizar</button>
+                    </div>
+                </div>
+                <div id="relatoriosContent"><div class="loading"><div class="spinner"></div><p>Carregando relatórios...</p></div></div>
+            </div>
+        </div>
+
+        <!-- PÁGINA: USUÁRIOS -->
+        <div id="page-usuarios" class="page-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>👤 Usuários</h2>
+                    <div class="card-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="app.loadUsuarios()">🔄 Atualizar</button>
+                    </div>
+                </div>
+                <div id="usuariosContent"><div class="loading"><div class="spinner"></div><p>Carregando usuários...</p></div></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ============================================ -->
+    <!-- FOOTER -->
+    <!-- ============================================ -->
+    <footer class="footer"><div class="container"><p>🐄 Gestão de Gado &copy; 2026 - Todos os direitos reservados</p></div></footer>
+
+    <!-- ============================================ -->
+    <!-- MODALS -->
+    <!-- ============================================ -->
+
+    <!-- Modal Animal -->
+    <div class="modal-overlay" id="modalAnimal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 id="modalAnimalTitle">🐮 Novo Animal</h3>
+                <button class="modal-close" onclick="app.closeModal('animal')">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="animalForm">
+                    <div class="form-row">
+                        <div class="form-group"><label>Brinco *</label><input type="number" id="animalBrinco" required /></div>
+                        <div class="form-group"><label>Nome *</label><input type="text" id="animalNome" required /></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Sexo *</label><select id="animalSexo"><option value="F">Fêmea</option><option value="M">Macho</option></select></div>
+                        <div class="form-group"><label>Raça</label><input type="text" id="animalRaca" /></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Peso (kg) *</label><input type="number" id="animalPeso" step="0.1" required /></div>
+                        <div class="form-group"><label>Data Nascimento *</label><input type="date" id="animalDataNascimento" required /></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Brinco do Pai</label><input type="number" id="animalBrincoPai" /></div>
+                        <div class="form-group"><label>Brinco da Mãe</label><input type="number" id="animalBrincoMae" /></div>
+                    </div>
+                    <input type="hidden" id="animalEditBrinco" />
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="app.closeModal('animal')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="animalSubmitBtn">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Produção -->
+    <div class="modal-overlay" id="modalProducao">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 id="modalProducaoTitle">🥛 Nova Produção</h3>
+                <button class="modal-close" onclick="app.closeModal('producao')">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="producaoForm">
+                    <div class="form-row">
+                        <div class="form-group"><label>Animal *</label><select id="producaoAnimal" required></select></div>
+                        <div class="form-group"><label>Data *</label><input type="date" id="producaoData" required /></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Litros *</label><input type="number" id="producaoLitros" step="0.1" required /></div>
+                        <div class="form-group"><label>Período *</label><select id="producaoPeriodo"><option value="Manha">🌅 Manhã</option><option value="Tarde">☀️ Tarde</option><option value="Noite">🌙 Noite</option></select></div>
+                    </div>
+                    <input type="hidden" id="producaoEditId" />
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="app.closeModal('producao')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="producaoSubmitBtn">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- TOAST -->
+    <!-- ============================================ -->
+    <div id="toast" class="toast"></div>
+
+    <!-- ============================================ -->
+    <!-- SCRIPTS -->
+    <!-- ============================================ -->
+    <script>
+        // ============================================
+        // API
+        // ============================================
+        const API_URL = 'http://localhost:3000/api';
+
+        class Api {
+            constructor() { this.token = localStorage.getItem('token'); }
+            getHeaders() { const h = { 'Content-Type': 'application/json' }; if (this.token) h['Authorization'] = `Bearer ${this.token}`; return h; }
+            setToken(t) { this.token = t; localStorage.setItem('token', t); }
+            clearToken() { this.token = null; localStorage.removeItem('token'); }
+            isAuthenticated() { return !!this.token; }
+            async request(method, endpoint, body = null) {
+                const url = `${API_URL}${endpoint}`;
+                const options = { method, headers: this.getHeaders() };
+                if (body) options.body = JSON.stringify(body);
+                const response = await fetch(url, options);
+                let data; try { data = await response.json(); } catch { data = { error: 'Resposta inválida' }; }
+                return { data, status: response.status };
+            }
+            async getAnimais(f = {}) { const p = new URLSearchParams(f).toString(); return this.request('GET', p ? `/animais?${p}` : '/animais'); }
+            async getAnimal(b) { return this.request('GET', `/animais/${b}`); }
+            async getAnimalTree(b) { return this.request('GET', `/animais/${b}/tree`); }
+            async createAnimal(d) { return this.request('POST', '/animais', d); }
+            async updateAnimal(b, d) { return this.request('PUT', `/animais/${b}`, d); }
+            async deleteAnimal(b) { return this.request('DELETE', `/animais/${b}`); }
+            async getAnimalStats() { return this.request('GET', '/animais/stats'); }
+            async getProducoes(f = {}) { const p = new URLSearchParams(f).toString(); return this.request('GET', p ? `/producoes?${p}` : '/producoes'); }
+            async getProducao(id) { return this.request('GET', `/producoes/${id}`); }
+            async createProducao(d) { return this.request('POST', '/producoes', d); }
+            async updateProducao(id, d) { return this.request('PUT', `/producoes/${id}`, d); }
+            async deleteProducao(id) { return this.request('DELETE', `/producoes/${id}`); }
+            async getTopVacas(limit = 5) { return this.request('GET', `/producoes/top-vacas?limit=${limit}`); }
+            async getProducaoPorDia(dias = 7) { return this.request('GET', `/producoes/producao-dia?dias=${dias}`); }
+            async getRelatorioProducao(f = {}) { const p = new URLSearchParams(f).toString(); return this.request('GET', p ? `/relatorios/producao?${p}` : '/relatorios/producao'); }
+            async getRelatorioRebanho(f = {}) { const p = new URLSearchParams(f).toString(); return this.request('GET', p ? `/relatorios/rebanho?${p}` : '/relatorios/rebanho'); }
+            async getGraficosProducao(dias = 7) { return this.request('GET', `/relatorios/graficos/producao?dias=${dias}`); }
+            async getUsers() { return this.request('GET', '/users'); }
+            async toggleUserStatus(id) { return this.request('PATCH', `/users/${id}/toggle-status`); }
+            async deleteUser(id) { return this.request('DELETE', `/users/${id}`); }
+        }
+
+        const api = new Api();
+
+        // ============================================
+        // APP
+        // ============================================
+        const app = {
+            currentPage: 'dashboard',
+            user: null,
+            chartInstances: {},
+
+            init() {
+                if (!api.isAuthenticated()) {
+                    console.log('🔒 Usuário não autenticado, redirecionando...');
+                    window.location.href = '/';
+                    return;
+                }
+
+                console.log('✅ Usuário autenticado');
+                this.loadUserInfo();
+
+                // ✅ RECARREGAR DADOS QUANDO A ABA GANHAR FOCO
+                window.addEventListener('focus', () => {
+                    console.log('🔄 Aba recuperou foco');
+                    if (this.currentPage === 'dashboard') {
+                        this.loadDashboard();
+                    }
+                });
+
+                // ✅ RECARREGAR DADOS QUANDO A PÁGINA FICAR VISÍVEL
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden && this.currentPage === 'dashboard') {
+                        console.log('🔄 Página visível novamente');
+                        this.loadDashboard();
+                    }
+                });
+
+                document.querySelectorAll('[data-page]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.navigateTo(btn.dataset.page);
+                    });
+                });
+
+                document.getElementById('mobileToggle').addEventListener('click', () => {
+                    document.getElementById('navMenu').classList.toggle('open');
+                });
+
+                document.getElementById('animalForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveAnimal();
+                });
+
+                document.getElementById('producaoForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveProducao();
+                });
+
+                this.navigateTo('dashboard');
+            },
+
+            navigateTo(page) {
+                this.currentPage = page;
+
+                document.querySelectorAll('[data-page]').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.page === page);
+                });
+
+                document.querySelectorAll('.page-content').forEach(p => {
+                    p.classList.toggle('active', p.id === `page-${page}`);
+                });
+
+                switch (page) {
+                    case 'dashboard': this.loadDashboard(); break;
+                    case 'animais': this.loadAnimais(); break;
+                    case 'producoes': this.loadProducoes(); break;
+                    case 'relatorios': this.loadRelatorios(); break;
+                    case 'usuarios': this.loadUsuarios(); break;
+                }
+
+                document.getElementById('navMenu').classList.remove('open');
+            },
+
+            loadUserInfo() {
+                try {
+                    const token = api.token;
+                    if (token) {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        this.user = { nome: payload.nome || 'Usuário', email: payload.email || '', role: payload.role || 'Cliente' };
+                        document.getElementById('userInfo').style.display = 'flex';
+                        document.getElementById('userName').textContent = this.user.nome;
+                        document.getElementById('userAvatar').textContent = this.user.nome?.charAt(0) || '👤';
+                        if (this.user.role === 'Admin') document.getElementById('navUsuarios').style.display = 'block';
+                    }
+                } catch (e) { console.error(e); }
+            },
+
+            // ============================================
+            // DASHBOARD
+            // ============================================
+            async loadDashboard() {
+                console.log('🔄 Carregando dashboard...');
+                const container = document.getElementById('dashboardContent');
+                container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando dashboard...</p></div>`;
+
+                try {
+                    const [animaisRes, producoesRes, statsRes] = await Promise.all([
+                        api.getAnimais(),
+                        api.getProducoes(),
+                        api.getAnimalStats()
+                    ]);
+
+                    const animais = animaisRes.data?.data?.animais || [];
+                    const producoes = producoesRes.data?.data?.producoes || [];
+                    const stats = statsRes.data?.data || {};
+
+                    const totalAnimais = animais.length;
+                    const totalFemea = animais.filter(a => a.sexo === 'F').length;
+                    const totalMacho = animais.filter(a => a.sexo === 'M').length;
+                    const pesoMedio = totalAnimais > 0 ? animais.reduce((sum, a) => sum + (parseFloat(a.peso) || 0), 0) / totalAnimais : 0;
+                    const totalLitros = producoes.reduce((sum, p) => sum + (parseFloat(p.litros) || 0), 0);
+
+                    const vacasMap = new Map();
+                    producoes.forEach(p => {
+                        const nome = p.animal?.nome || `Animal ${p.animal_brinco}`;
+                        vacasMap.set(nome, (vacasMap.get(nome) || 0) + (parseFloat(p.litros) || 0));
+                    });
+                    const topVacas = Array.from(vacasMap.entries()).map(([nome, total]) => ({ nome, total: Number(total) })).sort((a, b) => b.total - a.total).slice(0, 5);
+
+                    const ultimos7Dias = [];
+                    for (let i = 6; i >= 0; i--) {
+                        const data = new Date();
+                        data.setDate(data.getDate() - i);
+                        const dataStr = data.toISOString().split('T')[0];
+                        const total = producoes.filter(p => p.data_coleta?.split('T')[0] === dataStr).reduce((sum, p) => sum + (parseFloat(p.litros) || 0), 0);
+                        ultimos7Dias.push({ data: dataStr, total });
+                    }
+
+                    let html = `
+                        <div class="stats-grid">
+                            <div class="stat-card"><div class="stat-icon">🐄</div><div class="stat-value">${totalAnimais}</div><div class="stat-label">Total de Animais</div></div>
+                            <div class="stat-card"><div class="stat-icon">♀️</div><div class="stat-value">${totalFemea}</div><div class="stat-label">Fêmeas</div></div>
+                            <div class="stat-card"><div class="stat-icon">♂️</div><div class="stat-value">${totalMacho}</div><div class="stat-label">Machos</div></div>
+                            <div class="stat-card"><div class="stat-icon">🥛</div><div class="stat-value">${totalLitros.toFixed(1)} L</div><div class="stat-label">Produção Total</div></div>
+                        </div>
+                        <div class="chart-grid">
+                            <div class="card" style="padding:16px;margin:0;"><h4 style="margin-bottom:12px;">📈 Produção dos Últimos 7 Dias</h4><div class="chart-container"><canvas id="chartProducaoDia"></canvas></div></div>
+                            <div class="card" style="padding:16px;margin:0;"><h4 style="margin-bottom:12px;">🏆 Top 5 Vacas Produtoras</h4><div class="chart-container"><canvas id="chartTopVacas"></canvas></div></div>
+                        </div>
+                    `;
+
+                    container.innerHTML = html;
+
+                    setTimeout(() => {
+                        this.renderCharts(ultimos7Dias, topVacas);
+                    }, 100);
+
+                } catch (error) {
+                    console.error('❌ Erro ao carregar dashboard:', error);
+                    container.innerHTML = `<p class="text-muted text-center">Erro ao carregar dashboard: ${error.message}</p>`;
+                }
+            },
+
+            renderCharts(producaoDia, topVacas) {
+                Object.values(this.chartInstances).forEach(chart => { if (chart) chart.destroy(); });
+                this.chartInstances = {};
+
+                const ctx1 = document.getElementById('chartProducaoDia');
+                if (ctx1 && producaoDia && producaoDia.length > 0) {
+                    this.chartInstances.producaoDia = new Chart(ctx1, {
+                        type: 'line',
+                        data: {
+                            labels: producaoDia.map(d => d.data),
+                            datasets: [{
+                                label: 'Litros',
+                                data: producaoDia.map(d => d.total),
+                                borderColor: '#0d6efd',
+                                backgroundColor: 'rgba(13,110,253,0.1)',
+                                tension: 0.3,
+                                fill: true,
+                                pointBackgroundColor: '#0d6efd'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true, title: { display: true, text: 'Litros' } } }
+                        }
+                    });
+                }
+
+                const ctx2 = document.getElementById('chartTopVacas');
+                if (ctx2 && topVacas && topVacas.length > 0) {
+                    const cores = ['#0d6efd', '#28a745', '#ffc107', '#dc3545', '#6c757d'];
+                    this.chartInstances.topVacas = new Chart(ctx2, {
+                        type: 'bar',
+                        data: {
+                            labels: topVacas.map(v => v.nome),
+                            datasets: [{
+                                label: 'Litros',
+                                data: topVacas.map(v => v.producao),
+                                backgroundColor: cores.slice(0, topVacas.length),
+                                borderRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true, title: { display: true, text: 'Litros' } } }
+                        }
+                    });
+                }
+            },
+
+            // ============================================
+            // ANIMAIS
+            // ============================================
+            async loadAnimais() {
+                const container = document.getElementById('animaisContent');
+                container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando animais...</p></div>`;
+                try {
+                    const searchNome = document.getElementById('filterNome')?.value || '';
+                    const sexo = document.getElementById('filterSexo')?.value || '';
+                    const raca = document.getElementById('filterRaca')?.value || '';
+                    const response = await api.getAnimais({ searchNome, sexo, raca });
+                    const data = response.data?.data;
+                    let animais = data?.animais || [];
+                    animais = animais.map(a => ({ ...a, brinco: typeof a.brinco === 'number' ? a.brinco : parseInt(a.brinco) || 0, peso: typeof a.peso === 'number' ? a.peso : parseFloat(a.peso) || 0, idade: typeof a.idade === 'number' ? a.idade : parseInt(a.idade) || 0 }));
+                    const stats = { total: data?.total || 0, totalFemea: data?.totalFemea || 0, totalMacho: data?.totalMacho || 0, pesoMedio: data?.pesoMedio || 0 };
+                    const racas = [...new Set(animais.map(a => a.raca).filter(r => r))];
+                    let html = `
+                        <div class="stats-grid">
+                            <div class="stat-card"><div class="stat-icon">🐄</div><div class="stat-value">${stats.total}</div><div class="stat-label">Total</div></div>
+                            <div class="stat-card"><div class="stat-icon">♀️</div><div class="stat-value">${stats.totalFemea}</div><div class="stat-label">Fêmeas</div></div>
+                            <div class="stat-card"><div class="stat-icon">♂️</div><div class="stat-value">${stats.totalMacho}</div><div class="stat-label">Machos</div></div>
+                            <div class="stat-card"><div class="stat-icon">⚖️</div><div class="stat-value">${(stats.pesoMedio || 0).toFixed(0)} kg</div><div class="stat-label">Peso Médio</div></div>
+                        </div>
+                        <div class="filters">
+                            <div class="filter-group"><label>Nome</label><input type="text" id="filterNome" placeholder="Buscar por nome..." value="${searchNome}" /></div>
+                            <div class="filter-group"><label>Sexo</label><select id="filterSexo"><option value="">Todos</option><option value="F" ${sexo === 'F' ? 'selected' : ''}>Fêmea</option><option value="M" ${sexo === 'M' ? 'selected' : ''}>Macho</option></select></div>
+                            <div class="filter-group"><label>Raça</label><select id="filterRaca"><option value="">Todas</option>${racas.map(r => `<option value="${r}" ${raca === r ? 'selected' : ''}>${r}</option>`).join('')}</select></div>
+                            <div class="filter-actions"><button class="btn btn-primary btn-sm" onclick="app.loadAnimais()">🔍 Filtrar</button><button class="btn btn-secondary btn-sm" onclick="document.getElementById('filterNome').value='';document.getElementById('filterSexo').value='';document.getElementById('filterRaca').value='';app.loadAnimais();">✖️ Limpar</button></div>
+                        </div>
+                    `;
+                    if (!animais || animais.length === 0) { html += `<p class="text-muted text-center">Nenhum animal cadastrado.</p>`; } else {
+                        html += `<div class="table-responsive"><table><thead><tr><th>Brinco</th><th>Nome</th><th>Sexo</th><th>Raça</th><th>Peso</th><th>Idade</th><th>Status</th><th>Ações</th></tr></thead><tbody>`;
+                        animais.forEach(a => {
+                            const sexoLabel = a.sexo === 'F' ? '♀️ Fêmea' : '♂️ Macho';
+                            const status = a.ativo ? '<span class="badge badge-success">Ativo</span>' : '<span class="badge badge-danger">Inativo</span>';
+                            html += `<tr><td><strong>${a.brinco}</strong></td><td>${a.nome}</td><td>${sexoLabel}</td><td>${a.raca || 'N/A'}</td><td>${a.peso.toFixed(1)} kg</td><td>${a.idade || 0} anos</td><td>${status}</td><td><div class="actions"><button class="btn btn-sm btn-primary" onclick="app.editarAnimal(${a.brinco})">✏️</button><button class="btn btn-sm btn-danger" onclick="app.deletarAnimal(${a.brinco})">🗑️</button><button class="btn btn-sm btn-info" onclick="app.verArvore(${a.brinco})">🌳</button></div></td></tr>`;
+                        });
+                        html += `</tbody></table></div>`;
+                    }
+                    container.innerHTML = html;
+                } catch (error) {
+                    container.innerHTML = `<p class="text-muted text-center">Erro ao carregar animais: ${error.message}</p>`;
+                }
+            },
+
+            // ============================================
+            // PRODUÇÕES
+            // ============================================
+            async loadProducoes() {
+                const container = document.getElementById('producoesContent');
+                container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando produções...</p></div>`;
+                try {
+                    const response = await api.getProducoes();
+                    let producoes = response.data?.data?.producoes || [];
+                    producoes = producoes.map(p => ({ ...p, litros: typeof p.litros === 'number' ? p.litros : parseFloat(p.litros) || 0 }));
+                    if (!producoes || producoes.length === 0) { container.innerHTML = '<p class="text-muted text-center">Nenhuma produção registrada.</p>'; return; }
+                    const totalLitros = producoes.reduce((sum, p) => sum + p.litros, 0);
+                    let html = `<div class="table-responsive"><table><thead><tr><th>ID</th><th>Animal</th><th>Data</th><th>Período</th><th>Litros</th><th>Ações</th></tr></thead><tbody>`;
+                    producoes.forEach(p => {
+                        const periodo = { 'Manha': '🌅 Manhã', 'Tarde': '☀️ Tarde', 'Noite': '🌙 Noite' } [p.periodo] || p.periodo;
+                        html += `<tr><td>${p.id}</td><td>${p.animal?.nome || p.animal_brinco}</td><td>${new Date(p.data_coleta).toLocaleDateString()}</td><td>${periodo}</td><td><strong>${p.litros.toFixed(1)} L</strong></td><td><div class="actions"><button class="btn btn-sm btn-primary" onclick="app.editarProducao(${p.id})">✏️</button><button class="btn btn-sm btn-danger" onclick="app.deletarProducao(${p.id})">🗑️</button></div></td></tr>`;
+                    });
+                    html += `</tbody><tfoot><tr><td colspan="4" style="text-align:right;font-weight:600;">Total:</td><td style="font-weight:700;color:#0d6efd;">${totalLitros.toFixed(1)} L</td><td></td></tr></tfoot></table></div>`;
+                    container.innerHTML = html;
+                } catch (error) {
+                    container.innerHTML = `<p class="text-muted text-center">Erro ao carregar produções: ${error.message}</p>`;
+                }
+            },
+
+            // ============================================
+            // RELATÓRIOS
+            // ============================================
+            async loadRelatorios() {
+                const container = document.getElementById('relatoriosContent');
+                container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando relatórios...</p></div>`;
+                try {
+                    const [producaoRes, rebanhoRes, graficosRes, animaisRes, topRes] = await Promise.all([
+                        api.getRelatorioProducao(), api.getRelatorioRebanho(), api.getGraficosProducao(7),
+                        api.getAnimais(), api.getTopVacas(5)
+                    ]);
+                    const producaoData = producaoRes.data?.data || {};
+                    const rebanhoData = rebanhoRes.data?.data || {};
+                    const graficosData = graficosRes.data?.data || [];
+                    const animais = animaisRes.data?.data?.animais || [];
+                    const topVacas = topRes.data?.data || [];
+                    const totalAnimais = animais.length;
+                    const totalFemea = animais.filter(a => a.sexo === 'F').length;
+                    const totalMacho = animais.filter(a => a.sexo === 'M').length;
+                    const totalLitros = producaoData.stats?.totalLitros || 0;
+                    let html = `
+                        <div class="stats-grid">
+                            <div class="stat-card"><div class="stat-icon">🐄</div><div class="stat-value">${totalAnimais}</div><div class="stat-label">Total de Animais</div></div>
+                            <div class="stat-card"><div class="stat-icon">♀️</div><div class="stat-value">${totalFemea}</div><div class="stat-label">Fêmeas</div></div>
+                            <div class="stat-card"><div class="stat-icon">♂️</div><div class="stat-value">${totalMacho}</div><div class="stat-label">Machos</div></div>
+                            <div class="stat-card"><div class="stat-icon">🥛</div><div class="stat-value">${totalLitros.toFixed(1)} L</div><div class="stat-label">Total Produzido</div></div>
+                        </div>
+                        <div class="card" style="padding:16px;margin-top:16px;"><h4 style="margin-bottom:12px;">📈 Produção dos Últimos 7 Dias</h4><div class="chart-container"><canvas id="chartRelatorioProducao"></canvas></div></div>
+                        <div class="card" style="padding:16px;margin-top:16px;"><h4 style="margin-bottom:12px;">🏆 Top 5 Vacas Produtoras</h4><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;">
+                        ${topVacas.length > 0 ? topVacas.map((v, i) => `<div style="background:#f8f9fa;padding:12px;border-radius:8px;text-align:center;"><div style="font-size:1.5rem;">${['🥇','🥈','🥉','4️⃣','5️⃣'][i] || '•'}</div><div><strong>${v.nome}</strong></div><div style="color:#0d6efd;font-weight:700;">${v.producao.toFixed(1)} L</div></div>`).join('') : '<p class="text-muted text-center">Nenhuma produção registrada.</p>'}
+                        </div></div>
+                    `;
+                    container.innerHTML = html;
+                    setTimeout(() => {
+                        const ctx = document.getElementById('chartRelatorioProducao');
+                        if (ctx && graficosData && graficosData.length > 0) {
+                            new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: graficosData.map(d => d.data),
+                                    datasets: [{
+                                        label: 'Litros',
+                                        data: graficosData.map(d => d.total),
+                                        borderColor: '#0d6efd',
+                                        backgroundColor: 'rgba(13,110,253,0.1)',
+                                        tension: 0.3,
+                                        fill: true
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { display: false } },
+                                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Litros' } } }
+                                }
+                            });
+                        }
+                    }, 100);
+                } catch (error) {
+                    container.innerHTML = `<p class="text-muted text-center">Erro ao carregar relatórios: ${error.message}</p>`;
+                }
+            },
+
+            // ============================================
+            // USUÁRIOS
+            // ============================================
+            async loadUsuarios() {
+                const container = document.getElementById('usuariosContent');
+                container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando usuários...</p></div>`;
+                try {
+                    const response = await api.getUsers();
+                    const users = response.data?.data || [];
+                    if (!users || users.length === 0) { container.innerHTML = '<p class="text-muted text-center">Nenhum usuário cadastrado.</p>'; return; }
+                    let html = `<div class="table-responsive"><table><thead><tr><th>Nome</th><th>Email</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead><tbody>`;
+                    users.forEach(u => {
+                        const role = u.role === 'Admin' ? '<span class="badge badge-danger">Admin</span>' : '<span class="badge badge-info">Cliente</span>';
+                        const status = u.ativo ? '<span class="badge badge-success">Ativo</span>' : '<span class="badge badge-danger">Inativo</span>';
+                        html += `<tr><td><strong>${u.nome}</strong></td><td>${u.email}</td><td>${role}</td><td>${status}</td><td><div class="actions"><button class="btn btn-sm btn-warning" onclick="app.toggleUserStatus('${u.id}')">🔄</button><button class="btn btn-sm btn-danger" onclick="app.deletarUsuario('${u.id}')">🗑️</button></div></td></tr>`;
+                    });
+                    html += `</tbody></table></div>`;
+                    container.innerHTML = html;
+                } catch (error) {
+                    container.innerHTML = `<p class="text-muted text-center">Erro ao carregar usuários: ${error.message}</p>`;
+                }
+            },
+
+            // ============================================
+            // ANIMAIS - CRUD
+            // ============================================
+            novoAnimal() {
+                document.getElementById('modalAnimalTitle').textContent = '🐮 Novo Animal';
+                document.getElementById('animalSubmitBtn').textContent = 'Salvar';
+                document.getElementById('animalEditBrinco').value = '';
+                document.getElementById('animalBrinco').disabled = false;
+                document.getElementById('animalForm').reset();
+                this.showModal('animal');
+            },
+
+            async editarAnimal(brinco) {
+                try {
+                    const response = await api.getAnimal(brinco);
+                    const animal = response.data?.data;
+                    if (!animal) { this.toast('Animal não encontrado', 'error'); return; }
+                    document.getElementById('modalAnimalTitle').textContent = `✏️ Editando ${animal.nome}`;
+                    document.getElementById('animalSubmitBtn').textContent = 'Atualizar';
+                    document.getElementById('animalEditBrinco').value = animal.brinco;
+                    document.getElementById('animalBrinco').value = animal.brinco;
+                    document.getElementById('animalBrinco').disabled = true;
+                    document.getElementById('animalNome').value = animal.nome;
+                    document.getElementById('animalSexo').value = animal.sexo;
+                    document.getElementById('animalRaca').value = animal.raca || '';
+                    document.getElementById('animalPeso').value = animal.peso;
+                    document.getElementById('animalDataNascimento').value = animal.data_nascimento?.split('T')[0] || '';
+                    document.getElementById('animalBrincoPai').value = animal.brinco_pai || '';
+                    document.getElementById('animalBrincoMae').value = animal.brinco_mae || '';
+                    this.showModal('animal');
+                } catch (error) { this.toast('Erro ao carregar animal', 'error'); }
+            },
+
+            async saveAnimal() {
+                const isEdit = !!document.getElementById('animalEditBrinco').value;
+                const data = {
+                    brinco: parseInt(document.getElementById('animalBrinco').value),
+                    nome: document.getElementById('animalNome').value,
+                    sexo: document.getElementById('animalSexo').value,
+                    raca: document.getElementById('animalRaca').value || undefined,
+                    peso: parseFloat(document.getElementById('animalPeso').value),
+                    data_nascimento: document.getElementById('animalDataNascimento').value,
+                    brinco_pai: document.getElementById('animalBrincoPai').value ? parseInt(document.getElementById('animalBrincoPai').value) : undefined,
+                    brinco_mae: document.getElementById('animalBrincoMae').value ? parseInt(document.getElementById('animalBrincoMae').value) : undefined
+                };
+                try {
+                    const response = isEdit ? await api.updateAnimal(data.brinco, data) : await api.createAnimal(data);
+                    if (response.status >= 200 && response.status < 300) {
+                        this.toast(isEdit ? 'Animal atualizado!' : 'Animal cadastrado!', 'success');
+                        this.closeModal('animal');
+                        this.loadAnimais();
+                        if (this.currentPage === 'dashboard') this.loadDashboard();
+                    } else { this.toast(response.data?.message || 'Erro ao salvar', 'error'); }
+                } catch (error) { this.toast('Erro ao salvar animal', 'error'); }
+            },
+
+            async deletarAnimal(brinco) {
+                if (!confirm(`Excluir animal ${brinco}?`)) return;
+                try {
+                    const response = await api.deleteAnimal(brinco);
+                    if (response.status >= 200 && response.status < 300) {
+                        this.toast('Animal excluído!', 'success');
+                        this.loadAnimais();
+                        if (this.currentPage === 'dashboard') this.loadDashboard();
+                    } else { this.toast(response.data?.message || 'Erro ao excluir', 'error'); }
+                } catch (error) { this.toast('Erro ao excluir animal', 'error'); }
+            },
+
+            async verArvore(brinco) {
+                try {
+                    const response = await api.getAnimalTree(brinco);
+                    const data = response.data?.data;
+                    if (!data) { this.toast('Árvore não encontrada', 'error'); return; }
+                    const animal = data.animal, pai = data.pai, mae = data.mae, filhos = data.filhos || [];
+                    let html = `
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px;">
+                            <div style="background:#f8f9fa;border-radius:12px;padding:16px;text-align:center;"><h4>${pai ? `👨 ${pai.nome}` : '❓ Pai não informado'}</h4>${pai ? `<p><small>Brinco: ${pai.brinco}</small></p>` : ''}${pai?.pai ? `<p><small>Avô: ${pai.pai.nome}</small></p>` : ''}${pai?.mae ? `<p><small>Avó: ${pai.mae.nome}</small></p>` : ''}</div>
+                            <div style="background:#0d6efd;color:white;border-radius:12px;padding:16px;text-align:center;"><h4>🐄 ${animal.nome}</h4><p><small>Brinco: ${animal.brinco}</small></p><p><small>${animal.sexo === 'F' ? '♀️ Fêmea' : '♂️ Macho'}</small></p></div>
+                            <div style="background:#f8f9fa;border-radius:12px;padding:16px;text-align:center;"><h4>${mae ? `👩 ${mae.nome}` : '❓ Mãe não informada'}</h4>${mae ? `<p><small>Brinco: ${mae.brinco}</small></p>` : ''}${mae?.pai ? `<p><small>Avô: ${mae.pai.nome}</small></p>` : ''}${mae?.mae ? `<p><small>Avó: ${mae.mae.nome}</small></p>` : ''}</div>
+                        </div>
+                        ${filhos.length > 0 ? `<div style="margin-top:20px;"><h4>👶 Filhos (${filhos.length})</h4><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">${filhos.map(f => `<span class="badge badge-primary">${f.nome} (${f.brinco})</span>`).join('')}</div></div>` : ''}
+                        <div style="margin-top:16px;"><button class="btn btn-secondary btn-sm" onclick="app.loadAnimais()">⬅️ Voltar</button></div>
+                    `;
+                    document.getElementById('animaisContent').innerHTML = html;
+                } catch (error) { this.toast('Erro ao carregar árvore', 'error'); }
+            },
+
+            // ============================================
+            // PRODUÇÕES - CRUD
+            // ============================================
+            async novaProducao() {
+                try {
+                    const response = await api.getAnimais();
+                    const animais = response.data?.data?.animais || [];
+                    const femeas = animais.filter(a => a.sexo === 'F' && a.ativo);
+                    const select = document.getElementById('producaoAnimal');
+                    select.innerHTML = '<option value="">Selecione...</option>' + femeas.map(a => `<option value="${a.brinco}">${a.brinco} - ${a.nome}</option>`).join('');
+                    document.getElementById('modalProducaoTitle').textContent = '🥛 Nova Produção';
+                    document.getElementById('producaoSubmitBtn').textContent = 'Salvar';
+                    document.getElementById('producaoEditId').value = '';
+                    document.getElementById('producaoForm').reset();
+                    document.getElementById('producaoData').value = new Date().toISOString().split('T')[0];
+                    this.showModal('producao');
+                } catch (error) { this.toast('Erro ao carregar animais', 'error'); }
+            },
+
+            async editarProducao(id) {
+                try {
+                    const response = await api.getProducao(id);
+                    const producao = response.data?.data;
+                    if (!producao) { this.toast('Produção não encontrada', 'error'); return; }
+                    const resAnimais = await api.getAnimais();
+                    const animais = resAnimais.data?.data?.animais || [];
+                    const femeas = animais.filter(a => a.sexo === 'F' && a.ativo);
+                    const select = document.getElementById('producaoAnimal');
+                    select.innerHTML = '<option value="">Selecione...</option>' + femeas.map(a => `<option value="${a.brinco}" ${a.brinco === producao.animal_brinco ? 'selected' : ''}>${a.brinco} - ${a.nome}</option>`).join('');
+                    document.getElementById('modalProducaoTitle').textContent = `✏️ Editando #${id}`;
+                    document.getElementById('producaoSubmitBtn').textContent = 'Atualizar';
+                    document.getElementById('producaoEditId').value = id;
+                    document.getElementById('producaoData').value = producao.data_coleta?.split('T')[0] || '';
+                    document.getElementById('producaoLitros').value = producao.litros;
+                    document.getElementById('producaoPeriodo').value = producao.periodo;
+                    this.showModal('producao');
+                } catch (error) { this.toast('Erro ao carregar produção', 'error'); }
+            },
+
+            async saveProducao() {
+                const isEdit = !!document.getElementById('producaoEditId').value;
+                const id = document.getElementById('producaoEditId').value;
+                const data = {
+                    animal_brinco: parseInt(document.getElementById('producaoAnimal').value),
+                    data_coleta: document.getElementById('producaoData').value,
+                    litros: parseFloat(document.getElementById('producaoLitros').value),
+                    periodo: document.getElementById('producaoPeriodo').value
+                };
+                if (!data.animal_brinco) { this.toast('Selecione um animal', 'error'); return; }
+                try {
+                    const response = isEdit ? await api.updateProducao(parseInt(id), data) : await api.createProducao(data);
+                    if (response.status >= 200 && response.status < 300) {
+                        this.toast(isEdit ? 'Produção atualizada!' : 'Produção registrada!', 'success');
+                        this.closeModal('producao');
+                        this.loadProducoes();
+                        if (this.currentPage === 'dashboard') this.loadDashboard();
+                    } else { this.toast(response.data?.message || 'Erro ao salvar', 'error'); }
+                } catch (error) { this.toast('Erro ao salvar produção', 'error'); }
+            },
+
+            async deletarProducao(id) {
+                if (!confirm(`Excluir produção ${id}?`)) return;
+                try {
+                    const response = await api.deleteProducao(id);
+                    if (response.status >= 200 && response.status < 300) {
+                        this.toast('Produção excluída!', 'success');
+                        this.loadProducoes();
+                        if (this.currentPage === 'dashboard') this.loadDashboard();
+                    } else { this.toast(response.data?.message || 'Erro ao excluir', 'error'); }
+                } catch (error) { this.toast('Erro ao excluir produção', 'error'); }
+            },
+
+            // ============================================
+            // USUÁRIOS - Admin
+            // ============================================
+            async toggleUserStatus(id) {
+                try {
+                    const response = await api.toggleUserStatus(id);
+                    if (response.status >= 200 && response.status < 300) {
+                        this.toast('Status alterado!', 'success');
+                        this.loadUsuarios();
+                    } else { this.toast(response.data?.message || 'Erro ao alterar', 'error'); }
+                } catch (error) { this.toast('Erro ao alterar status', 'error'); }
+            },
+
+            async deletarUsuario(id) {
+                if (!confirm('Excluir usuário?')) return;
+                try {
+                    const response = await api.deleteUser(id);
+                    if (response.status >= 200 && response.status < 300) {
+                        this.toast('Usuário excluído!', 'success');
+                        this.loadUsuarios();
+                    } else { this.toast(response.data?.message || 'Erro ao excluir', 'error'); }
+                } catch (error) { this.toast('Erro ao excluir usuário', 'error'); }
+            },
+
+            // ============================================
+            // LOGOUT
+            // ============================================
+            logout() { api.clearToken(); this.toast('Desconectado!', 'warning'); setTimeout(() => window.location.href = '/', 500); },
+
+            // ============================================
+            // MODAL
+            // ============================================
+            showModal(name) { document.getElementById(`modal${name.charAt(0).toUpperCase() + name.slice(1)}`).classList.add('active'); document.body.style.overflow = 'hidden'; },
+            closeModal(name) { document.getElementById(`modal${name.charAt(0).toUpperCase() + name.slice(1)}`).classList.remove('active'); document.body.style.overflow = ''; },
+
+            // ============================================
+            // TOAST
+            // ============================================
+            toast(message, type = 'info') {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.className = `toast ${type}`;
+                setTimeout(() => toast.classList.add('show'), 10);
+                clearTimeout(this.toastTimeout);
+                this.toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Inicializando aplicação...');
+            app.init();
+        });
+    </script>
+</body>
+</html>

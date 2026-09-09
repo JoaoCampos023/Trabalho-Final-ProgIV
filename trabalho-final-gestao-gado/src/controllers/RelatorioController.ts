@@ -20,6 +20,19 @@ export class RelatorioController {
 
       const totalLitros = producoes.reduce((sum, p) => sum + Number(p.litros), 0);
       const totalRegistros = producoes.length;
+      const mediaPorOrdenha = totalRegistros > 0 ? totalLitros / totalRegistros : 0;
+
+      // Top 5 animais
+      const topAnimaisMap = new Map();
+      producoes.forEach(p => {
+        const nome = p.animal?.nome || `Animal ${p.animal_brinco}`;
+        topAnimaisMap.set(nome, (topAnimaisMap.get(nome) || 0) + Number(p.litros));
+      });
+      
+      const topAnimais = Array.from(topAnimaisMap.entries())
+        .map(([nome, total]) => ({ nome, total: Number(total) }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
 
       return res.json({
         success: true,
@@ -28,9 +41,10 @@ export class RelatorioController {
           stats: {
             totalLitros,
             totalRegistros,
-            mediaPorOrdenha: totalRegistros > 0 ? totalLitros / totalRegistros : 0,
+            mediaPorOrdenha,
             vacasEmProducao: new Set(producoes.map(p => p.animal_brinco)).size
-          }
+          },
+          topAnimais
         }
       });
     } catch (error) {
@@ -145,8 +159,10 @@ export class RelatorioController {
 
   async getDashboardData(_req: Request, res: Response): Promise<Response> {
     try {
-      const [totalAnimais, producaoTotal] = await Promise.all([
+      const [totalAnimais, totalFemeas, totalMachos, producaoTotal] = await Promise.all([
         prisma.animal.count({ where: { ativo: true } }),
+        prisma.animal.count({ where: { ativo: true, sexo: 'F' } }),
+        prisma.animal.count({ where: { ativo: true, sexo: 'M' } }),
         prisma.producaoLeite.aggregate({ _sum: { litros: true } })
       ]);
 
@@ -154,6 +170,8 @@ export class RelatorioController {
         success: true,
         data: {
           totalAnimais,
+          totalFemeas,
+          totalMachos,
           producaoTotal: Number(producaoTotal._sum.litros) || 0,
           timestamp: new Date().toISOString()
         }
@@ -163,6 +181,38 @@ export class RelatorioController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao buscar dados do dashboard',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  }
+
+  // ✅ ENDPOINT DE DEBUG
+  async debugDados(_req: Request, res: Response): Promise<Response> {
+    try {
+      const [animais, producoes, stats] = await Promise.all([
+        prisma.animal.findMany(),
+        prisma.producaoLeite.findMany(),
+        prisma.animal.aggregate({
+          _count: { brinco: true },
+          _avg: { peso: true }
+        })
+      ]);
+
+      return res.json({
+        success: true,
+        data: {
+          totalAnimais: animais.length,
+          animais,
+          producoes,
+          stats: {
+            total: stats._count.brinco,
+            pesoMedio: stats._avg.peso
+          }
+        }
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
         error: error instanceof Error ? error.message : 'Erro desconhecido'
       });
     }

@@ -16,4 +16,7 @@ router.get('/graficos/producao', relatorioController.getDadosGraficoProducao.bin
 router.get('/graficos/rebanho', relatorioController.getDadosGraficoRebanho.bind(relatorioController));
 router.get('/dashboard', relatorioController.getDashboardData.bind(relatorioController));
 
+// ✅ ENDPOINT DE DEBUG
+router.get('/debug', relatorioController.debugDados.bind(relatorioController));
+
 export default router;
