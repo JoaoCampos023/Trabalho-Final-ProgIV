@@ -193,8 +193,7 @@ trabalho-final-gestao-gado/
 #### 1. Clone o repositório
 
 ```bash
-git clone https://github.com/seu-usuario/gestao-gado.git
-cd gestao-gado
+git clone https://github.com/JoaoCampos023/Trabalho-Final-ProgIV.git
 ```
 
 #### 2. Instale as dependências
