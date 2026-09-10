@@ -12,8 +12,8 @@ export interface IProducaoLeite {
     data_coleta: Date;
     litros: number;
     periodo: PeriodoProducao;
-    created_at: Date;
-    updated_at: Date;
+    criado_em: Date;
+    atualizado_em: Date;
 }
 
 export class ProducaoLeite {
@@ -22,8 +22,8 @@ export class ProducaoLeite {
     data_coleta: Date;
     litros: number;
     periodo: PeriodoProducao;
-    created_at: Date;
-    updated_at: Date;
+    criado_em: Date;
+    atualizado_em: Date;
 
     animal?: Animal;
 
@@ -33,8 +33,8 @@ export class ProducaoLeite {
         this.data_coleta = data.data_coleta;
         this.litros = data.litros;
         this.periodo = data.periodo;
-        this.created_at = data.created_at || new Date();
-        this.updated_at = data.updated_at || new Date();
+        this.criado_em = data.criado_em || new Date();
+        this.atualizado_em = data.atualizado_em || new Date();
     }
 
     get isManha(): boolean {

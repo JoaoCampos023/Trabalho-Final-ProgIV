@@ -8,8 +8,8 @@ export interface IAnimal {
     ativo: boolean;
     brinco_pai?: number | null;
     brinco_mae?: number | null;
-    created_at: Date;
-    updated_at: Date;
+    criado_em: Date;
+    atualizado_em: Date;
 }
 
 export class Animal {
@@ -22,8 +22,8 @@ export class Animal {
     ativo: boolean;
     brinco_pai?: number | null;
     brinco_mae?: number | null;
-    created_at: Date;
-    updated_at: Date;
+    criado_em: Date;
+    atualizado_em: Date;
 
     pai?: Animal;
     mae?: Animal;
@@ -40,8 +40,8 @@ export class Animal {
         this.ativo = data.ativo ?? true;
         this.brinco_pai = data.brinco_pai;
         this.brinco_mae = data.brinco_mae;
-        this.created_at = data.created_at || new Date();
-        this.updated_at = data.updated_at || new Date();
+        this.criado_em = data.criado_em || new Date();
+        this.atualizado_em = data.atualizado_em || new Date();
     }
 
     get idade(): number {
@@ -90,8 +90,8 @@ export class Animal {
             ativo: this.ativo,
             brinco_pai: this.brinco_pai,
             brinco_mae: this.brinco_mae,
-            created_at: this.created_at,
-            updated_at: this.updated_at
+            criado_em: this.criado_em,
+            atualizado_em: this.atualizado_em
         };
     }
 }

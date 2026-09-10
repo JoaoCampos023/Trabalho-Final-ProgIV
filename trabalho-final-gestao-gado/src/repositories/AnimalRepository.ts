@@ -13,8 +13,8 @@ function toAnimal(row: any): Animal {
     ativo: row.ativo,
     brinco_pai: row.brinco_pai || undefined,
     brinco_mae: row.brinco_mae || undefined,
-    created_at: row.created_at,
-    updated_at: row.updated_at
+    criado_em: row.criado_em,
+    atualizado_em: row.atualizado_em
   });
 }
 
@@ -214,7 +214,7 @@ export class AnimalRepository {
   /**
    * Criar um novo animal
    */
-  async create(animalData: Omit<IAnimal, 'created_at' | 'updated_at'>): Promise<Animal> {
+  async create(animalData: Omit<IAnimal, 'criado_em' | 'atualizado_em'>): Promise<Animal> {
     // Validar se pai e mãe existem e têm o sexo correto
     if (animalData.brinco_pai) {
       const pai = await this.findByBrinco(animalData.brinco_pai);

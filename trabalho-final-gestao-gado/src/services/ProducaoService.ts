@@ -66,35 +66,39 @@ export class ProducaoService {
    * Registrar uma nova produção
    */
   async registrarProducao(
-    data: Omit<IProducaoLeite, 'id' | 'created_at' | 'updated_at'>
+    data: Omit<IProducaoLeite, 'id' | 'criado_em' | 'atualizado_em'>
   ): Promise<ProducaoLeite> {
     // Validações (igual ao projeto original em C#)
 
+    // 1. Litros não pode ser negativo (zero é permitido)
+    if (data.litros < 0) {
+      throw new Error('A quantidade de litros não pode ser negativa.');
+    }
 
-    // 1. Data futura
+    // 2. Data futura
     if (data.data_coleta > new Date()) {
       throw new Error('Não é possível registrar uma ordenha em uma data futura.');
     }
 
-    // 2. Data muito antiga (mais de 5 anos)
+    // 3. Data muito antiga (mais de 5 anos)
     const dataLimite = new Date();
     dataLimite.setFullYear(dataLimite.getFullYear() - 5);
     if (data.data_coleta < dataLimite) {
       throw new Error('Não é possível registrar uma ordenha com mais de 5 anos.');
     }
 
-    // 3. Verificar se animal existe
+    // 4. Verificar se animal existe
     const animal = await this.animalRepository.findByBrinco(data.animal_brinco);
     if (!animal) {
       throw new Error('Animal não encontrado.');
     }
 
-    // 4. Apenas fêmeas produzem
+    // 5. Apenas fêmeas produzem
     if (animal.sexo === 'M') {
       throw new Error('Não é possível registrar produção de leite para machos.');
     }
 
-    // 5. Animal ativo
+    // 6. Animal ativo
     if (!animal.ativo) {
       throw new Error('Não é possível registrar produção para um animal inativo.');
     }
@@ -129,8 +133,8 @@ export class ProducaoService {
       }
     }
 
-    if (data.litros !== undefined && data.litros <= 0) {
-      throw new Error('A quantidade de litros deve ser maior que zero.');
+    if (data.litros !== undefined && data.litros < 0) {
+      throw new Error('A quantidade de litros não pode ser negativa.');
     }
 
     // Se a data foi alterada, validar

@@ -1,36 +1,38 @@
+export type Role = 'Admin' | 'Cliente';
+
 export interface IUser {
   id: string;
   nome: string;
   email: string;
-  password_hash: string;
+  senha_hash: string;
   cpf: string;
   ativo: boolean;
-  role: 'Admin' | 'Cliente';
-  created_at: Date;
-  updated_at: Date;
+  role: Role;
+  criado_em: Date;
+  atualizado_em: Date;
 }
 
 export class User {
   id: string;
   nome: string;
   email: string;
-  password_hash: string;
+  senha_hash: string;
   cpf: string;
   ativo: boolean;
-  role: 'Admin' | 'Cliente';
-  created_at: Date;
-  updated_at: Date;
+  role: Role;
+  criado_em: Date;
+  atualizado_em: Date;
 
   constructor(data: IUser) {
     this.id = data.id;
     this.nome = data.nome;
     this.email = data.email;
-    this.password_hash = data.password_hash;
+    this.senha_hash = data.senha_hash;
     this.cpf = data.cpf;
     this.ativo = data.ativo ?? true;
     this.role = data.role ?? 'Cliente';
-    this.created_at = data.created_at || new Date();
-    this.updated_at = data.updated_at || new Date();
+    this.criado_em = data.criado_em || new Date();
+    this.atualizado_em = data.atualizado_em || new Date();
   }
 
   // Propriedades calculadas (como no projeto original)
@@ -51,7 +53,7 @@ export class User {
       cpf: this.cpf,
       role: this.role,
       ativo: this.ativo,
-      created_at: this.created_at
+      criado_em: this.criado_em
     };
   }
 }

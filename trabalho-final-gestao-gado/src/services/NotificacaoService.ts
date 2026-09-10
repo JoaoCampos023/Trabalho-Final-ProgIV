@@ -53,14 +53,14 @@ export class NotificacaoService {
         tipo: 'peso',
         mensagem: 'Animal 101 está com peso baixo',
         lido: false,
-        created_at: new Date()
+        criado_em: new Date()
       },
       {
         id: 2,
         tipo: 'producao',
         mensagem: 'Vaca 205 não produz há 3 dias',
         lido: false,
-        created_at: new Date()
+        criado_em: new Date()
       }
     ];
   }

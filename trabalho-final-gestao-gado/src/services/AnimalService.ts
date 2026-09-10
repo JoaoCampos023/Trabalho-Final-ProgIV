@@ -1,11 +1,31 @@
 import { AnimalRepository } from '../repositories/AnimalRepository';
 import { Animal, IAnimal } from '../models/Animal';
 
+const IDADE_MAXIMA_ANOS = 50;
+
 export class AnimalService {
   private animalRepository: AnimalRepository;
 
   constructor() {
     this.animalRepository = new AnimalRepository();
+  }
+
+  /**
+   * Validar data de nascimento
+   * - Não pode ser no futuro.
+   * - Não pode ser absurdamente antiga (idade resultante maior que IDADE_MAXIMA_ANOS).
+   */
+  private validarDataNascimento(dataNascimento: Date): void {
+    const hoje = new Date();
+    if (dataNascimento > hoje) {
+      throw new Error('A data de nascimento não pode ser no futuro.');
+    }
+
+    const dataLimite = new Date(hoje);
+    dataLimite.setFullYear(dataLimite.getFullYear() - IDADE_MAXIMA_ANOS);
+    if (dataNascimento < dataLimite) {
+      throw new Error(`A data de nascimento não pode resultar em uma idade maior que ${IDADE_MAXIMA_ANOS} anos.`);
+    }
   }
 
   /**
@@ -191,7 +211,7 @@ export class AnimalService {
   /**
    * Cadastrar um novo animal
    */
-  async cadastrarAnimal(data: Omit<IAnimal, 'created_at' | 'updated_at'>): Promise<Animal> {
+  async cadastrarAnimal(data: Omit<IAnimal, 'criado_em' | 'atualizado_em'>): Promise<Animal> {
     // Validar dados básicos
     if (!data.nome || data.nome.trim().length === 0) {
       throw new Error('O nome do animal é obrigatório.');
@@ -199,9 +219,7 @@ export class AnimalService {
     if (data.peso <= 0) {
       throw new Error('O peso deve ser maior que zero.');
     }
-    if (data.data_nascimento > new Date()) {
-      throw new Error('A data de nascimento não pode ser no futuro.');
-    }
+    this.validarDataNascimento(data.data_nascimento);
     if (data.sexo !== 'M' && data.sexo !== 'F') {
       throw new Error("O sexo deve ser 'M' (Macho) ou 'F' (Fêmea).");
     }
@@ -238,8 +256,8 @@ export class AnimalService {
     if (data.peso !== undefined && data.peso <= 0) {
       throw new Error('O peso deve ser maior que zero.');
     }
-    if (data.data_nascimento !== undefined && data.data_nascimento > new Date()) {
-      throw new Error('A data de nascimento não pode ser no futuro.');
+    if (data.data_nascimento !== undefined) {
+      this.validarDataNascimento(data.data_nascimento);
     }
 
     // Validar linhagem

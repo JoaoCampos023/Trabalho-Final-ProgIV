@@ -1,9 +1,34 @@
-/* ---------- RESET & BASE ---------- */
+/* ============================================
+   LANDING PAGE - ESTILOS COMPLETOS
+   ============================================ */
+
+/* ---------- RESET ---------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 html {
     scroll-behavior: smooth;
 }
 
-/* ---------- NAVBAR LANDING ---------- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 20px;
+    width: 100%;
+}
+
+/* ---------- NAVBAR ---------- */
 .navbar-landing {
     position: fixed;
     top: 0;
@@ -28,43 +53,44 @@ html {
     justify-content: space-between;
 }
 
-.navbar-landing .navbar-brand {
-    color: white;
-    text-decoration: none;
-    font-size: 1.5rem;
-    font-weight: 700;
+.navbar-brand {
     display: flex;
     align-items: center;
     gap: 10px;
+    text-decoration: none;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
 }
 
-.navbar-landing .navbar-brand span {
+.navbar-brand span {
     color: #0dcaf0;
 }
 
-.navbar-landing .navbar-menu {
+.navbar-menu {
     display: flex;
     gap: 30px;
 }
 
-.navbar-landing .navbar-menu a {
+.navbar-menu a {
     color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
     font-size: 0.95rem;
     font-weight: 500;
     transition: all 0.3s ease;
+    cursor: pointer;
 }
 
-.navbar-landing .navbar-menu a:hover {
+.navbar-menu a:hover {
     color: white;
 }
 
-.navbar-landing .navbar-auth {
+.navbar-auth {
     display: flex;
     gap: 12px;
 }
 
-.navbar-landing .mobile-toggle {
+.mobile-toggle {
     display: none;
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -73,6 +99,60 @@ html {
     padding: 4px 12px;
     border-radius: 8px;
     cursor: pointer;
+}
+
+/* ---------- BUTTONS ---------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #0a58ca, #0bb5d4);
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #218838;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.btn-outline:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: white;
+}
+
+.btn-lg {
+    padding: 14px 32px;
+    font-size: 1rem;
 }
 
 /* ---------- HERO ---------- */
@@ -155,21 +235,6 @@ html {
     margin-bottom: 40px;
 }
 
-.hero-buttons .btn-lg {
-    padding: 14px 32px;
-    font-size: 1rem;
-}
-
-.hero-buttons .btn-outline {
-    border-color: rgba(255, 255, 255, 0.3);
-    color: white;
-}
-
-.hero-buttons .btn-outline:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: white;
-}
-
 .hero-stats {
     display: flex;
     gap: 40px;
@@ -226,6 +291,7 @@ html {
 .illustration-card .illustration-icon {
     font-size: 2.5rem;
     margin-bottom: 8px;
+    color: #ffffff;
 }
 
 .illustration-card h4 {
@@ -255,7 +321,7 @@ html {
 .section-header .section-badge {
     display: inline-block;
     background: rgba(13, 110, 253, 0.1);
-    color: var(--primary);
+    color: #0d6efd;
     padding: 4px 16px;
     border-radius: 20px;
     font-size: 0.85rem;
@@ -266,17 +332,17 @@ html {
 .section-header h2 {
     font-size: 2.5rem;
     font-weight: 700;
-    color: var(--dark);
+    color: #1a1a2e;
     margin-bottom: 16px;
 }
 
 .section-header h2 span {
-    color: var(--primary);
+    color: #0d6efd;
 }
 
 .section-header p {
     font-size: 1.1rem;
-    color: var(--gray);
+    color: #6c757d;
 }
 
 .features-grid {
@@ -306,12 +372,12 @@ html {
 .feature-card h3 {
     font-size: 1.2rem;
     font-weight: 600;
-    color: var(--dark);
+    color: #1a1a2e;
     margin-bottom: 8px;
 }
 
 .feature-card p {
-    color: var(--gray);
+    color: #6c757d;
     font-size: 0.95rem;
     margin-bottom: 16px;
 }
@@ -326,6 +392,12 @@ html {
     color: #555;
     font-size: 0.9rem;
     padding: 4px 0;
+}
+
+.feature-card ul li i {
+    color: #28a745;
+    width: 16px;
+    margin-right: 6px;
 }
 
 /* ---------- CTA SECTION ---------- */
@@ -372,7 +444,7 @@ html {
     text-decoration: underline;
 }
 
-/* ---------- FOOTER LANDING ---------- */
+/* ---------- FOOTER ---------- */
 .footer-landing {
     background: #111;
     color: rgba(255, 255, 255, 0.6);
@@ -438,22 +510,176 @@ html {
     font-size: 0.85rem;
 }
 
-/* ---------- MODAL OVERRIDES ---------- */
+/* ---------- MODAL ---------- */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal {
+    background: white;
+    border-radius: 12px;
+    max-width: 480px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.modal-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: #999;
+    transition: all 0.3s ease;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: #333;
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    padding: 24px;
+}
+
 .modal-footer-text {
     text-align: center;
     margin-top: 16px;
     font-size: 0.9rem;
-    color: var(--gray);
+    color: #6c757d;
 }
 
 .modal-footer-text a {
-    color: var(--primary);
+    color: #0d6efd;
     text-decoration: none;
     font-weight: 600;
 }
 
 .modal-footer-text a:hover {
     text-decoration: underline;
+}
+
+/* ---------- FORM ---------- */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    color: #555;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+.w-100 {
+    width: 100%;
+}
+
+/* ---------- TOAST ---------- */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 14px 24px;
+    border-radius: 12px;
+    background: #333;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 3000;
+    max-width: 400px;
+}
+
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.toast.success {
+    background: #28a745;
+}
+
+.toast.error {
+    background: #dc3545;
+}
+
+.toast.warning {
+    background: #ffc107;
+    color: #333;
 }
 
 /* ---------- RESPONSIVE ---------- */
@@ -487,18 +713,18 @@ html {
         margin: 0 auto;
     }
 
-    .navbar-landing .navbar-menu {
+    .navbar-menu {
         display: none;
         flex-direction: column;
         width: 100%;
         padding: 20px 0;
     }
 
-    .navbar-landing .navbar-menu.open {
+    .navbar-menu.open {
         display: flex;
     }
 
-    .navbar-landing .mobile-toggle {
+    .mobile-toggle {
         display: block;
     }
 
@@ -538,6 +764,16 @@ html {
     }
 
     .hero-buttons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .navbar-auth {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .navbar-auth .btn {
         width: 100%;
         justify-content: center;
     }

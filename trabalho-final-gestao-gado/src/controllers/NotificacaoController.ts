@@ -4,8 +4,8 @@ export class NotificacaoController {
   async getAlertas(_req: Request, res: Response): Promise<Response> {
     try {
       const alertas = [
-        { id: 1, tipo: 'peso', mensagem: 'Animal 101 está com peso baixo', lido: false, created_at: new Date() },
-        { id: 2, tipo: 'producao', mensagem: 'Vaca 205 não produz há 3 dias', lido: false, created_at: new Date() }
+        { id: 1, tipo: 'peso', mensagem: 'Animal 101 está com peso baixo', lido: false, criado_em: new Date() },
+        { id: 2, tipo: 'producao', mensagem: 'Vaca 205 não produz há 3 dias', lido: false, criado_em: new Date() }
       ];
 
       return res.json({ success: true, data: alertas });

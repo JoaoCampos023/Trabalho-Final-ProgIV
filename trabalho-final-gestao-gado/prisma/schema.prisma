@@ -8,18 +8,26 @@ datasource db {
 }
 
 // ============================================
+// ENUM: PAPEL DO USUÁRIO
+// ============================================
+enum Role {
+  Admin
+  Cliente
+}
+
+// ============================================
 // MODEL: USUÁRIO
 // ============================================
 model User {
-  id            String   @id @default(uuid())
-  nome          String   @db.VarChar(100)
-  email         String   @unique @db.VarChar(100)
-  password_hash String   @db.VarChar(255)
-  cpf           String   @unique @db.VarChar(14)
-  ativo         Boolean  @default(true)
-  role          String   @default("Cliente") @db.VarChar(20)
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+  id          String   @id @default(uuid())
+  nome        String   @db.VarChar(100)
+  email       String   @unique @db.VarChar(100)
+  senha_hash  String   @db.VarChar(255)
+  cpf         String   @unique @db.VarChar(14)
+  ativo       Boolean  @default(true)
+  role        Role     @default(Cliente)
+  criado_em   DateTime @default(now())
+  atualizado_em DateTime @updatedAt
 
   @@map("users")
 }
@@ -37,15 +45,15 @@ model Animal {
   ativo           Boolean  @default(true)
   brinco_pai      Int?
   brinco_mae      Int?
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  criado_em       DateTime @default(now())
+  atualizado_em   DateTime @updatedAt
 
   // Relacionamentos para árvore genealógica
   pai        Animal?           @relation("Pai", fields: [brinco_pai], references: [brinco])
   mae        Animal?           @relation("Mae", fields: [brinco_mae], references: [brinco])
   filhos_pai Animal[]          @relation("Pai")
   filhos_mae Animal[]          @relation("Mae")
-  
+
   producoes  ProducaoLeite[]
 
   @@map("animais")
@@ -60,8 +68,8 @@ model ProducaoLeite {
   data_coleta    DateTime @db.Date
   litros         Decimal  @db.Decimal(10, 2)
   periodo        String   @db.VarChar(10)
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
+  criado_em      DateTime @default(now())
+  atualizado_em  DateTime @updatedAt
 
   animal Animal @relation(fields: [animal_brinco], references: [brinco], onDelete: Cascade)
 

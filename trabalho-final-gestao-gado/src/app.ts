@@ -14,6 +14,9 @@ import externaRoutes from './routes/externaRoutes';
 // Importação do WebSocket
 import { WebSocketServer } from 'ws';
 
+// Seed automático em banco vazio (ver src/config/autoSeed.ts)
+import { runAutoSeedIfNeeded } from './config/autoSeed';
+
 dotenv.config();
 
 const app = express();
@@ -232,18 +235,25 @@ export { broadcast, wss };
 // INICIAR SERVIDOR
 // ============================================
 
-server.listen(PORT, () => {
-  console.log('========================================');
-  console.log('🐄 GESTÃO DE GADO - SERVIDOR INICIADO');
-  console.log('========================================');
-  console.log(`🚀 API: http://localhost:${PORT}/api`);
-  console.log(`📡 WebSocket: ws://localhost:${PORT}/ws`);
-  console.log(`🏠 Landing Page: http://localhost:${PORT}/`);
-  console.log(`📊 Dashboard: http://localhost:${PORT}/app/dashboard.html`);
-  console.log(`📋 Relatórios: http://localhost:${PORT}/app/relatorios.html`);
-  console.log(`📊 Health Check: http://localhost:${PORT}/api/health`);
-  console.log('========================================');
-});
+async function iniciarServidor(): Promise<void> {
+  // Roda o seed automaticamente se o banco estiver vazio (desativável via AUTO_SEED=false).
+  await runAutoSeedIfNeeded();
+
+  server.listen(PORT, () => {
+    console.log('========================================');
+    console.log('🐄 GESTÃO DE GADO - SERVIDOR INICIADO');
+    console.log('========================================');
+    console.log(`🚀 API: http://localhost:${PORT}/api`);
+    console.log(`📡 WebSocket: ws://localhost:${PORT}/ws`);
+    console.log(`🏠 Landing Page: http://localhost:${PORT}/`);
+    console.log(`📊 Dashboard: http://localhost:${PORT}/app/dashboard.html`);
+    console.log(`📋 Relatórios: http://localhost:${PORT}/app/relatorios.html`);
+    console.log(`📊 Health Check: http://localhost:${PORT}/api/health`);
+    console.log('========================================');
+  });
+}
+
+iniciarServidor();
 
 process.on('SIGINT', () => {
   console.log('\n🛑 Encerrando servidor...');

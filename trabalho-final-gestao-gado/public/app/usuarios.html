@@ -5,173 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>👤 Usuários - Gestão de Gado</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>" />
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; min-height: 100vh; display: flex; flex-direction: column; }
-        .container { max-width: 1280px; margin: 0 auto; padding: 0 20px; width: 100%; }
-        .navbar { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 12px 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
-        .navbar .container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-        .navbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; font-size: 1.4rem; font-weight: 700; }
-        .navbar-brand span { color: #0dcaf0; }
-        .navbar-menu { display: flex; gap: 4px; flex-wrap: wrap; }
-        .nav-link { color: rgba(255,255,255,0.7); text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; transition: all 0.3s ease; cursor: pointer; background: transparent; border: none; }
-        .nav-link:hover { color: white; background: rgba(255,255,255,0.1); }
-        .nav-link.active { color: white; background: linear-gradient(135deg, #0d6efd, #0dcaf0); }
-        .navbar-auth { display: flex; align-items: center; gap: 10px; }
-        .user-info { display: flex; align-items: center; gap: 8px; color: white; }
-        .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0d6efd, #0dcaf0); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-        .user-name { font-size: 0.9rem; font-weight: 500; }
-        .mobile-toggle { display: none; background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; font-size: 1.5rem; padding: 4px 12px; border-radius: 8px; cursor: pointer; }
-        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease; text-decoration: none; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .btn-warning { background: #ffc107; color: #333; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-secondary { background: #6c757d; color: white; }
-        .btn-sm { padding: 4px 10px; font-size: 0.75rem; }
-        .card { background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 24px; margin-bottom: 20px; }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; flex-wrap: wrap; gap: 10px; }
-        .card-header h2 { font-size: 1.2rem; display: flex; align-items: center; gap: 8px; margin: 0; }
-        .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        .table-responsive { overflow-x: auto; }
-        .table-responsive table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        .table-responsive th { background: #f8f9fa; text-align: left; padding: 12px 16px; font-weight: 600; border-bottom: 2px solid #e9ecef; white-space: nowrap; }
-        .table-responsive td { padding: 10px 16px; border-bottom: 1px solid #e9ecef; vertical-align: middle; }
-        .table-responsive tr:hover { background: #f8f9fa; }
-        .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
-        .badge-success { background: #d4edda; color: #155724; }
-        .badge-danger { background: #f8d7da; color: #721c24; }
-        .badge-warning { background: #fff3cd; color: #856404; }
-        .badge-info { background: #d1ecf1; color: #0c5460; }
-        .badge-primary { background: #cce5ff; color: #004085; }
-        .toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 24px; border-radius: 12px; background: #333; color: white; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.2); transform: translateY(100px); opacity: 0; transition: all 0.3s ease; z-index: 3000; max-width: 400px; }
-        .toast.show { transform: translateY(0); opacity: 1; }
-        .toast.success { background: #28a745; }
-        .toast.error { background: #dc3545; }
-        .toast.warning { background: #ffc107; color: #333; }
-        .loading { text-align: center; padding: 40px 0; color: #6c757d; }
-        .loading .spinner { display: inline-block; width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: #0d6efd; border-radius: 50%; animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .footer { background: #1a1a2e; color: rgba(255,255,255,0.5); padding: 16px 0; text-align: center; font-size: 0.85rem; margin-top: auto; }
-        .text-muted { color: #6c757d; }
-        .text-center { text-align: center; }
-        @media (max-width: 768px) { .mobile-toggle { display: block !important; } .navbar-menu { display: none; width: 100%; flex-direction: column; padding: 12px 0; } .navbar-menu.open { display: flex; } .navbar-menu .nav-link { text-align: center; padding: 10px 16px; } .card-header { flex-direction: column; align-items: flex-start; } }
-    </style>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 </head>
 <body>
 
     <!-- NAVBAR (injetada por components.js) -->
     <div id="navbar"></div>
 
-    <main style="flex:1;padding:24px 20px;max-width:1280px;margin:0 auto;width:100%;">
+    <main class="main-content">
         <div class="card">
             <div class="card-header">
-                <h2>👤 Usuários</h2>
+                <h2><i class="fa-solid fa-user"></i> Usuários</h2>
                 <div class="card-actions">
-                    <button class="btn btn-secondary btn-sm" onclick="app.loadUsuarios()">🔄 Atualizar</button>
+                    <button class="btn btn-secondary btn-sm" onclick="app.loadUsuarios()"><i class="fa-solid fa-arrows-rotate"></i> Atualizar</button>
                 </div>
             </div>
             <div id="usuariosContent"><div class="loading"><div class="spinner"></div><p>Carregando usuários...</p></div></div>
         </div>
     </main>
 
-    <footer class="footer"><div class="container"><p>🐄 Gestão de Gado &copy; 2026 - Todos os direitos reservados</p></div></footer>
+    <footer class="footer"><div class="container"><p><i class="fa-solid fa-cow"></i> Gestão de Gado &copy; 2026 - Todos os direitos reservados</p></div></footer>
 
     <div id="toast" class="toast"></div>
 
+    <script src="/js/api.js"></script>
     <script src="/js/components.js"></script>
-    <script>
-        const API_URL = 'http://localhost:3000/api';
-
-        class Api {
-            constructor() { this.token = localStorage.getItem('token'); }
-            getHeaders() { const h = { 'Content-Type': 'application/json' }; if (this.token) h['Authorization'] = `Bearer ${this.token}`; return h; }
-            setToken(t) { this.token = t; localStorage.setItem('token', t); }
-            clearToken() { this.token = null; localStorage.removeItem('token'); }
-            isAuthenticated() { return !!this.token; }
-            async request(method, endpoint, body = null) {
-                const url = `${API_URL}${endpoint}`;
-                const options = { method, headers: this.getHeaders() };
-                if (body) options.body = JSON.stringify(body);
-                const response = await fetch(url, options);
-                let data; try { data = await response.json(); } catch { data = { error: 'Resposta inválida' }; }
-                return { data, status: response.status };
-            }
-            async getUsers() { return this.request('GET', '/users'); }
-            async toggleUserStatus(id) { return this.request('PATCH', `/users/${id}/toggle-status`); }
-            async deleteUser(id) { return this.request('DELETE', `/users/${id}`); }
-        }
-
-        const api = new Api();
-
-        const app = {
-            init() {
-                if (!api.isAuthenticated()) { window.location.href = '/'; return; }
-                this.loadUserInfo();
-                this.loadUsuarios();
-            },
-            loadUserInfo() {
-                try {
-                    const token = api.token;
-                    if (token) {
-                        const payload = JSON.parse(atob(token.split('.')[1]));
-                        this.user = { nome: payload.nome || 'Usuário', email: payload.email || '', role: payload.role || 'Cliente' };
-                        Components.renderNavbar('usuarios', this.user, 'mpa');
-                    }
-                } catch (e) { console.error(e); }
-            },
-            logout() { api.clearToken(); this.toast('Desconectado!', 'warning'); setTimeout(() => window.location.href = '/', 500); },
-            toast(message, type = 'info') {
-                const toast = document.getElementById('toast');
-                toast.textContent = message;
-                toast.className = `toast ${type}`;
-                setTimeout(() => toast.classList.add('show'), 10);
-                clearTimeout(this.toastTimeout);
-                this.toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
-            },
-
-            async loadUsuarios() {
-                const container = document.getElementById('usuariosContent');
-                container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando usuários...</p></div>`;
-                try {
-                    const response = await api.getUsers();
-                    const users = response.data?.data || [];
-                    if (!users || users.length === 0) { container.innerHTML = '<p class="text-muted text-center">Nenhum usuário cadastrado.</p>'; return; }
-                    let html = `<div class="table-responsive"><table><thead><tr><th>Nome</th><th>Email</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead><tbody>`;
-                    users.forEach(u => {
-                        const role = u.role === 'Admin' ? '<span class="badge badge-danger">Admin</span>' : '<span class="badge badge-info">Cliente</span>';
-                        const status = u.ativo ? '<span class="badge badge-success">Ativo</span>' : '<span class="badge badge-danger">Inativo</span>';
-                        html += `<tr><td><strong>${u.nome}</strong></td><td>${u.email}</td><td>${role}</td><td>${status}</td><td><div class="actions"><button class="btn btn-sm btn-warning" onclick="app.toggleUserStatus('${u.id}')">🔄</button><button class="btn btn-sm btn-danger" onclick="app.deletarUsuario('${u.id}')">🗑️</button></div></td></tr>`;
-                    });
-                    html += `</tbody></table></div>`;
-                    container.innerHTML = html;
-                } catch (error) {
-                    container.innerHTML = `<p class="text-muted text-center">Erro ao carregar usuários: ${error.message}</p>`;
-                }
-            },
-
-            async toggleUserStatus(id) {
-                try {
-                    const response = await api.toggleUserStatus(id);
-                    if (response.status >= 200 && response.status < 300) {
-                        this.toast('Status alterado!', 'success');
-                        this.loadUsuarios();
-                    } else { this.toast(response.data?.message || 'Erro ao alterar', 'error'); }
-                } catch (error) { this.toast('Erro ao alterar status', 'error'); }
-            },
-
-            async deletarUsuario(id) {
-                if (!confirm('Excluir usuário?')) return;
-                try {
-                    const response = await api.deleteUser(id);
-                    if (response.status >= 200 && response.status < 300) {
-                        this.toast('Usuário excluído!', 'success');
-                        this.loadUsuarios();
-                    } else { this.toast(response.data?.message || 'Erro ao excluir', 'error'); }
-                } catch (error) { this.toast('Erro ao excluir usuário', 'error'); }
-            }
-        };
-
-        document.addEventListener('DOMContentLoaded', () => app.init());
-    </script>
+    <script src="/js/pages/usuarios.js"></script>
 </body>
 </html>

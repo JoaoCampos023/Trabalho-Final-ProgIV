@@ -3,43 +3,47 @@
 /**
  * Landing Page (/index.html) - Lógica
  */
+
 // ============================================
 // NAVBAR SCROLL EFFECT
 // ============================================
 window.addEventListener('scroll', () => {
     const navbar = document.getElementById('navbar');
-    if (!navbar)
-        return;
+    if (!navbar) return;
     if (window.scrollY > 50) {
         navbar.classList.add('scrolled');
-    }
-    else {
+    } else {
         navbar.classList.remove('scrolled');
     }
 });
+
 // ============================================
 // MOBILE TOGGLE
 // ============================================
 document.getElementById('mobileToggle')?.addEventListener('click', () => {
     document.getElementById('navMenu')?.classList.toggle('open');
 });
+
 // ============================================
 // MODALS
 // ============================================
-function openModal(name) {
+function openModal(name: string): void {
     document.getElementById(`modal${name.charAt(0).toUpperCase() + name.slice(1)}`)?.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
-function closeModal(name) {
+
+function closeModal(name: string): void {
     document.getElementById(`modal${name.charAt(0).toUpperCase() + name.slice(1)}`)?.classList.remove('active');
     document.body.style.overflow = '';
 }
-function switchModal(from, to) {
+
+function switchModal(from: string, to: string): void {
     closeModal(from);
     openModal(to);
 }
+
 // Fechar modal clicando fora
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
+document.querySelectorAll<HTMLElement>('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', e => {
         if (e.target === overlay) {
             overlay.classList.remove('active');
@@ -47,103 +51,115 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
         }
     });
 });
+
 // Fechar com ESC
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-        document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+        document.querySelectorAll<HTMLElement>('.modal-overlay.active').forEach(modal => {
             modal.classList.remove('active');
             document.body.style.overflow = '';
         });
     }
 });
+
 // ============================================
 // TOAST
 // ============================================
-function toast(message, type = 'info') {
+function toast(message: string, type = 'info'): void {
     const toastEl = document.getElementById('toast');
-    if (!toastEl)
-        return;
+    if (!toastEl) return;
     toastEl.textContent = message;
     toastEl.className = `toast ${type}`;
+
     setTimeout(() => toastEl.classList.add('show'), 10);
     setTimeout(() => toastEl.classList.remove('show'), 3000);
 }
+
 // ============================================
 // LOGIN
 // ============================================
-async function handleLogin() {
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
+async function handleLogin(): Promise<void> {
+    const email = (document.getElementById('loginEmail') as HTMLInputElement).value;
+    const password = (document.getElementById('loginPassword') as HTMLInputElement).value;
+
     if (!email || !password) {
         toast('Preencha todos os campos', 'error');
         return;
     }
+
     try {
         const response = await api.login({ email, password });
+
         if (response.status === 200) {
             const token = response.data?.data?.token;
             const user = response.data?.data?.user;
+
             if (token && user) {
                 api.setToken(token);
                 toast(`Bem-vindo, ${user.nome}!`, 'success');
                 closeModal('login');
+
                 setTimeout(() => {
                     window.location.href = '/app/dashboard.html';
                 }, 500);
             }
-        }
-        else {
+        } else {
             toast(response.data?.message || 'Erro ao fazer login', 'error');
         }
-    }
-    catch (error) {
+    } catch (error) {
         toast('Erro ao fazer login', 'error');
     }
 }
+
 // ============================================
 // REGISTER
 // ============================================
-async function handleRegister() {
-    const nome = document.getElementById('regNome').value;
-    const email = document.getElementById('regEmail').value;
-    const cpf = document.getElementById('regCpf').value;
-    const password = document.getElementById('regPassword').value;
-    const confirm2 = document.getElementById('regConfirmPassword').value;
+async function handleRegister(): Promise<void> {
+    const nome = (document.getElementById('regNome') as HTMLInputElement).value;
+    const email = (document.getElementById('regEmail') as HTMLInputElement).value;
+    const cpf = (document.getElementById('regCpf') as HTMLInputElement).value;
+    const password = (document.getElementById('regPassword') as HTMLInputElement).value;
+    const confirm2 = (document.getElementById('regConfirmPassword') as HTMLInputElement).value;
+
     if (!nome || !email || !cpf || !password) {
         toast('Preencha todos os campos', 'error');
         return;
     }
+
     if (password !== confirm2) {
         toast('As senhas não coincidem', 'error');
         return;
     }
+
     try {
         const response = await api.register({ nome, email, password, cpf });
+
         if (response.status === 201) {
             const token = response.data?.data?.token;
             const user = response.data?.data?.user;
+
             if (token && user) {
                 api.setToken(token);
                 toast(`Conta criada com sucesso! Bem-vindo, ${user.nome}!`, 'success');
                 closeModal('register');
+
                 setTimeout(() => {
                     window.location.href = '/app/dashboard.html';
                 }, 500);
             }
-        }
-        else {
+        } else {
             toast(response.data?.message || 'Erro ao criar conta', 'error');
         }
-    }
-    catch (error) {
+    } catch (error) {
         toast('Erro ao criar conta', 'error');
     }
 }
+
 // ============================================
 // MASCARAR CPF
 // ============================================
 document.getElementById('regCpf')?.addEventListener('input', function (e) {
-    const target = e.target;
+    const target = e.target as HTMLInputElement;
     let value = target.value.replace(/\D/g, '');
     if (value.length <= 11) {
         value = value.replace(/(\d{3})(\d)/, '$1.$2');
@@ -152,6 +168,7 @@ document.getElementById('regCpf')?.addEventListener('input', function (e) {
         target.value = value;
     }
 });
+
 // ============================================
 // VERIFICAR SE JÁ ESTÁ LOGADO
 // ============================================
@@ -161,4 +178,3 @@ document.getElementById('regCpf')?.addEventListener('input', function (e) {
         window.location.href = '/app/dashboard.html';
     }
 })();
-//# sourceMappingURL=landing.js.map

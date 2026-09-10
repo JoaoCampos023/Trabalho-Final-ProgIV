@@ -10,12 +10,12 @@ export class UserRepository {
       id: u.id,
       nome: u.nome,
       email: u.email,
-      password_hash: u.password_hash,
+      senha_hash: u.senha_hash,
       cpf: u.cpf,
       ativo: u.ativo,
-      role: u.role as 'Admin' | 'Cliente',
-      created_at: u.created_at,
-      updated_at: u.updated_at
+      role: u.role,
+      criado_em: u.criado_em,
+      atualizado_em: u.atualizado_em
     }));
   }
 
@@ -28,12 +28,12 @@ export class UserRepository {
       id: user.id,
       nome: user.nome,
       email: user.email,
-      password_hash: user.password_hash,
+      senha_hash: user.senha_hash,
       cpf: user.cpf,
       ativo: user.ativo,
-      role: user.role as 'Admin' | 'Cliente',
-      created_at: user.created_at,
-      updated_at: user.updated_at
+      role: user.role,
+      criado_em: user.criado_em,
+      atualizado_em: user.atualizado_em
     });
   }
 
@@ -46,12 +46,12 @@ export class UserRepository {
       id: user.id,
       nome: user.nome,
       email: user.email,
-      password_hash: user.password_hash,
+      senha_hash: user.senha_hash,
       cpf: user.cpf,
       ativo: user.ativo,
-      role: user.role as 'Admin' | 'Cliente',
-      created_at: user.created_at,
-      updated_at: user.updated_at
+      role: user.role,
+      criado_em: user.criado_em,
+      atualizado_em: user.atualizado_em
     });
   }
 
@@ -64,12 +64,12 @@ export class UserRepository {
       id: user.id,
       nome: user.nome,
       email: user.email,
-      password_hash: user.password_hash,
+      senha_hash: user.senha_hash,
       cpf: user.cpf,
       ativo: user.ativo,
-      role: user.role as 'Admin' | 'Cliente',
-      created_at: user.created_at,
-      updated_at: user.updated_at
+      role: user.role,
+      criado_em: user.criado_em,
+      atualizado_em: user.atualizado_em
     });
   }
 
@@ -82,16 +82,16 @@ export class UserRepository {
       id: u.id,
       nome: u.nome,
       email: u.email,
-      password_hash: u.password_hash,
+      senha_hash: u.senha_hash,
       cpf: u.cpf,
       ativo: u.ativo,
-      role: u.role as 'Admin' | 'Cliente',
-      created_at: u.created_at,
-      updated_at: u.updated_at
+      role: u.role,
+      criado_em: u.criado_em,
+      atualizado_em: u.atualizado_em
     }));
   }
 
-  async findByRole(role: string): Promise<User[]> {
+  async findByRole(role: 'Admin' | 'Cliente'): Promise<User[]> {
     const users = await prisma.user.findMany({
       where: { role },
       orderBy: { nome: 'asc' }
@@ -100,21 +100,21 @@ export class UserRepository {
       id: u.id,
       nome: u.nome,
       email: u.email,
-      password_hash: u.password_hash,
+      senha_hash: u.senha_hash,
       cpf: u.cpf,
       ativo: u.ativo,
-      role: u.role as 'Admin' | 'Cliente',
-      created_at: u.created_at,
-      updated_at: u.updated_at
+      role: u.role,
+      criado_em: u.criado_em,
+      atualizado_em: u.atualizado_em
     }));
   }
 
-  async create(userData: Omit<IUser, 'id' | 'created_at' | 'updated_at'>): Promise<User> {
+  async create(userData: Omit<IUser, 'id' | 'criado_em' | 'atualizado_em'>): Promise<User> {
     const user = await prisma.user.create({
       data: {
         nome: userData.nome,
         email: userData.email,
-        password_hash: userData.password_hash,
+        senha_hash: userData.senha_hash,
         cpf: userData.cpf,
         ativo: userData.ativo ?? true,
         role: userData.role ?? 'Cliente'
@@ -124,12 +124,12 @@ export class UserRepository {
       id: user.id,
       nome: user.nome,
       email: user.email,
-      password_hash: user.password_hash,
+      senha_hash: user.senha_hash,
       cpf: user.cpf,
       ativo: user.ativo,
-      role: user.role as 'Admin' | 'Cliente',
-      created_at: user.created_at,
-      updated_at: user.updated_at
+      role: user.role,
+      criado_em: user.criado_em,
+      atualizado_em: user.atualizado_em
     });
   }
 
@@ -140,7 +140,7 @@ export class UserRepository {
         data: {
           nome: data.nome,
           email: data.email,
-          password_hash: data.password_hash,
+          senha_hash: data.senha_hash,
           cpf: data.cpf,
           ativo: data.ativo,
           role: data.role
@@ -151,12 +151,12 @@ export class UserRepository {
         id: user.id,
         nome: user.nome,
         email: user.email,
-        password_hash: user.password_hash,
+        senha_hash: user.senha_hash,
         cpf: user.cpf,
         ativo: user.ativo,
-        role: user.role as 'Admin' | 'Cliente',
-        created_at: user.created_at,
-        updated_at: user.updated_at
+        role: user.role,
+        criado_em: user.criado_em,
+        atualizado_em: user.atualizado_em
       });
     } catch (error) {
       return null;
@@ -174,12 +174,12 @@ export class UserRepository {
         id: user.id,
         nome: user.nome,
         email: user.email,
-        password_hash: user.password_hash,
+        senha_hash: user.senha_hash,
         cpf: user.cpf,
         ativo: user.ativo,
-        role: user.role as 'Admin' | 'Cliente',
-        created_at: user.created_at,
-        updated_at: user.updated_at
+        role: user.role,
+        criado_em: user.criado_em,
+        atualizado_em: user.atualizado_em
       });
     } catch (error) {
       return null;
@@ -197,12 +197,12 @@ export class UserRepository {
         id: user.id,
         nome: user.nome,
         email: user.email,
-        password_hash: user.password_hash,
+        senha_hash: user.senha_hash,
         cpf: user.cpf,
         ativo: user.ativo,
-        role: user.role as 'Admin' | 'Cliente',
-        created_at: user.created_at,
-        updated_at: user.updated_at
+        role: user.role,
+        criado_em: user.criado_em,
+        atualizado_em: user.atualizado_em
       });
     } catch (error) {
       return null;
@@ -230,7 +230,7 @@ export class UserRepository {
     });
   }
 
-  async countByRole(role: string): Promise<number> {
+  async countByRole(role: 'Admin' | 'Cliente'): Promise<number> {
     return await prisma.user.count({
       where: { role }
     });
@@ -277,12 +277,12 @@ export class UserRepository {
         id: u.id,
         nome: u.nome,
         email: u.email,
-        password_hash: u.password_hash,
+        senha_hash: u.senha_hash,
         cpf: u.cpf,
         ativo: u.ativo,
-        role: u.role as 'Admin' | 'Cliente',
-        created_at: u.created_at,
-        updated_at: u.updated_at
+        role: u.role,
+        criado_em: u.criado_em,
+        atualizado_em: u.atualizado_em
       })),
       total,
       page,

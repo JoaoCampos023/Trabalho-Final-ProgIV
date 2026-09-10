@@ -10,8 +10,8 @@ function toProducao(row: any): ProducaoLeite {
     data_coleta: row.data_coleta,
     litros: Number(row.litros) || 0,
     periodo: row.periodo as PeriodoProducao,
-    created_at: row.created_at,
-    updated_at: row.updated_at
+    criado_em: row.criado_em,
+    atualizado_em: row.atualizado_em
   });
 
   if (row.animal) {
@@ -25,8 +25,8 @@ function toProducao(row: any): ProducaoLeite {
       ativo: row.animal.ativo,
       brinco_pai: row.animal.brinco_pai || undefined,
       brinco_mae: row.animal.brinco_mae || undefined,
-      created_at: row.animal.created_at,
-      updated_at: row.animal.updated_at
+      criado_em: row.animal.criado_em,
+      atualizado_em: row.animal.atualizado_em
     });
   }
 
@@ -204,7 +204,7 @@ export class ProducaoRepository {
   /**
    * Criar uma nova produção
    */
-  async create(producaoData: Omit<IProducaoLeite, 'id' | 'created_at' | 'updated_at'>): Promise<ProducaoLeite> {
+  async create(producaoData: Omit<IProducaoLeite, 'id' | 'criado_em' | 'atualizado_em'>): Promise<ProducaoLeite> {
     // Validar se animal existe e é fêmea ativa
     const animal = await prisma.animal.findUnique({
       where: { brinco: producaoData.animal_brinco }

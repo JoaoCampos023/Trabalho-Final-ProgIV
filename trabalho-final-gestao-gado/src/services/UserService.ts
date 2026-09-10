@@ -122,7 +122,7 @@ export class UserService {
     const user = await this.userRepository.create({
       nome: data.nome,
       email: data.email,
-      password_hash: passwordHash,
+      senha_hash: passwordHash,
       cpf: data.cpf,
       ativo: true,
       role: data.role || 'Cliente'
@@ -231,7 +231,7 @@ export class UserService {
     const passwordHash = await bcrypt.hash(novaSenha, salt);
 
     const updatedUser = await this.userRepository.update(id, {
-      password_hash: passwordHash
+      senha_hash: passwordHash
     });
 
     if (!updatedUser) {
@@ -277,7 +277,7 @@ export class UserService {
     }
 
     // Verificar senha
-    const senhaValida = await bcrypt.compare(password, user.password_hash);
+    const senhaValida = await bcrypt.compare(password, user.senha_hash);
     if (!senhaValida) {
       throw new Error('Email ou senha inválidos');
     }

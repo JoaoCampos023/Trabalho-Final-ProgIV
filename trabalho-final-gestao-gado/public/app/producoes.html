@@ -5,98 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🥛 Produções - Gestão de Gado</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>" />
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; min-height: 100vh; display: flex; flex-direction: column; }
-        .container { max-width: 1280px; margin: 0 auto; padding: 0 20px; width: 100%; }
-        .navbar { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 12px 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
-        .navbar .container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-        .navbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; font-size: 1.4rem; font-weight: 700; }
-        .navbar-brand span { color: #0dcaf0; }
-        .navbar-menu { display: flex; gap: 4px; flex-wrap: wrap; }
-        .nav-link { color: rgba(255,255,255,0.7); text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; transition: all 0.3s ease; cursor: pointer; background: transparent; border: none; }
-        .nav-link:hover { color: white; background: rgba(255,255,255,0.1); }
-        .nav-link.active { color: white; background: linear-gradient(135deg, #0d6efd, #0dcaf0); }
-        .navbar-auth { display: flex; align-items: center; gap: 10px; }
-        .user-info { display: flex; align-items: center; gap: 8px; color: white; }
-        .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0d6efd, #0dcaf0); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-        .user-name { font-size: 0.9rem; font-weight: 500; }
-        .mobile-toggle { display: none; background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; font-size: 1.5rem; padding: 4px 12px; border-radius: 8px; cursor: pointer; }
-        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease; text-decoration: none; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .btn-primary { background: #0d6efd; color: white; }
-        .btn-success { background: #28a745; color: white; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-secondary { background: #6c757d; color: white; }
-        .btn-sm { padding: 4px 10px; font-size: 0.75rem; }
-        .card { background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 24px; margin-bottom: 20px; }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; flex-wrap: wrap; gap: 10px; }
-        .card-header h2 { font-size: 1.2rem; display: flex; align-items: center; gap: 8px; margin: 0; }
-        .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        .table-responsive { overflow-x: auto; }
-        .table-responsive table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        .table-responsive th { background: #f8f9fa; text-align: left; padding: 12px 16px; font-weight: 600; border-bottom: 2px solid #e9ecef; white-space: nowrap; }
-        .table-responsive td { padding: 10px 16px; border-bottom: 1px solid #e9ecef; vertical-align: middle; }
-        .table-responsive tr:hover { background: #f8f9fa; }
-        .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
-        .badge-success { background: #d4edda; color: #155724; }
-        .badge-danger { background: #f8d7da; color: #721c24; }
-        .badge-warning { background: #fff3cd; color: #856404; }
-        .badge-info { background: #d1ecf1; color: #0c5460; }
-        .toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 24px; border-radius: 12px; background: #333; color: white; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.2); transform: translateY(100px); opacity: 0; transition: all 0.3s ease; z-index: 3000; max-width: 400px; }
-        .toast.show { transform: translateY(0); opacity: 1; }
-        .toast.success { background: #28a745; }
-        .toast.error { background: #dc3545; }
-        .toast.warning { background: #ffc107; color: #333; }
-        .loading { text-align: center; padding: 40px 0; color: #6c757d; }
-        .loading .spinner { display: inline-block; width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: #0d6efd; border-radius: 50%; animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
-        .modal-overlay.active { display: flex; }
-        .modal { background: white; border-radius: 12px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease; }
-        .modal-lg { max-width: 720px; }
-        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 2px solid #f0f0f0; }
-        .modal-header h3 { display: flex; align-items: center; gap: 8px; margin: 0; }
-        .modal-close { background: transparent; border: none; font-size: 1.8rem; cursor: pointer; color: #999; transition: all 0.3s ease; line-height: 1; }
-        .modal-close:hover { color: #333; transform: rotate(90deg); }
-        .modal-body { padding: 24px; }
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: #555; }
-        .form-group input, .form-group select { width: 100%; padding: 10px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 0.95rem; transition: all 0.3s ease; font-family: inherit; }
-        .form-group input:focus, .form-group select:focus { outline: none; border-color: #0d6efd; box-shadow: 0 0 0 3px rgba(13,110,253,0.15); }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 2px solid #f0f0f0; }
-        .footer { background: #1a1a2e; color: rgba(255,255,255,0.5); padding: 16px 0; text-align: center; font-size: 0.85rem; margin-top: auto; }
-        .text-muted { color: #6c757d; }
-        .text-center { text-align: center; }
-        @media (max-width: 768px) { .mobile-toggle { display: block !important; } .navbar-menu { display: none; width: 100%; flex-direction: column; padding: 12px 0; } .navbar-menu.open { display: flex; } .navbar-menu .nav-link { text-align: center; padding: 10px 16px; } .card-header { flex-direction: column; align-items: flex-start; } .form-row { grid-template-columns: 1fr; } }
-    </style>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 </head>
 <body>
 
     <!-- NAVBAR (injetada por components.js) -->
     <div id="navbar"></div>
 
-    <main style="flex:1;padding:24px 20px;max-width:1280px;margin:0 auto;width:100%;">
+    <main class="main-content">
         <div class="card">
             <div class="card-header">
-                <h2>🥛 Produções de Leite</h2>
+                <h2><i class="fa-solid fa-droplet"></i> Produções de Leite</h2>
                 <div class="card-actions">
-                    <button class="btn btn-primary btn-sm" onclick="app.novaProducao()">➕ Nova Produção</button>
-                    <button class="btn btn-secondary btn-sm" onclick="app.loadProducoes()">🔄 Atualizar</button>
+                    <button class="btn btn-primary btn-sm" onclick="app.novaProducao()"><i class="fa-solid fa-plus"></i> Nova Produção</button>
+                    <button class="btn btn-secondary btn-sm" onclick="app.loadProducoes()"><i class="fa-solid fa-arrows-rotate"></i> Atualizar</button>
                 </div>
             </div>
             <div id="producoesContent"><div class="loading"><div class="spinner"></div><p>Carregando produções...</p></div></div>
         </div>
     </main>
 
-    <footer class="footer"><div class="container"><p>🐄 Gestão de Gado &copy; 2026 - Todos os direitos reservados</p></div></footer>
+    <footer class="footer"><div class="container"><p><i class="fa-solid fa-cow"></i> Gestão de Gado &copy; 2026 - Todos os direitos reservados</p></div></footer>
 
     <div class="modal-overlay" id="modalProducao">
         <div class="modal modal-lg">
             <div class="modal-header">
-                <h3 id="modalProducaoTitle">🥛 Nova Produção</h3>
+                <h3 id="modalProducaoTitle"><i class="fa-solid fa-droplet"></i> Nova Produção</h3>
                 <button class="modal-close" onclick="app.closeModal('producao')">×</button>
             </div>
             <div class="modal-body">
@@ -106,8 +41,8 @@
                         <div class="form-group"><label>Data *</label><input type="date" id="producaoData" required /></div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group"><label>Litros *</label><input type="number" id="producaoLitros" step="0.1" required /></div>
-                        <div class="form-group"><label>Período *</label><select id="producaoPeriodo"><option value="Manha">🌅 Manhã</option><option value="Tarde">☀️ Tarde</option><option value="Noite">🌙 Noite</option></select></div>
+                        <div class="form-group"><label>Litros *</label><input type="number" id="producaoLitros" step="0.1" min="0" required /></div>
+                        <div class="form-group"><label>Período *</label><select id="producaoPeriodo"><option value="Manha">Manhã</option><option value="Tarde">Tarde</option><option value="Noite">Noite</option></select></div>
                     </div>
                     <input type="hidden" id="producaoEditId" />
                     <div class="form-actions">
@@ -121,154 +56,8 @@
 
     <div id="toast" class="toast"></div>
 
+    <script src="/js/api.js"></script>
     <script src="/js/components.js"></script>
-    <script>
-        const API_URL = 'http://localhost:3000/api';
-
-        class Api {
-            constructor() { this.token = localStorage.getItem('token'); }
-            getHeaders() { const h = { 'Content-Type': 'application/json' }; if (this.token) h['Authorization'] = `Bearer ${this.token}`; return h; }
-            setToken(t) { this.token = t; localStorage.setItem('token', t); }
-            clearToken() { this.token = null; localStorage.removeItem('token'); }
-            isAuthenticated() { return !!this.token; }
-            async request(method, endpoint, body = null) {
-                const url = `${API_URL}${endpoint}`;
-                const options = { method, headers: this.getHeaders() };
-                if (body) options.body = JSON.stringify(body);
-                const response = await fetch(url, options);
-                let data; try { data = await response.json(); } catch { data = { error: 'Resposta inválida' }; }
-                return { data, status: response.status };
-            }
-            async getProducoes(f = {}) { const p = new URLSearchParams(f).toString(); return this.request('GET', p ? `/producoes?${p}` : '/producoes'); }
-            async getProducao(id) { return this.request('GET', `/producoes/${id}`); }
-            async createProducao(d) { return this.request('POST', '/producoes', d); }
-            async updateProducao(id, d) { return this.request('PUT', `/producoes/${id}`, d); }
-            async deleteProducao(id) { return this.request('DELETE', `/producoes/${id}`); }
-            async getAnimais() { return this.request('GET', '/animais'); }
-        }
-
-        const api = new Api();
-
-        const app = {
-            init() {
-                if (!api.isAuthenticated()) { window.location.href = '/'; return; }
-                this.loadUserInfo();
-                document.getElementById('producaoForm').addEventListener('submit', (e) => { e.preventDefault(); this.saveProducao(); });
-                this.loadProducoes();
-            },
-            loadUserInfo() {
-                try {
-                    const token = api.token;
-                    if (token) {
-                        const payload = JSON.parse(atob(token.split('.')[1]));
-                        this.user = { nome: payload.nome || 'Usuário', email: payload.email || '', role: payload.role || 'Cliente' };
-                        Components.renderNavbar('producoes', this.user, 'mpa');
-                    }
-                } catch (e) { console.error(e); }
-            },
-            logout() { api.clearToken(); this.toast('Desconectado!', 'warning'); setTimeout(() => window.location.href = '/', 500); },
-            toast(message, type = 'info') {
-                const toast = document.getElementById('toast');
-                toast.textContent = message;
-                toast.className = `toast ${type}`;
-                setTimeout(() => toast.classList.add('show'), 10);
-                clearTimeout(this.toastTimeout);
-                this.toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
-            },
-
-            async loadProducoes() {
-                const container = document.getElementById('producoesContent');
-                container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando produções...</p></div>`;
-                try {
-                    const response = await api.getProducoes();
-                    let producoes = response.data?.data?.producoes || [];
-                    producoes = producoes.map(p => ({ ...p, litros: typeof p.litros === 'number' ? p.litros : parseFloat(p.litros) || 0 }));
-                    if (!producoes || producoes.length === 0) { container.innerHTML = '<p class="text-muted text-center">Nenhuma produção registrada.</p>'; return; }
-                    const totalLitros = producoes.reduce((sum, p) => sum + p.litros, 0);
-                    let html = `<div class="table-responsive"><table><thead><tr><th>ID</th><th>Animal</th><th>Data</th><th>Período</th><th>Litros</th><th>Ações</th></tr></thead><tbody>`;
-                    producoes.forEach(p => {
-                        const periodo = { 'Manha': '🌅 Manhã', 'Tarde': '☀️ Tarde', 'Noite': '🌙 Noite' } [p.periodo] || p.periodo;
-                        html += `<tr><td>${p.id}</td><td>${p.animal?.nome || p.animal_brinco}</td><td>${new Date(p.data_coleta).toLocaleDateString()}</td><td>${periodo}</td><td><strong>${p.litros.toFixed(1)} L</strong></td><td><div class="actions"><button class="btn btn-sm btn-primary" onclick="app.editarProducao(${p.id})">✏️</button><button class="btn btn-sm btn-danger" onclick="app.deletarProducao(${p.id})">🗑️</button></div></td></tr>`;
-                    });
-                    html += `</tbody><tfoot><tr><td colspan="4" style="text-align:right;font-weight:600;">Total:</td><td style="font-weight:700;color:#0d6efd;">${totalLitros.toFixed(1)} L</td><td></td></tr></tfoot></table></div>`;
-                    container.innerHTML = html;
-                } catch (error) {
-                    container.innerHTML = `<p class="text-muted text-center">Erro ao carregar produções: ${error.message}</p>`;
-                }
-            },
-
-            async novaProducao() {
-                try {
-                    const response = await api.getAnimais();
-                    const animais = response.data?.data?.animais || [];
-                    const femeas = animais.filter(a => a.sexo === 'F' && a.ativo);
-                    const select = document.getElementById('producaoAnimal');
-                    select.innerHTML = '<option value="">Selecione...</option>' + femeas.map(a => `<option value="${a.brinco}">${a.brinco} - ${a.nome}</option>`).join('');
-                    document.getElementById('modalProducaoTitle').textContent = '🥛 Nova Produção';
-                    document.getElementById('producaoSubmitBtn').textContent = 'Salvar';
-                    document.getElementById('producaoEditId').value = '';
-                    document.getElementById('producaoForm').reset();
-                    document.getElementById('producaoData').value = new Date().toISOString().split('T')[0];
-                    this.showModal('producao');
-                } catch (error) { this.toast('Erro ao carregar animais', 'error'); }
-            },
-
-            async editarProducao(id) {
-                try {
-                    const response = await api.getProducao(id);
-                    const producao = response.data?.data;
-                    if (!producao) { this.toast('Produção não encontrada', 'error'); return; }
-                    const resAnimais = await api.getAnimais();
-                    const animais = resAnimais.data?.data?.animais || [];
-                    const femeas = animais.filter(a => a.sexo === 'F' && a.ativo);
-                    const select = document.getElementById('producaoAnimal');
-                    select.innerHTML = '<option value="">Selecione...</option>' + femeas.map(a => `<option value="${a.brinco}" ${a.brinco === producao.animal_brinco ? 'selected' : ''}>${a.brinco} - ${a.nome}</option>`).join('');
-                    document.getElementById('modalProducaoTitle').textContent = `✏️ Editando #${id}`;
-                    document.getElementById('producaoSubmitBtn').textContent = 'Atualizar';
-                    document.getElementById('producaoEditId').value = id;
-                    document.getElementById('producaoData').value = producao.data_coleta?.split('T')[0] || '';
-                    document.getElementById('producaoLitros').value = producao.litros;
-                    document.getElementById('producaoPeriodo').value = producao.periodo;
-                    this.showModal('producao');
-                } catch (error) { this.toast('Erro ao carregar produção', 'error'); }
-            },
-
-            async saveProducao() {
-                const isEdit = !!document.getElementById('producaoEditId').value;
-                const id = document.getElementById('producaoEditId').value;
-                const data = {
-                    animal_brinco: parseInt(document.getElementById('producaoAnimal').value),
-                    data_coleta: document.getElementById('producaoData').value,
-                    litros: parseFloat(document.getElementById('producaoLitros').value),
-                    periodo: document.getElementById('producaoPeriodo').value
-                };
-                if (!data.animal_brinco) { this.toast('Selecione um animal', 'error'); return; }
-                try {
-                    const response = isEdit ? await api.updateProducao(parseInt(id), data) : await api.createProducao(data);
-                    if (response.status >= 200 && response.status < 300) {
-                        this.toast(isEdit ? 'Produção atualizada!' : 'Produção registrada!', 'success');
-                        this.closeModal('producao');
-                        this.loadProducoes();
-                    } else { this.toast(response.data?.message || 'Erro ao salvar', 'error'); }
-                } catch (error) { this.toast('Erro ao salvar produção', 'error'); }
-            },
-
-            async deletarProducao(id) {
-                if (!confirm(`Excluir produção ${id}?`)) return;
-                try {
-                    const response = await api.deleteProducao(id);
-                    if (response.status >= 200 && response.status < 300) {
-                        this.toast('Produção excluída!', 'success');
-                        this.loadProducoes();
-                    } else { this.toast(response.data?.message || 'Erro ao excluir', 'error'); }
-                } catch (error) { this.toast('Erro ao excluir produção', 'error'); }
-            },
-
-            showModal(name) { document.getElementById(`modal${name.charAt(0).toUpperCase() + name.slice(1)}`).classList.add('active'); document.body.style.overflow = 'hidden'; },
-            closeModal(name) { document.getElementById(`modal${name.charAt(0).toUpperCase() + name.slice(1)}`).classList.remove('active'); document.body.style.overflow = ''; }
-        };
-
-        document.addEventListener('DOMContentLoaded', () => app.init());
-    </script>
+    <script src="/js/pages/producoes.js"></script>
 </body>
 </html>

@@ -1,0 +1,47 @@
+# Não existe um serviço separado de frontend: o Express do próprio backend
+# serve os arquivos estáticos de public/ (landing page, dashboard, css, js
+# compilado de public/ts/) — ver `app.use(express.static('public'))` em
+# src/app.ts. Por isso um único serviço `backend` já expõe tudo em
+# http://localhost:${PORT}/.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-gestao_gado}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-gestao_gado}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    # .env fornece os valores (nunca hardcoded aqui) — DATABASE_URL/DB_HOST
+    # abaixo sobrescrevem só o necessário para apontar para o serviço `db`
+    # da rede interna do compose, em vez do `localhost` usado fora do Docker.
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD}@db:5432/${DB_NAME:-gestao_gado}?schema=public
+      PORT: ${PORT:-3000}
+    ports:
+      - '${PORT:-3000}:${PORT:-3000}'
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:
+    name: gestao_gado_db_data
