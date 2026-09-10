@@ -99,8 +99,18 @@ class Api {
     // ============================================
     // ANIMALS
     // ============================================
+    cleanParams(filters) {
+        const clean = {};
+        for (const key in filters) {
+            if (filters[key] !== undefined && filters[key] !== null && filters[key] !== '') {
+                clean[key] = filters[key];
+            }
+        }
+        return new URLSearchParams(clean).toString();
+    }
+
     async getAnimais(filters = {}) {
-        const params = new URLSearchParams(filters).toString();
+        const params = this.cleanParams(filters);
         const endpoint = params ? `/animais?${params}` : '/animais';
         return this.request('GET', endpoint);
     }
@@ -133,7 +143,7 @@ class Api {
     // PRODUÇÕES
     // ============================================
     async getProducoes(filters = {}) {
-        const params = new URLSearchParams(filters).toString();
+        const params = this.cleanParams(filters);
         const endpoint = params ? `/producoes?${params}` : '/producoes';
         return this.request('GET', endpoint);
     }
@@ -175,7 +185,7 @@ class Api {
     }
 
     async getRelatorio(filters = {}) {
-        const params = new URLSearchParams(filters).toString();
+        const params = this.cleanParams(filters);
         const endpoint = params ? `/producoes/relatorio?${params}` : '/producoes/relatorio';
         return this.request('GET', endpoint);
     }

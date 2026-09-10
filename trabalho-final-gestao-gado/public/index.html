@@ -17,6 +17,10 @@
             box-sizing: border-box;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #333;
@@ -1052,7 +1056,7 @@
                     </div>
                     <div class="form-group">
                         <label>CPF</label>
-                        <input type="text" id="regCpf" placeholder="000.000.000-00" required />
+                        <input type="text" id="regCpf" placeholder="000.000.000-00" maxlength="14" required />
                     </div>
                     <div class="form-group">
                         <label>Senha</label>

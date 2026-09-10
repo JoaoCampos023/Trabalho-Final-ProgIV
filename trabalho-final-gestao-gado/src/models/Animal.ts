@@ -77,4 +77,21 @@ export class Animal {
     get isAtivo(): boolean {
         return this.ativo;
     }
+
+    toJSON() {
+        return {
+            brinco: this.brinco,
+            nome: this.nome,
+            sexo: this.sexo,
+            raca: this.raca,
+            peso: this.peso,
+            data_nascimento: this.data_nascimento,
+            idade: this.idade,
+            ativo: this.ativo,
+            brinco_pai: this.brinco_pai,
+            brinco_mae: this.brinco_mae,
+            created_at: this.created_at,
+            updated_at: this.updated_at
+        };
+    }
 }

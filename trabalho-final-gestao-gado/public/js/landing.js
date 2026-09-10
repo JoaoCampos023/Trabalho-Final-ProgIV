@@ -75,7 +75,7 @@ async function handleLogin() {
 
                 // Redirecionar para o dashboard
                 setTimeout(() => {
-                    window.location.href = '/dashboard.html';
+                    window.location.href = '/app/dashboard.html';
                 }, 500);
             }
         } else {
@@ -119,7 +119,7 @@ async function handleRegister() {
                 closeModal('register');
 
                 setTimeout(() => {
-                    window.location.href = '/dashboard.html';
+                    window.location.href = '/app/dashboard.html';
                 }, 500);
             }
         } else {
@@ -161,14 +161,27 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ============================================
-// MASCARAR CPF
+// MASCARAR CPF — máximo 11 dígitos (14 com máscara)
 // ============================================
 document.getElementById('regCpf').addEventListener('input', function(e) {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length <= 11) {
-        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-        e.target.value = value;
-    }
+    // Remove tudo que não for dígito e limita a 11
+    let value = e.target.value.replace(/\D/g, '').slice(0, 11);
+    // Aplicar máscara: 000.000.000-00
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3}\.\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3}\.\d{3}\.\d{3})(\d{1,2})$/, '$1-$2');
+    e.target.value = value;
+});
+
+// ============================================
+// SMOOTH SCROLL — âncoras da landing
+// ============================================
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
 });

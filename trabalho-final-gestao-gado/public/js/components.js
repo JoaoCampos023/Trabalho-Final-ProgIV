@@ -4,6 +4,93 @@
 
 const Components = {
     // ============================================
+    // NAVBAR
+    // ============================================
+    /**
+     * Renderiza a navbar e a injeta no elemento #navbar da página.
+     * @param {string} activePage - nome da página ativa ('dashboard'|'animais'|'producoes'|'relatorios'|'usuarios')
+     * @param {{ nome: string, role: string }|null} user - dados do usuário logado (ou null)
+     * @param {'spa'|'mpa'} mode - 'spa': navegação interna (data-page); 'mpa': redireciona para /app/<page>.html
+     */
+    renderNavbar(activePage, user, mode) {
+        const container = document.getElementById('navbar');
+        if (!container) return;
+
+        const navMode = mode || 'mpa';
+        const isAdmin = user && user.role === 'Admin';
+        const userInitial = user ? (user.nome ? user.nome.charAt(0).toUpperCase() : '?') : '?';
+        const userName = user ? user.nome : 'Usuário';
+
+        const items = [
+            { id: 'dashboard', label: '📊 Dashboard', title: 'Visualizar resumo e estatísticas' },
+            { id: 'animais',   label: '🐮 Rebanho', title: 'Gerenciar rebanho de animais' },
+            { id: 'producoes', label: '🥛 Produções', title: 'Registros de produção de leite' },
+            { id: 'relatorios',label: '📋 Relatórios', title: 'Relatórios e gráficos estatísticos' },
+            { id: 'usuarios',  label: '👤 Usuários', title: 'Gerenciar usuários do sistema', adminOnly: true },
+        ];
+
+        const navLinks = items
+            .filter(item => !item.adminOnly || isAdmin)
+            .map(item => {
+                const isActive = item.id === activePage ? 'active' : '';
+                const id = item.id === 'usuarios' ? ' id="navUsuarios"' : '';
+                return `<button class="nav-link ${isActive}" data-page="${item.id}"${id} title="${item.title}">${item.label}</button>`;
+            })
+            .join('\n                ');
+
+        const brandHref = navMode === 'spa' ? '#' : '/app/dashboard.html';
+        const brandClick = navMode === 'spa' ? 'onclick="event.preventDefault(); window.app && window.app.navigateTo(\'dashboard\');"' : '';
+
+        container.innerHTML = `
+            <nav class="navbar">
+                <div class="container">
+                    <a href="${brandHref}" ${brandClick} class="navbar-brand" title="Página Inicial da Gestão de Gado"><span style="font-size:1.8rem;">🐄</span> Gestão<span>Gado</span></a>
+                    <div class="navbar-menu" id="navMenu">
+                        ${navLinks}
+                    </div>
+                    <div class="navbar-auth">
+                        <div class="user-info" id="userInfo" ${user ? '' : 'style="display:none;"'}>
+                            <span class="user-avatar" id="userAvatar">${userInitial}</span>
+                            <span class="user-name" id="userName">${userName}</span>
+                            <button class="btn btn-sm btn-danger" title="Encerrar sessão" onclick="app.logout()">Sair</button>
+                        </div>
+                    </div>
+                    <button class="mobile-toggle" id="mobileToggle" title="Menu principal">☰</button>
+                </div>
+            </nav>
+        `;
+
+        // Eventos de navegação
+        container.querySelectorAll('[data-page]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (navMode === 'spa' && window.app && typeof window.app.navigateTo === 'function') {
+                    window.app.navigateTo(btn.dataset.page);
+                } else {
+                    window.location.href = `/app/${btn.dataset.page}.html`;
+                }
+            });
+        });
+
+        // Toggle mobile
+        const toggle = container.querySelector('#mobileToggle');
+        if (toggle) {
+            toggle.addEventListener('click', () => {
+                container.querySelector('#navMenu').classList.toggle('open');
+            });
+        }
+    },
+
+    /**
+     * Atualiza o item ativo da navbar (usado pela SPA ao navegar).
+     * @param {string} activePage
+     */
+    setNavbarActivePage(activePage) {
+        document.querySelectorAll('#navbar [data-page]').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.page === activePage);
+        });
+    },
+
+    // ============================================
     // ESTATÍSTICAS
     // ============================================
     statsGrid(stats) {
@@ -36,6 +123,18 @@ const Components = {
     // ============================================
     // TABELA DE ANIMAIS
     // ============================================
+    calcularIdade(dataNasc) {
+        if (!dataNasc) return 0;
+        const nasc = new Date(dataNasc);
+        const hoje = new Date();
+        let idade = hoje.getFullYear() - nasc.getFullYear();
+        const m = hoje.getMonth() - nasc.getMonth();
+        if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) {
+            idade--;
+        }
+        return Math.max(0, idade);
+    },
+
     animalTable(animais) {
         if (!animais || animais.length === 0) {
             return `<p class="text-muted text-center">Nenhum animal cadastrado.</p>`;
@@ -63,6 +162,7 @@ const Components = {
             const sexo = a.sexo === 'F' ? '♀️ Fêmea' : '♂️ Macho';
             const status = a.ativo ? '<span class="badge badge-success">Ativo</span>' :
                 '<span class="badge badge-danger">Inativo</span>';
+            const valIdade = (typeof a.idade === 'number' && a.idade > 0) ? a.idade : this.calcularIdade(a.data_nascimento);
 
             html += `
                 <tr>
@@ -71,13 +171,13 @@ const Components = {
                     <td>${sexo}</td>
                     <td>${a.raca || 'N/A'}</td>
                     <td>${a.peso.toFixed(1)} kg</td>
-                    <td>${a.idade || 0} anos</td>
+                    <td>${valIdade} ${valIdade === 1 ? 'ano' : 'anos'}</td>
                     <td>${status}</td>
                     <td>
                         <div class="actions">
-                            <button class="btn btn-sm btn-primary" onclick="app.editarAnimal(${a.brinco})">✏️</button>
-                            <button class="btn btn-sm btn-danger" onclick="app.deletarAnimal(${a.brinco})">🗑️</button>
-                            <button class="btn btn-sm btn-info" onclick="app.verArvore(${a.brinco})">🌳</button>
+                            <button class="btn btn-sm btn-primary" title="Editar Animal ${a.brinco}" onclick="app.editarAnimal(${a.brinco})">✏️</button>
+                            <button class="btn btn-sm btn-danger" title="Excluir Animal ${a.brinco}" onclick="app.deletarAnimal(${a.brinco})">🗑️</button>
+                            <button class="btn btn-sm btn-info" title="Ver Árvore Genealógica" onclick="app.verArvore(${a.brinco})">🌳</button>
                         </div>
                     </td>
                 </tr>
@@ -135,8 +235,8 @@ const Components = {
                     <td><strong>${p.litros.toFixed(1)} L</strong></td>
                     <td>
                         <div class="actions">
-                            <button class="btn btn-sm btn-primary" onclick="app.editarProducao(${p.id})">✏️</button>
-                            <button class="btn btn-sm btn-danger" onclick="app.deletarProducao(${p.id})">🗑️</button>
+                            <button class="btn btn-sm btn-primary" title="Editar Produção #${p.id}" onclick="app.editarProducao(${p.id})">✏️</button>
+                            <button class="btn btn-sm btn-danger" title="Excluir Produção #${p.id}" onclick="app.deletarProducao(${p.id})">🗑️</button>
                         </div>
                     </td>
                 </tr>
@@ -199,8 +299,8 @@ const Components = {
                     <td>${status}</td>
                     <td>
                         <div class="actions">
-                            <button class="btn btn-sm btn-warning" onclick="app.toggleUserStatus('${u.id}')">🔄</button>
-                            <button class="btn btn-sm btn-danger" onclick="app.deletarUsuario('${u.id}')">🗑️</button>
+                            <button class="btn btn-sm btn-warning" title="Alternar status do usuário" onclick="app.toggleUserStatus('${u.id}')">🔄</button>
+                            <button class="btn btn-sm btn-danger" title="Excluir usuário" onclick="app.deletarUsuario('${u.id}')">🗑️</button>
                         </div>
                     </td>
                 </tr>
@@ -226,6 +326,16 @@ const Components = {
         const pai = data.pai;
         const mae = data.mae;
         const filhos = data.filhos || [];
+
+        if (!pai && !mae && filhos.length === 0) {
+            return `
+            <div class="card">
+                <h3>🌳 Árvore Genealógica - ${animal.nome} (Brinco: ${animal.brinco})</h3>
+                <div style="text-align:center; padding: 40px 20px;">
+                    <p class="text-muted" style="font-size: 1.1rem;">Nenhuma informação genealógica cadastrada.</p>
+                </div>
+            </div>`;
+        }
 
         let html = `
             <div class="card">
@@ -306,10 +416,11 @@ const Components = {
             `;
             topVacas.forEach((v, i) => {
                 const medal = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'][i] || '•';
+                const valLitros = v.producao !== undefined ? v.producao : (v.total || 0);
                 html += `
                     <li style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #f0f0f0;">
                         <span>${medal} <strong>${v.nome}</strong></span>
-                        <span style="font-weight:700;color:var(--primary);">${v.producao.toFixed(1)} L</span>
+                        <span style="font-weight:700;color:var(--primary);">${valLitros.toFixed(1)} L</span>
                     </li>
                 `;
             });

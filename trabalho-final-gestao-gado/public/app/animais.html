@@ -119,27 +119,8 @@
 </head>
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar">
-        <div class="container">
-            <a href="/" class="navbar-brand"><span style="font-size:1.8rem;">🐄</span> Gestão<span>Gado</span></a>
-            <div class="navbar-menu" id="navMenu">
-                <button class="nav-link" data-page="dashboard">📊 Dashboard</button>
-                <button class="nav-link active" data-page="animais">🐮 Rebanho</button>
-                <button class="nav-link" data-page="producoes">🥛 Produções</button>
-                <button class="nav-link" data-page="relatorios">📋 Relatórios</button>
-                <button class="nav-link" data-page="usuarios" id="navUsuarios" style="display:none;">👤 Usuários</button>
-            </div>
-            <div class="navbar-auth">
-                <div class="user-info" id="userInfo" style="display:none;">
-                    <span class="user-avatar" id="userAvatar">👤</span>
-                    <span class="user-name" id="userName">Usuário</span>
-                    <button class="btn btn-sm btn-danger" onclick="app.logout()">Sair</button>
-                </div>
-            </div>
-            <button class="mobile-toggle" id="mobileToggle">☰</button>
-        </div>
-    </nav>
+    <!-- NAVBAR (injetada por components.js) -->
+    <div id="navbar"></div>
 
     <!-- MAIN CONTENT -->
     <main style="flex:1;padding:24px 20px;max-width:1280px;margin:0 auto;width:100%;">
@@ -199,6 +180,7 @@
     <div id="toast" class="toast"></div>
 
     <!-- SCRIPTS -->
+    <script src="/js/components.js"></script>
     <script>
         const API_URL = 'http://localhost:3000/api';
 
@@ -231,12 +213,6 @@
             init() {
                 if (!api.isAuthenticated()) { window.location.href = '/'; return; }
                 this.loadUserInfo();
-                document.querySelectorAll('[data-page]').forEach(btn => {
-                    btn.addEventListener('click', () => { window.location.href = `/app/${btn.dataset.page}.html`; });
-                });
-                document.getElementById('mobileToggle').addEventListener('click', () => {
-                    document.getElementById('navMenu').classList.toggle('open');
-                });
                 document.getElementById('animalForm').addEventListener('submit', (e) => { e.preventDefault(); this.saveAnimal(); });
                 this.loadAnimais();
             },
@@ -246,10 +222,7 @@
                     if (token) {
                         const payload = JSON.parse(atob(token.split('.')[1]));
                         this.user = { nome: payload.nome || 'Usuário', email: payload.email || '', role: payload.role || 'Cliente' };
-                        document.getElementById('userInfo').style.display = 'flex';
-                        document.getElementById('userName').textContent = this.user.nome;
-                        document.getElementById('userAvatar').textContent = this.user.nome?.charAt(0) || '👤';
-                        if (this.user.role === 'Admin') document.getElementById('navUsuarios').style.display = 'block';
+                        Components.renderNavbar('animais', this.user, 'mpa');
                     }
                 } catch (e) { console.error(e); }
             },

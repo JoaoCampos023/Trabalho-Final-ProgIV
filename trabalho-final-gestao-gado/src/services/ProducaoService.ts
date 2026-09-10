@@ -69,7 +69,8 @@ export class ProducaoService {
     data: Omit<IProducaoLeite, 'id' | 'created_at' | 'updated_at'>
   ): Promise<ProducaoLeite> {
     // Validações (igual ao projeto original em C#)
-    
+
+
     // 1. Data futura
     if (data.data_coleta > new Date()) {
       throw new Error('Não é possível registrar uma ordenha em uma data futura.');
@@ -126,6 +127,10 @@ export class ProducaoService {
       if (!animal.ativo) {
         throw new Error('Não é possível registrar produção para um animal inativo.');
       }
+    }
+
+    if (data.litros !== undefined && data.litros <= 0) {
+      throw new Error('A quantidade de litros deve ser maior que zero.');
     }
 
     // Se a data foi alterada, validar

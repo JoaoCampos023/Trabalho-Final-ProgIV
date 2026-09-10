@@ -1,6 +1,7 @@
-/* ============================================
-   LANDING PAGE - ESTILOS ESPECÍFICOS
-   ============================================ */
+/* ---------- RESET & BASE ---------- */
+html {
+    scroll-behavior: smooth;
+}
 
 /* ---------- NAVBAR LANDING ---------- */
 .navbar-landing {
