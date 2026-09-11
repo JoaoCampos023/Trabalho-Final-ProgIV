@@ -45,18 +45,28 @@ app.use(express.urlencoded({ extended: true }));
 // ============================================
 // SERVER ARQUIVOS ESTÁTICOS
 // ============================================
+// Em MPA, cada aba é um .html próprio em public/app/. O express.static já
+// serve todos eles. Desabilitamos cache em desenvolvimento para evitar que
+// o navegador sirva versões antigas de JS/CSS após rebuild do frontend.
 
-// Landing Page e arquivos públicos (index.html, css, js)
-app.use(express.static('public'));
+app.use(
+  express.static('public', {
+    etag: false,
+    lastModified: false,
+    setHeaders: (res) => {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  })
+);
 
-// Sistema (pasta app) - servir arquivos estáticos
 app.use('/app', express.static(path.join(__dirname, '../public/app')));
 
 // ============================================
 // ROTAS DA API (DEVEM VIR ANTES DO FALLBACK)
 // ============================================
 
-// Health Check
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({
     status: 'OK',
@@ -71,7 +81,6 @@ app.get('/api/health', (_req: Request, res: Response) => {
   });
 });
 
-// Rotas da API
 app.use('/api', routes);
 app.use('/api/relatorios', relatorioRoutes);
 app.use('/api/notificacoes', notificacaoRoutes);
@@ -79,29 +88,33 @@ app.use('/api/importacao', importacaoRoutes);
 app.use('/api/externa', externaRoutes);
 
 // ============================================
-// ✅ FALLBACK PARA SPA
+// FALLBACK (MPA)
 // ============================================
-
-// Se a rota não for da API e não for um arquivo estático,
-// redireciona para o dashboard ou landing page
+// Em MPA cada aba é um .html próprio dentro de public/app/. O express.static
+// acima já serve esses arquivos quando existem. Este fallback só cobre dois
+// casos:
+// 1. "/" → landing page.
+// 2. "/app/<algo>" SEM extensão (ex.: "/app/relatorios") → manda o
+//    relatorios.html. Isso é conveniência para URLs "bonitas"; o caminho
+//    normal é /app/relatorios.html.
+// Qualquer outra rota que não seja da API cai na landing.
 app.use((req: Request, res: Response, next: NextFunction) => {
-  // Se for uma requisição para a API, passa para o próximo middleware
-  if (req.path.startsWith('/api')) {
-    return next();
-  }
+  if (req.path.startsWith('/api')) return next();
 
-  // Se a requisição for para a raiz, envia a landing page
   if (req.path === '/' || req.path === '') {
     return res.sendFile(path.join(__dirname, '../public/index.html'));
   }
 
-  // Se a requisição for para /app ou subpastas, envia o dashboard
-  if (req.path.startsWith('/app')) {
-    return res.sendFile(path.join(__dirname, '../public/app/dashboard.html'));
+  // /app/<pagina> (sem .html) → /app/<pagina>.html, se o arquivo existir.
+  const match = /^\/app\/([a-z0-9_-]+)\/?$/i.exec(req.path);
+  if (match) {
+    const arquivo = path.join(__dirname, `../public/app/${match[1]}.html`);
+    return res.sendFile(arquivo, (err) => {
+      if (err) res.sendFile(path.join(__dirname, '../public/app/dashboard.html'));
+    });
   }
 
-  // Para qualquer outra rota, verifica se é um arquivo estático
-  // Se não for, redireciona para a landing page
+  // Qualquer outra coisa cai na landing.
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
@@ -263,7 +276,10 @@ async function iniciarServidor(): Promise<void> {
     console.log(`📡 WebSocket: ws://localhost:${PORT}/ws`);
     console.log(`🏠 Landing Page: http://localhost:${PORT}/`);
     console.log(`📊 Dashboard: http://localhost:${PORT}/app/dashboard.html`);
+    console.log(`🐮 Rebanho: http://localhost:${PORT}/app/animais.html`);
+    console.log(`🥛 Produções: http://localhost:${PORT}/app/producoes.html`);
     console.log(`📋 Relatórios: http://localhost:${PORT}/app/relatorios.html`);
+    console.log(`👤 Usuários: http://localhost:${PORT}/app/usuarios.html`);
     console.log(`📊 Health Check: http://localhost:${PORT}/api/health`);
     console.log('========================================');
   });

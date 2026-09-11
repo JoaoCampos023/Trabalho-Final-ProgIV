@@ -13,21 +13,59 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
   </head>
   <body>
-    <!-- NAVBAR (injetada por components.js) -->
     <div id="navbar"></div>
 
-    <!-- MAIN CONTENT -->
-    <!-- ============================================ -->
     <main class="main-content">
       <div class="card">
         <div class="card-header">
-          <h2><i class="fa-solid fa-clipboard-list"></i> Relatórios</h2>
+          <h2><i class="fa-solid fa-clipboard-list"></i> Relatórios Analíticos</h2>
           <div class="card-actions">
+            <button class="btn btn-success btn-sm" onclick="app.exportar('excel')" title="Baixar planilha Excel">
+              <i class="fa-solid fa-file-excel"></i> Excel
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="app.exportar('pdf')" title="Baixar relatório em PDF">
+              <i class="fa-solid fa-file-pdf"></i> PDF
+            </button>
             <button class="btn btn-secondary btn-sm" onclick="app.loadRelatorios()">
               <i class="fa-solid fa-arrows-rotate"></i> Atualizar
             </button>
           </div>
         </div>
+
+        <div class="filters">
+          <div class="filter-group">
+            <label>Data início</label>
+            <input type="date" id="filtroDataInicio" onchange="app.loadRelatorios()" />
+          </div>
+          <div class="filter-group">
+            <label>Data fim</label>
+            <input type="date" id="filtroDataFim" onchange="app.loadRelatorios()" />
+          </div>
+          <div class="filter-group">
+            <label>Animal</label>
+            <select id="filtroAnimal" onchange="app.loadRelatorios()">
+              <option value="">Todas</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Período do dia</label>
+            <select id="filtroPeriodo" onchange="app.loadRelatorios()">
+              <option value="">Todos</option>
+              <option value="Manha">🌅 Manhã</option>
+              <option value="Tarde">☀️ Tarde</option>
+              <option value="Noite">🌙 Noite</option>
+            </select>
+          </div>
+          <div class="filter-actions" style="gap: 6px">
+            <button class="btn btn-secondary btn-sm" onclick="app.aplicarAtalho('7d')" title="Últimos 7 dias">7d</button>
+            <button class="btn btn-secondary btn-sm" onclick="app.aplicarAtalho('30d')" title="Últimos 30 dias">30d</button>
+            <button class="btn btn-secondary btn-sm" onclick="app.aplicarAtalho('mes')" title="Este mês">Mês</button>
+            <button class="btn btn-secondary btn-sm btn-square" onclick="app.limparFiltros()" title="Limpar filtros">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+
         <div id="relatoriosContent">
           <div class="loading">
             <div class="spinner"></div>
@@ -37,23 +75,14 @@
       </div>
     </main>
 
-    <!-- ============================================ -->
-    <!-- FOOTER -->
-    <!-- ============================================ -->
     <footer class="footer">
       <div class="container">
         <p><i class="fa-solid fa-cow"></i> Gestão de Gado &copy; 2026 - Todos os direitos reservados</p>
       </div>
     </footer>
 
-    <!-- ============================================ -->
-    <!-- TOAST -->
-    <!-- ============================================ -->
     <div id="toast" class="toast"></div>
 
-    <!-- ============================================ -->
-    <!-- SCRIPTS -->
-    <!-- ============================================ -->
     <script src="/js/api.js"></script>
     <script src="/js/components.js"></script>
     <script src="/js/pages/relatorios.js"></script>

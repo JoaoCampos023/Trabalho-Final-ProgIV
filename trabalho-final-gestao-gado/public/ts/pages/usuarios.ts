@@ -2,33 +2,52 @@
 /// <reference path="../api.ts" />
 /// <reference path="../components.ts" />
 /**
- * Página Usuários (/app/usuarios.html) — acesso Admin
+ * Página Usuários (/app/usuarios.html) — acesso Admin.
+ *
+ * Funcionalidades:
+ * - Lista, ordena e filtra usuários.
+ * - Edita nome, CPF, perfil (Admin/Cliente) e status.
+ * - Alterna status (ativar/desativar), reseta senha e exclui.
+ * - Bloqueia ações perigosas na UI (excluir/desativar a si mesmo,
+ *   mexer no admin principal), espelhando as regras do backend.
+ *
+ * IMPORTANTE: `(window as any).app = app` no final é o que expõe os métodos
+ * para os `onclick="app.xxx()"` inline do HTML. Sem isso, nenhum botão
+ * funciona (foi exatamente o bug anterior).
  */
 
 (function () {
-  interface UsuariosAppState {
+  interface UsuariosState {
     user: UsuarioLogado | null;
+    userFull: any;
     toastTimeout?: number;
-    init(): void;
-    loadUserInfo(): void;
-    logout(): void;
-    toast(message: string, type?: string): void;
     sortCampo: string;
     sortDir: SortDir;
     ultimoResultado: Usuario[] | null;
+    init(): void;
+    loadUserInfo(): Promise<void>;
+    toast(message: string, type?: string): void;
     ordenarPor(campo: string): void;
     renderUsuarios(): void;
     loadUsuarios(): Promise<void>;
+    abrirEdicao(id: string): Promise<void>;
+    salvarEdicao(): Promise<void>;
     toggleUserStatus(id: string): Promise<void>;
     deletarUsuario(id: string): Promise<void>;
+    resetarSenha(id: string): Promise<void>;
+    closeModal(name: string): void;
+    showModal(name: string): void;
+    ehAdminPrincipal(u: Usuario): boolean;
+    ehEuMesmo(u: Usuario): boolean;
   }
 
   function el<T extends HTMLElement = HTMLElement>(id: string): T {
     return document.getElementById(id) as T;
   }
 
-  const app: UsuariosAppState = {
+  const app: UsuariosState = {
     user: null,
+    userFull: null,
     sortCampo: 'nome',
     sortDir: 'asc',
     ultimoResultado: null,
@@ -38,27 +57,31 @@
         window.location.href = '/';
         return;
       }
-      this.loadUserInfo();
-      this.loadUsuarios();
+      this.loadUserInfo().then(() => this.loadUsuarios());
     },
 
-    loadUserInfo() {
+    /**
+     * Decodifica o JWT para saber quem está logado (nome, email, role, id).
+     * Precisamos do `id` para bloquear auto-exclusão na UI — o backend
+     * também bloqueia, mas mostrar o botão vermelho desabilitado é UX melhor
+     * do que deixar clicar e receber erro.
+     */
+    async loadUserInfo() {
       try {
         const token = api.token;
-        if (token) {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          this.user = { nome: payload.nome || 'Usuário', email: payload.email || '', role: payload.role || 'Cliente' };
-          Components.renderNavbar('usuarios', this.user, 'mpa');
-        }
+        if (!token) return;
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        this.user = {
+          nome: payload.nome || 'Usuário',
+          email: payload.email || '',
+          role: payload.role || 'Cliente'
+        };
+        // Guardamos o payload completo para ter acesso ao `id`.
+        this.userFull = payload;
+        Components.renderNavbar('usuarios', this.user, 'mpa');
       } catch (e) {
         console.error(e);
       }
-    },
-
-    logout() {
-      api.clearToken();
-      this.toast('Desconectado!', 'warning');
-      setTimeout(() => (window.location.href = '/'), 500);
     },
 
     toast(message, type = 'info') {
@@ -70,8 +93,16 @@
       this.toastTimeout = window.setTimeout(() => toast.classList.remove('show'), 3000);
     },
 
-    // Clicar no título de uma coluna ordena por ela; clicar de novo inverte a ordem.
-    // Reordena a partir dos dados já carregados (sem novo fetch/spinner) para não piscar a tela.
+    /** True se o usuário é o admin principal (e-mail do seed). */
+    ehAdminPrincipal(u) {
+      return u.email.toLowerCase() === 'admin@gmail.com';
+    },
+
+    /** True se o usuário da linha é o admin logado. */
+    ehEuMesmo(u) {
+      return !!this.userFull && u.id === this.userFull.id;
+    },
+
     ordenarPor(campo) {
       if (this.sortCampo === campo) {
         this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
@@ -83,6 +114,10 @@
     },
 
     renderUsuarios() {
+      // Anotação explícita em `resultado` e no `u` do forEach: sem isso, com
+      // strict:false no tsconfig.frontend.json, o TS infere `unknown[]` do
+      // retorno de ordenarLista e o forEach recebe `u: unknown`. Anotar é
+      // mais barato que caçar a raiz da inferência em código de front.
       const resultado: Usuario[] | null = this.ultimoResultado;
       if (!resultado) return;
       const container = el('usuariosContent');
@@ -90,11 +125,13 @@
         container.innerHTML = '<p class="text-muted text-center">Nenhum usuário cadastrado.</p>';
         return;
       }
-      const users = Components.ordenarLista(resultado, this.sortCampo, this.sortDir);
+      const users: Usuario[] = Components.ordenarLista<Usuario>(resultado, this.sortCampo, this.sortDir);
       const th = (label: string, campo: string) =>
         Components.thOrdenavel(label, campo, this.sortCampo, this.sortDir, `app.ordenarPor('${campo}')`);
+
       let html = `<div class="table-responsive"><table><thead><tr>${th('Nome', 'nome')}${th('Email', 'email')}${th('Perfil', 'role')}${th('Status', 'ativo')}<th>Ações</th></tr></thead><tbody>`;
-      users.forEach(u => {
+
+      users.forEach((u: Usuario) => {
         const role =
           u.role === 'Admin'
             ? '<span class="badge badge-danger">Admin</span>'
@@ -102,7 +139,35 @@
         const status = u.ativo
           ? '<span class="badge badge-success">Ativo</span>'
           : '<span class="badge badge-danger">Inativo</span>';
-        html += `<tr><td><strong>${u.nome}</strong></td><td>${u.email}</td><td>${role}</td><td>${status}</td><td><div class="actions"><button class="btn btn-sm btn-warning" onclick="app.toggleUserStatus('${u.id}')"><i class="fa-solid fa-arrows-rotate"></i></button><button class="btn btn-sm btn-danger" onclick="app.deletarUsuario('${u.id}')"><i class="fa-solid fa-trash"></i></button></div></td></tr>`;
+
+        // Regras de UI espelhando o backend:
+        // - Admin principal: nada de editar role, desativar, excluir ou resetar.
+        // - Eu mesmo: nada de desativar ou excluir.
+        // - Demais: tudo liberado.
+        const ehPrincipal = this.ehAdminPrincipal(u);
+        const ehEu = this.ehEuMesmo(u);
+        const podeEditar = !ehPrincipal || ehEu;
+        const podeToggle = !ehPrincipal && !ehEu;
+        const podeExcluir = !ehPrincipal && !ehEu;
+        const podeResetar = !ehPrincipal;
+
+        const btn = (habilitado: boolean, classes: string, titulo: string, onclick: string, icone: string) =>
+          habilitado
+            ? `<button class="btn btn-sm ${classes}" title="${titulo}" onclick="${onclick}"><i class="fa-solid ${icone}"></i></button>`
+            : `<button class="btn btn-sm ${classes}" title="${titulo} (bloqueado)" disabled style="opacity:.4;cursor:not-allowed"><i class="fa-solid ${icone}"></i></button>`;
+
+        html += `<tr>
+          <td><strong>${u.nome}</strong>${ehEu ? ' <span class="badge badge-primary" title="Você">você</span>' : ''}</td>
+          <td>${u.email}</td>
+          <td>${role}</td>
+          <td>${status}</td>
+          <td><div class="actions">
+            ${btn(podeEditar, 'btn-primary', 'Editar usuário', `app.abrirEdicao('${u.id}')`, 'fa-pen')}
+            ${btn(podeToggle, 'btn-warning', u.ativo ? 'Desativar' : 'Ativar', `app.toggleUserStatus('${u.id}')`, 'fa-arrows-rotate')}
+            ${btn(podeResetar, 'btn-info', 'Resetar senha', `app.resetarSenha('${u.id}')`, 'fa-key')}
+            ${btn(podeExcluir, 'btn-danger', 'Excluir usuário', `app.deletarUsuario('${u.id}')`, 'fa-trash')}
+          </div></td>
+        </tr>`;
       });
       html += `</tbody></table></div>`;
       container.innerHTML = html;
@@ -121,6 +186,89 @@
       }
     },
 
+    // ============================================
+    // EDIÇÃO
+    // ============================================
+    async abrirEdicao(id) {
+      try {
+        const response = await api.getUser(id);
+        const u: any = response.data?.data;
+        if (!u) {
+          this.toast('Usuário não encontrado', 'error');
+          return;
+        }
+
+        const ehPrincipal = this.ehAdminPrincipal(u);
+
+        el('modalUsuarioTitle').innerHTML = '<i class="fa-solid fa-pen"></i> Editar Usuário';
+        el<HTMLInputElement>('usuarioEditId').value = u.id;
+        el<HTMLInputElement>('usuarioNome').value = u.nome;
+        el<HTMLInputElement>('usuarioEmail').value = u.email;
+        el<HTMLInputElement>('usuarioCpf').value = u.cpf || '';
+        el<HTMLSelectElement>('usuarioRole').value = u.role;
+        el<HTMLInputElement>('usuarioAtivo').checked = !!u.ativo;
+
+        // Trava os campos do admin principal: a role não pode sair de Admin
+        // e o status não pode virar Inativo. É a mesma regra do backend.
+        if (ehPrincipal) {
+          el<HTMLSelectElement>('usuarioRole').disabled = true;
+          el<HTMLInputElement>('usuarioAtivo').disabled = true;
+          el('usuarioAvisoPrincipal').style.display = 'block';
+        } else {
+          el<HTMLSelectElement>('usuarioRole').disabled = false;
+          el<HTMLInputElement>('usuarioAtivo').disabled = false;
+          el('usuarioAvisoPrincipal').style.display = 'none';
+        }
+
+        // E-mail não é editável (é o login) — desabilita sempre.
+        el<HTMLInputElement>('usuarioEmail').disabled = true;
+
+        this.showModal('usuario');
+      } catch (error: any) {
+        this.toast(error.message || 'Erro ao abrir edição', 'error');
+      }
+    },
+
+    async salvarEdicao() {
+      const id = el<HTMLInputElement>('usuarioEditId').value;
+      if (!id) return;
+
+      const data: any = {
+        nome: el<HTMLInputElement>('usuarioNome').value.trim(),
+        cpf: el<HTMLInputElement>('usuarioCpf').value.trim() || undefined
+      };
+
+      // Só manda role/ativo se os campos estiverem habilitados — assim o
+      // admin principal (que tem os campos travados) não tenta alterá-los.
+      if (!el<HTMLSelectElement>('usuarioRole').disabled) {
+        data.role = el<HTMLSelectElement>('usuarioRole').value;
+      }
+      if (!el<HTMLInputElement>('usuarioAtivo').disabled) {
+        data.ativo = el<HTMLInputElement>('usuarioAtivo').checked;
+      }
+
+      if (!data.nome) {
+        this.toast('O nome é obrigatório', 'error');
+        return;
+      }
+
+      try {
+        const response = await api.updateUser(id, data);
+        if (response.status >= 200 && response.status < 300) {
+          this.toast('Usuário atualizado!', 'success');
+          this.closeModal('usuario');
+          this.loadUsuarios();
+        } else {
+          this.toast(response.data?.message || 'Erro ao atualizar', 'error');
+        }
+      } catch (error: any) {
+        this.toast(error.message || 'Erro ao atualizar usuário', 'error');
+      }
+    },
+
+    // ============================================
+    // AÇÕES
+    // ============================================
     async toggleUserStatus(id) {
       try {
         const response = await api.toggleUserStatus(id);
@@ -130,13 +278,13 @@
         } else {
           this.toast(response.data?.message || 'Erro ao alterar', 'error');
         }
-      } catch (error) {
-        this.toast('Erro ao alterar status', 'error');
+      } catch (error: any) {
+        this.toast(error.message || 'Erro ao alterar status', 'error');
       }
     },
 
     async deletarUsuario(id) {
-      if (!confirm('Excluir usuário?')) return;
+      if (!confirm('Excluir este usuário? Esta ação não pode ser desfeita.')) return;
       try {
         const response = await api.deleteUser(id);
         if (response.status >= 200 && response.status < 300) {
@@ -145,11 +293,43 @@
         } else {
           this.toast(response.data?.message || 'Erro ao excluir', 'error');
         }
-      } catch (error) {
-        this.toast('Erro ao excluir usuário', 'error');
+      } catch (error: any) {
+        this.toast(error.message || 'Erro ao excluir usuário', 'error');
       }
+    },
+
+    async resetarSenha(id) {
+      if (!confirm('Resetar a senha deste usuário? Uma nova senha será gerada.')) return;
+      try {
+        const response = await api.resetUserPassword(id);
+        if (response.status >= 200 && response.status < 300) {
+          const nova = response.data?.data?.novaSenha;
+          if (nova) {
+            alert(`Nova senha gerada:\n\n${nova}\n\nCopie e envie ao usuário.`);
+          }
+          this.toast('Senha resetada!', 'success');
+          this.loadUsuarios();
+        } else {
+          this.toast(response.data?.message || 'Erro ao resetar senha', 'error');
+        }
+      } catch (error: any) {
+        this.toast(error.message || 'Erro ao resetar senha', 'error');
+      }
+    },
+
+    showModal(name) {
+      el(`modal${name.charAt(0).toUpperCase() + name.slice(1)}`).classList.add('active');
+      document.body.style.overflow = 'hidden';
+    },
+
+    closeModal(name) {
+      el(`modal${name.charAt(0).toUpperCase() + name.slice(1)}`).classList.remove('active');
+      document.body.style.overflow = '';
     }
   };
 
-  document.addEventListener('DOMContentLoaded', () => app.init());
+  document.addEventListener('DOMContentLoaded', () => {
+    (window as any).app = app;
+    app.init();
+  });
 })();

@@ -2,11 +2,14 @@
 /**
  * API - Comunicação com o backend
  *
- * Fonte única da camada HTTP: antes desta migração cada página tinha sua
- * própria cópia (parcial) desta classe declarada inline. Agora todas as
- * páginas carregam este mesmo arquivo compilado (public/js/api.js).
+ * Fonte única da camada HTTP: todas as páginas MPA carregam este mesmo
+ * arquivo compilado (public/js/api.js).
  */
-const API_URL = 'http://localhost:3000/api';
+// Em MPA, o front é servido pelo próprio Express, então um caminho relativo
+// ("/api") resolve para o mesmo host/porta do front. Antes estava hardcoded
+// como "http://localhost:3000/api", o que quebraria ao rodar em outra porta
+// ou atrás de proxy.
+const API_URL = '/api';
 class Api {
     constructor() {
         this.token = localStorage.getItem('token');
@@ -177,8 +180,44 @@ class Api {
         const endpoint = params ? `/relatorios/rebanho?${params}` : '/relatorios/rebanho';
         return this.request('GET', endpoint);
     }
-    async getGraficosProducao(dias = 7) {
-        return this.request('GET', `/relatorios/graficos/producao?dias=${dias}`);
+    async getGraficosProducao(dias = 7, filters = {}) {
+        const merged = { ...filters, dias };
+        const params = this.cleanParams(merged);
+        return this.request('GET', `/relatorios/graficos/producao?${params}`);
+    }
+    /**
+     * Dispara o download de um relatório (PDF ou Excel) já autenticado.
+     *
+     * Por que não usar <a href> direto: a rota é protegida por Bearer token,
+     * então não dá para simplesmente abrir numa nova aba. Aqui fazemos o fetch
+     * com o header de auth, recebemos o blob e criamos um link temporário.
+     */
+    async baixarRelatorio(tipo, formato, filtros = {}) {
+        const params = this.cleanParams(filtros);
+        const url = `${API_URL}/relatorios/${tipo}/${formato}${params ? `?${params}` : ''}`;
+        const response = await fetch(url, { headers: this.getHeaders() });
+        if (!response.ok) {
+            let msg = 'Falha ao exportar relatório';
+            try {
+                const body = await response.json();
+                msg = body?.message || msg;
+            }
+            catch {
+                /* resposta não era JSON */
+            }
+            throw new Error(msg);
+        }
+        const blob = await response.blob();
+        const cd = response.headers.get('Content-Disposition') || '';
+        const match = /filename=([^;]+)/.exec(cd);
+        const filename = match ? match[1].replace(/"/g, '') : `relatorio.${formato === 'excel' ? 'xlsx' : 'pdf'}`;
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(link.href);
     }
 }
 const api = new Api();

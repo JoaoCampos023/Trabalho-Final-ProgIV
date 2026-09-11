@@ -2,27 +2,19 @@
 /// <reference path="../api.ts" />
 /// <reference path="../components.ts" />
 /**
- * Página Dashboard (/app/dashboard.html) — SPA com todas as seções
- * (Dashboard, Rebanho, Produções, Relatórios, Usuários) em uma página só.
+ * Página Dashboard (/app/dashboard.html)
+ *
+ * Em MPA, cada aba tem seu próprio HTML e seu próprio TS. Aqui só vive o
+ * Dashboard: cards de resumo + 2 gráficos. Animais, Produções, Relatórios e
+ * Usuários têm arquivos próprios e são abertos via navegação real do navegador.
  */
 (function () {
     function el(id) {
         return document.getElementById(id);
     }
     const app = {
-        currentPage: 'dashboard',
         user: null,
         chartInstances: {},
-        IDADE_MAXIMA_ANOS: 50,
-        sortCampoAnimais: 'brinco',
-        sortDirAnimais: 'asc',
-        ultimoResultadoAnimais: null,
-        sortCampoProducoes: 'data_coleta',
-        sortDirProducoes: 'desc',
-        ultimoResultadoProducoes: null,
-        sortCampoUsuarios: 'nome',
-        sortDirUsuarios: 'asc',
-        ultimoResultadoUsuarios: null,
         init() {
             if (!api.isAuthenticated()) {
                 console.log('🔒 Usuário não autenticado, redirecionando...');
@@ -31,93 +23,28 @@
             }
             console.log('✅ Usuário autenticado');
             this.loadUserInfo();
-            // ✅ RECARREGAR DADOS QUANDO A ABA GANHAR FOCO
-            window.addEventListener('focus', () => {
-                console.log('🔄 Aba recuperou foco');
-                if (this.currentPage === 'dashboard') {
-                    this.loadDashboard();
-                }
-            });
-            // ✅ RECARREGAR DADOS QUANDO A PÁGINA FICAR VISÍVEL
+            // Recarrega os dados quando a aba volta a ficar visível / ganha foco.
+            // Útil para quem deixa o dashboard aberto num monitor.
+            window.addEventListener('focus', () => this.loadDashboard());
             document.addEventListener('visibilitychange', () => {
-                if (!document.hidden && this.currentPage === 'dashboard') {
-                    console.log('🔄 Página visível novamente');
+                if (!document.hidden)
                     this.loadDashboard();
-                }
             });
-            el('animalForm').addEventListener('submit', e => {
-                e.preventDefault();
-                this.saveAnimal();
-            });
-            el('producaoForm').addEventListener('submit', e => {
-                e.preventDefault();
-                this.saveProducao();
-            });
-            this.limitarDataNascimento();
-            this.navigateTo('dashboard');
-        },
-        // Limita o seletor de calendário: não permite data futura nem uma
-        // idade acima de IDADE_MAXIMA_ANOS (feedback imediato na UI).
-        limitarDataNascimento() {
-            const input = document.getElementById('animalDataNascimento');
-            if (!input)
-                return;
-            const limite = new Date();
-            limite.setFullYear(limite.getFullYear() - this.IDADE_MAXIMA_ANOS);
-            input.max = Components.dataLocalIso();
-            input.min = Components.dataParaIsoLocal(limite);
-        },
-        // Retorna uma mensagem de erro se a data de nascimento for inválida, ou null se estiver ok.
-        validarDataNascimento(dataStr) {
-            if (!dataStr)
-                return 'A data de nascimento é obrigatória.';
-            const dataNascimento = new Date(`${dataStr}T00:00:00`);
-            const hoje = new Date();
-            if (dataNascimento > hoje)
-                return 'A data de nascimento não pode ser no futuro.';
-            const limite = new Date();
-            limite.setFullYear(limite.getFullYear() - this.IDADE_MAXIMA_ANOS);
-            if (dataNascimento < limite) {
-                return `A data de nascimento não pode resultar em uma idade maior que ${this.IDADE_MAXIMA_ANOS} anos.`;
-            }
-            return null;
-        },
-        navigateTo(page) {
-            this.currentPage = page;
-            // Atualiza item ativo na navbar centralizada
-            Components.setNavbarActivePage(page);
-            document.querySelectorAll('.page-content').forEach(p => {
-                p.classList.toggle('active', p.id === `page-${page}`);
-            });
-            switch (page) {
-                case 'dashboard':
-                    this.loadDashboard();
-                    break;
-                case 'animais':
-                    this.loadAnimais();
-                    break;
-                case 'producoes':
-                    this.loadProducoes();
-                    break;
-                case 'relatorios':
-                    this.loadRelatorios();
-                    break;
-                case 'usuarios':
-                    this.loadUsuarios();
-                    break;
-            }
-            const navMenu = document.querySelector('#navbar #navMenu');
-            if (navMenu)
-                navMenu.classList.remove('open');
+            this.loadDashboard();
         },
         loadUserInfo() {
             try {
                 const token = api.token;
                 if (token) {
                     const payload = JSON.parse(atob(token.split('.')[1]));
-                    this.user = { nome: payload.nome || 'Usuário', email: payload.email || '', role: payload.role || 'Cliente' };
-                    // Renderiza navbar via componente centralizado (modo SPA)
-                    Components.renderNavbar('dashboard', this.user, 'spa');
+                    this.user = {
+                        nome: payload.nome || 'Usuário',
+                        email: payload.email || '',
+                        role: payload.role || 'Cliente'
+                    };
+                    // MODO MPA: cliques na navbar navegam para outra URL (/app/xxx.html),
+                    // sem SPA. A URL do navegador muda de verdade.
+                    Components.renderNavbar('dashboard', this.user, 'mpa');
                 }
             }
             catch (e) {
@@ -128,21 +55,17 @@
         // DASHBOARD
         // ============================================
         async loadDashboard() {
-            console.log('🔄 Carregando dashboard...');
             const container = el('dashboardContent');
             container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando dashboard...</p></div>`;
             try {
-                const [animaisRes, producoesRes] = await Promise.all([
-                    api.getAnimais(),
-                    api.getProducoes(),
-                    api.getAnimalStats()
-                ]);
+                const [animaisRes, producoesRes] = await Promise.all([api.getAnimais(), api.getProducoes()]);
                 const animais = animaisRes.data?.data?.animais || [];
                 const producoes = producoesRes.data?.data?.producoes || [];
                 const totalAnimais = animais.length;
                 const totalFemea = animais.filter(a => a.sexo === 'F').length;
                 const totalMacho = animais.filter(a => a.sexo === 'M').length;
                 const totalLitros = producoes.reduce((sum, p) => sum + (parseFloat(String(p.litros)) || 0), 0);
+                // Top 5 vacas (no histórico inteiro — o Dashboard é visão geral).
                 const vacasMap = new Map();
                 producoes.forEach(p => {
                     const nome = p.animal?.nome || `Animal ${p.animal_brinco}`;
@@ -152,6 +75,7 @@
                     .map(([nome, producao]) => ({ nome, producao: Number(producao) }))
                     .sort((a, b) => b.producao - a.producao)
                     .slice(0, 5);
+                // Série dos últimos 7 dias (para o gráfico de linha).
                 const ultimos7Dias = [];
                 for (let i = 6; i >= 0; i--) {
                     const dataObj = new Date();
@@ -163,22 +87,19 @@
                         .reduce((sum, p) => sum + (parseFloat(String(p.litros)) || 0), 0);
                     ultimos7Dias.push({ data: displayDate, total });
                 }
-                const html = `
-                    <div class="stats-grid">
-                        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-cow"></i></div><div class="stat-value">${totalAnimais}</div><div class="stat-label">Total de Animais</div></div>
-                        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-venus"></i></div><div class="stat-value">${totalFemea}</div><div class="stat-label">Fêmeas</div></div>
-                        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-mars"></i></div><div class="stat-value">${totalMacho}</div><div class="stat-label">Machos</div></div>
-                        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-droplet"></i></div><div class="stat-value">${totalLitros.toFixed(1)} L</div><div class="stat-label">Produção Total</div></div>
-                    </div>
-                    <div class="chart-grid">
-                        <div class="card chart-card"><h4 class="block-title"><i class="fa-solid fa-chart-line"></i> Produção dos Últimos 7 Dias</h4><div class="chart-container"><canvas id="chartProducaoDia"></canvas></div></div>
-                        <div class="card chart-card"><h4 class="block-title"><i class="fa-solid fa-trophy"></i> Top 5 Vacas Produtoras</h4><div class="chart-container"><canvas id="chartTopVacas"></canvas></div></div>
-                    </div>
-                `;
-                container.innerHTML = html;
-                setTimeout(() => {
-                    this.renderCharts(ultimos7Dias, topVacas);
-                }, 100);
+                container.innerHTML = `
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-cow"></i></div><div class="stat-value">${totalAnimais}</div><div class="stat-label">Total de Animais</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-venus"></i></div><div class="stat-value">${totalFemea}</div><div class="stat-label">Fêmeas</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-mars"></i></div><div class="stat-value">${totalMacho}</div><div class="stat-label">Machos</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-droplet"></i></div><div class="stat-value">${totalLitros.toFixed(1)} L</div><div class="stat-label">Produção Total</div></div>
+          </div>
+          <div class="chart-grid">
+            <div class="card chart-card"><h4 class="block-title"><i class="fa-solid fa-chart-line"></i> Produção dos Últimos 7 Dias</h4><div class="chart-container"><canvas id="chartProducaoDia"></canvas></div></div>
+            <div class="card chart-card"><h4 class="block-title"><i class="fa-solid fa-trophy"></i> Top 5 Vacas Produtoras</h4><div class="chart-container"><canvas id="chartTopVacas"></canvas></div></div>
+          </div>
+        `;
+                setTimeout(() => this.renderCharts(ultimos7Dias, topVacas), 100);
             }
             catch (error) {
                 console.error('❌ Erro ao carregar dashboard:', error);
@@ -186,13 +107,12 @@
             }
         },
         renderCharts(producaoDia, topVacas) {
-            Object.values(this.chartInstances).forEach((chart) => {
-                if (chart)
-                    chart.destroy();
-            });
+            // Destrói gráficos antigos antes de criar novos — sem isso, o Chart.js
+            // reclama de canvas reutilizado ao clicar em "Atualizar".
+            Object.values(this.chartInstances).forEach((chart) => chart && chart.destroy());
             this.chartInstances = {};
             const ctx1 = document.getElementById('chartProducaoDia');
-            if (ctx1 && producaoDia && producaoDia.length > 0) {
+            if (ctx1 && producaoDia.length > 0) {
                 this.chartInstances.producaoDia = new Chart(ctx1, {
                     type: 'line',
                     data: {
@@ -218,7 +138,7 @@
                 });
             }
             const ctx2 = document.getElementById('chartTopVacas');
-            if (ctx2 && topVacas && topVacas.length > 0) {
+            if (ctx2 && topVacas.length > 0) {
                 const cores = ['#0d6efd', '#28a745', '#ffc107', '#dc3545', '#6c757d'];
                 this.chartInstances.topVacas = new Chart(ctx2, {
                     type: 'bar',
@@ -242,629 +162,11 @@
                 });
             }
         },
-        // ============================================
-        // ANIMAIS
-        // ============================================
-        calcularIdade(dataNasc) {
-            if (!dataNasc)
-                return 0;
-            const nasc = new Date(dataNasc);
-            const hoje = new Date();
-            let idade = hoje.getFullYear() - nasc.getFullYear();
-            const m = hoje.getMonth() - nasc.getMonth();
-            if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) {
-                idade--;
-            }
-            return Math.max(0, idade);
-        },
-        debouncedLoadAnimais() {
-            clearTimeout(this.filterNomeDebounce);
-            this.filterNomeDebounce = window.setTimeout(() => this.loadAnimais(), 400);
-        },
-        // Reordena a partir dos dados já carregados (sem novo fetch/spinner) para não piscar a tela.
-        ordenarAnimaisPor(campo) {
-            if (this.sortCampoAnimais === campo) {
-                this.sortDirAnimais = this.sortDirAnimais === 'asc' ? 'desc' : 'asc';
-            }
-            else {
-                this.sortCampoAnimais = campo;
-                this.sortDirAnimais = 'asc';
-            }
-            this.renderAnimais();
-        },
-        renderAnimais() {
-            const resultado = this.ultimoResultadoAnimais;
-            if (!resultado)
-                return;
-            const { animais: animaisOriginais, stats, racas, searchNome, sexo, raca, status } = resultado;
-            const container = el('animaisContent');
-            const animais = Components.ordenarLista(animaisOriginais, this.sortCampoAnimais, this.sortDirAnimais);
-            let html = `
-                <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-cow"></i></div><div class="stat-value">${stats.total}</div><div class="stat-label">Total</div></div>
-                    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-venus"></i></div><div class="stat-value">${stats.totalFemea}</div><div class="stat-label">Fêmeas</div></div>
-                    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-mars"></i></div><div class="stat-value">${stats.totalMacho}</div><div class="stat-label">Machos</div></div>
-                    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-weight-scale"></i></div><div class="stat-value">${(stats.pesoMedio || 0).toFixed(0)} kg</div><div class="stat-label">Peso Médio</div></div>
-                </div>
-                <div class="filters">
-                    <div class="filter-group"><label>Nome</label><input type="text" id="filterNome" placeholder="Buscar por nome..." value="${searchNome}" oninput="app.debouncedLoadAnimais()" /></div>
-                    <div class="filter-group"><label>Sexo</label><select id="filterSexo" onchange="app.loadAnimais()"><option value="">Todos</option><option value="F" ${sexo === 'F' ? 'selected' : ''}>Fêmea</option><option value="M" ${sexo === 'M' ? 'selected' : ''}>Macho</option></select></div>
-                    <div class="filter-group"><label>Raça</label><select id="filterRaca" onchange="app.loadAnimais()"><option value="">Todas</option>${racas.map((r) => `<option value="${r}" ${raca === r ? 'selected' : ''}>${r}</option>`).join('')}</select></div>
-                    <div class="filter-group"><label>Status</label><select id="filterStatus" onchange="app.loadAnimais()"><option value="ativos" ${status === 'ativos' ? 'selected' : ''}>Ativos</option><option value="inativos" ${status === 'inativos' ? 'selected' : ''}>Inativos</option><option value="todos" ${status === 'todos' ? 'selected' : ''}>Todos</option></select></div>
-                    <div class="filter-actions"><button class="btn btn-secondary btn-sm btn-square" title="Limpar filtros" onclick="clearTimeout(app.filterNomeDebounce);document.getElementById('filterNome').value='';document.getElementById('filterSexo').value='';document.getElementById('filterRaca').value='';document.getElementById('filterStatus').value='ativos';app.loadAnimais();"><i class="fa-solid fa-xmark"></i></button></div>
-                </div>
-            `;
-            if (!animais || animais.length === 0) {
-                html += `<p class="text-muted text-center">Nenhum animal cadastrado.</p>`;
-            }
-            else {
-                const th = (label, campo) => Components.thOrdenavel(label, campo, this.sortCampoAnimais, this.sortDirAnimais, `app.ordenarAnimaisPor('${campo}')`);
-                html += `<div class="table-responsive"><table><thead><tr>${th('Brinco', 'brinco')}${th('Nome', 'nome')}${th('Sexo', 'sexo')}${th('Raça', 'raca')}${th('Peso', 'peso')}${th('Idade', 'idade')}${th('Status', 'ativo')}<th>Ações</th></tr></thead><tbody>`;
-                animais.forEach(a => {
-                    const sexoLabel = a.sexo === 'F' ? '<i class="fa-solid fa-venus"></i> Fêmea' : '<i class="fa-solid fa-mars"></i> Macho';
-                    const statusBadge = a.ativo
-                        ? '<span class="badge badge-success">Ativo</span>'
-                        : '<span class="badge badge-danger">Inativo</span>';
-                    html += `<tr><td><strong>${a.brinco}</strong></td><td>${a.nome}</td><td>${sexoLabel}</td><td>${a.raca || 'N/A'}</td><td>${a.peso.toFixed(1)} kg</td><td>${a.idade} ${a.idade === 1 ? 'ano' : 'anos'}</td><td>${statusBadge}</td><td><div class="actions"><button class="btn btn-sm btn-primary" data-tooltip="Editar Animal" onclick="app.editarAnimal(${a.brinco})"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-danger" data-tooltip="Excluir Animal" onclick="app.deletarAnimal(${a.brinco})"><i class="fa-solid fa-trash"></i></button><button class="btn btn-sm btn-info" data-tooltip="Ver Árvore" onclick="app.verArvore(${a.brinco})"><i class="fa-solid fa-sitemap"></i></button></div></td></tr>`;
-                });
-                html += `</tbody></table></div>`;
-            }
-            container.innerHTML = html;
-            const nomeInputAtual = document.getElementById('filterNome');
-            if (nomeInputAtual && this._mantendoFocoNome) {
-                nomeInputAtual.focus();
-                nomeInputAtual.setSelectionRange(this._cursorPos, this._cursorPos);
-            }
-        },
-        async loadAnimais() {
-            const searchNome = document.getElementById('filterNome')?.value || '';
-            const sexo = document.getElementById('filterSexo')?.value || '';
-            const raca = document.getElementById('filterRaca')?.value || '';
-            const status = document.getElementById('filterStatus')?.value || 'ativos';
-            const container = el('animaisContent');
-            if (!this.todasRacas || this.todasRacas.length === 0) {
-                const allRes = await api.getAnimais({ status: 'todos' });
-                const todosAnimais = allRes.data?.data?.animais || [];
-                this.todasRacas = [...new Set(todosAnimais.map(a => a.raca).filter((r) => !!r))];
-            }
-            // Preserva o foco e a posição do cursor no campo de nome, já que o filtro
-            // dispara a cada digitação (com debounce).
-            const nomeInputAtual = document.getElementById('filterNome');
-            this._mantendoFocoNome = document.activeElement === nomeInputAtual;
-            this._cursorPos = this._mantendoFocoNome ? nomeInputAtual.selectionStart : null;
-            container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando animais...</p></div>`;
-            try {
-                const response = await api.getAnimais({ searchNome, sexo, raca, status });
-                const data = response.data?.data;
-                let animais = data?.animais || [];
-                animais = animais.map(a => {
-                    const brinco = typeof a.brinco === 'number' ? a.brinco : parseInt(String(a.brinco)) || 0;
-                    const peso = typeof a.peso === 'number' ? a.peso : parseFloat(String(a.peso)) || 0;
-                    const idadeVal = typeof a.idade === 'number' && a.idade > 0 ? a.idade : this.calcularIdade(a.data_nascimento);
-                    return { ...a, brinco, peso, idade: idadeVal };
-                });
-                const stats = {
-                    total: data?.total || 0,
-                    totalFemea: data?.totalFemea || 0,
-                    totalMacho: data?.totalMacho || 0,
-                    pesoMedio: data?.pesoMedio || 0
-                };
-                const racas = this.todasRacas || [];
-                this.ultimoResultadoAnimais = { animais, stats, racas, searchNome, sexo, raca, status };
-                this.renderAnimais();
-            }
-            catch (error) {
-                container.innerHTML = `<p class="text-muted text-center">Erro ao carregar animais: ${error.message}</p>`;
-            }
-        },
-        // ============================================
-        // PRODUÇÕES
-        // ============================================
-        // Reordena a partir dos dados já carregados (sem novo fetch/spinner) para não piscar a tela.
-        ordenarProducoesPor(campo) {
-            if (this.sortCampoProducoes === campo) {
-                this.sortDirProducoes = this.sortDirProducoes === 'asc' ? 'desc' : 'asc';
-            }
-            else {
-                this.sortCampoProducoes = campo;
-                this.sortDirProducoes = 'asc';
-            }
-            this.renderProducoes();
-        },
-        renderProducoes() {
-            const resultado = this.ultimoResultadoProducoes;
-            if (!resultado)
-                return;
-            const container = el('producoesContent');
-            if (resultado.length === 0) {
-                container.innerHTML = '<p class="text-muted text-center">Nenhuma produção registrada.</p>';
-                return;
-            }
-            const totalLitros = resultado.reduce((sum, p) => sum + p.litros, 0);
-            const periodoLabel = {
-                Manha: '<i class="fa-solid fa-cloud-sun"></i> Manhã',
-                Tarde: '<i class="fa-solid fa-sun"></i> Tarde',
-                Noite: '<i class="fa-solid fa-moon"></i> Noite'
-            };
-            const producoes = Components.ordenarLista(resultado, this.sortCampoProducoes, this.sortDirProducoes, (p, campo) => (campo === 'animal' ? p.animal?.nome || p.animal_brinco : p[campo]));
-            const th = (label, campo) => Components.thOrdenavel(label, campo, this.sortCampoProducoes, this.sortDirProducoes, `app.ordenarProducoesPor('${campo}')`);
-            let html = `<div class="table-responsive"><table><thead><tr>${th('ID', 'id')}${th('Animal', 'animal')}${th('Data', 'data_coleta')}${th('Período', 'periodo')}${th('Litros', 'litros')}<th>Ações</th></tr></thead><tbody>`;
-            producoes.forEach(p => {
-                const periodo = periodoLabel[p.periodo] || p.periodo;
-                html += `<tr><td>${p.id}</td><td>${p.animal?.nome || p.animal_brinco}</td><td>${new Date(p.data_coleta).toLocaleDateString()}</td><td>${periodo}</td><td><strong>${p.litros.toFixed(1)} L</strong></td><td><div class="actions"><button class="btn btn-sm btn-primary" data-tooltip="Editar Produção" onclick="app.editarProducao(${p.id})"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-danger" data-tooltip="Excluir Produção" onclick="app.deletarProducao(${p.id})"><i class="fa-solid fa-trash"></i></button></div></td></tr>`;
-            });
-            html += `</tbody><tfoot><tr><td colspan="4" class="table-footer-label">Total:</td><td class="table-footer-value">${totalLitros.toFixed(1)} L</td><td></td></tr></tfoot></table></div>`;
-            container.innerHTML = html;
-        },
-        async loadProducoes() {
-            const container = el('producoesContent');
-            container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando produções...</p></div>`;
-            try {
-                const response = await api.getProducoes();
-                let producoes = response.data?.data?.producoes || [];
-                producoes = producoes.map(p => ({
-                    ...p,
-                    litros: typeof p.litros === 'number' ? p.litros : parseFloat(String(p.litros)) || 0
-                }));
-                this.ultimoResultadoProducoes = producoes;
-                this.renderProducoes();
-            }
-            catch (error) {
-                container.innerHTML = `<p class="text-muted text-center">Erro ao carregar produções: ${error.message}</p>`;
-            }
-        },
-        // ============================================
-        // RELATÓRIOS
-        // ============================================
-        async loadRelatorios() {
-            const container = el('relatoriosContent');
-            container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando relatórios...</p></div>`;
-            try {
-                const [producaoRes, , graficosRes, animaisRes, topRes] = await Promise.all([
-                    api.getRelatorioProducao(),
-                    api.getRelatorioRebanho(),
-                    api.getGraficosProducao(7),
-                    api.getAnimais(),
-                    api.getTopVacas(5)
-                ]);
-                const producaoData = producaoRes.data?.data || {};
-                const graficosData = graficosRes.data?.data || [];
-                const animais = animaisRes.data?.data?.animais || [];
-                const topVacas = topRes.data?.data || [];
-                const totalAnimais = animais.length;
-                const totalFemea = animais.filter(a => a.sexo === 'F').length;
-                const totalMacho = animais.filter(a => a.sexo === 'M').length;
-                const totalLitros = producaoData.stats?.totalLitros || 0;
-                const medalIcon = [
-                    '<i class="fa-solid fa-trophy medal-gold"></i>',
-                    '<i class="fa-solid fa-medal medal-silver"></i>',
-                    '<i class="fa-solid fa-medal medal-bronze"></i>',
-                    '<i class="fa-solid fa-award"></i>',
-                    '<i class="fa-solid fa-award"></i>'
-                ];
-                const html = `
-                    <div class="stats-grid">
-                        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-cow"></i></div><div class="stat-value">${totalAnimais}</div><div class="stat-label">Total de Animais</div></div>
-                        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-venus"></i></div><div class="stat-value">${totalFemea}</div><div class="stat-label">Fêmeas</div></div>
-                        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-mars"></i></div><div class="stat-value">${totalMacho}</div><div class="stat-label">Machos</div></div>
-                        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-droplet"></i></div><div class="stat-value">${totalLitros.toFixed(1)} L</div><div class="stat-label">Total Produzido</div></div>
-                    </div>
-                    <div class="card mini-stats-block"><h4 class="block-title"><i class="fa-solid fa-chart-line"></i> Produção dos Últimos 7 Dias</h4><div class="chart-container"><canvas id="chartRelatorioProducao"></canvas></div></div>
-                    <div class="card mini-stats-block"><h4 class="block-title"><i class="fa-solid fa-trophy"></i> Top 5 Vacas Produtoras</h4><div class="mini-stats-grid">
-                    ${topVacas.length > 0
-                    ? topVacas
-                        .map((v, i) => `<div class="mini-stat-card"><div class="mini-stat-medal">${medalIcon[i] || '<i class="fa-solid fa-circle"></i>'}</div><div><strong>${v.nome}</strong></div><div class="mini-stat-value">${(v.producao || v.total || 0).toFixed(1)} L</div></div>`)
-                        .join('')
-                    : '<p class="text-muted text-center">Nenhuma produção registrada.</p>'}
-                    </div></div>
-                `;
-                container.innerHTML = html;
-                setTimeout(() => {
-                    const ctx = document.getElementById('chartRelatorioProducao');
-                    if (ctx && graficosData && graficosData.length > 0) {
-                        if (this.chartInstances.relatorioProducao) {
-                            this.chartInstances.relatorioProducao.destroy();
-                        }
-                        const labelsFormatted = graficosData.map(d => {
-                            if (!d.data)
-                                return '';
-                            const parts = d.data.split('T')[0].split('-');
-                            return parts.length === 3 ? `${parts[2]}/${parts[1]}` : d.data;
-                        });
-                        this.chartInstances.relatorioProducao = new Chart(ctx, {
-                            type: 'line',
-                            data: {
-                                labels: labelsFormatted,
-                                datasets: [
-                                    {
-                                        label: 'Litros',
-                                        data: graficosData.map(d => d.total),
-                                        borderColor: '#0d6efd',
-                                        backgroundColor: 'rgba(13,110,253,0.1)',
-                                        tension: 0.3,
-                                        fill: true
-                                    }
-                                ]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: { legend: { display: false } },
-                                scales: { y: { beginAtZero: true, title: { display: true, text: 'Litros' } } }
-                            }
-                        });
-                    }
-                }, 100);
-            }
-            catch (error) {
-                container.innerHTML = `<p class="text-muted text-center">Erro ao carregar relatórios: ${error.message}</p>`;
-            }
-        },
-        // ============================================
-        // USUÁRIOS
-        // ============================================
-        // Reordena a partir dos dados já carregados (sem novo fetch/spinner) para não piscar a tela.
-        ordenarUsuariosPor(campo) {
-            if (this.sortCampoUsuarios === campo) {
-                this.sortDirUsuarios = this.sortDirUsuarios === 'asc' ? 'desc' : 'asc';
-            }
-            else {
-                this.sortCampoUsuarios = campo;
-                this.sortDirUsuarios = 'asc';
-            }
-            this.renderUsuarios();
-        },
-        renderUsuarios() {
-            const resultado = this.ultimoResultadoUsuarios;
-            if (!resultado)
-                return;
-            const container = el('usuariosContent');
-            if (resultado.length === 0) {
-                container.innerHTML = '<p class="text-muted text-center">Nenhum usuário cadastrado.</p>';
-                return;
-            }
-            const users = Components.ordenarLista(resultado, this.sortCampoUsuarios, this.sortDirUsuarios);
-            const th = (label, campo) => Components.thOrdenavel(label, campo, this.sortCampoUsuarios, this.sortDirUsuarios, `app.ordenarUsuariosPor('${campo}')`);
-            let html = `<div class="table-responsive"><table><thead><tr>${th('Nome', 'nome')}${th('Email', 'email')}${th('Perfil', 'role')}${th('Status', 'ativo')}<th>Ações</th></tr></thead><tbody>`;
-            users.forEach(u => {
-                const role = u.role === 'Admin'
-                    ? '<span class="badge badge-danger">Admin</span>'
-                    : '<span class="badge badge-info">Cliente</span>';
-                const status = u.ativo
-                    ? '<span class="badge badge-success">Ativo</span>'
-                    : '<span class="badge badge-danger">Inativo</span>';
-                html += `<tr><td><strong>${u.nome}</strong></td><td>${u.email}</td><td>${role}</td><td>${status}</td><td><div class="actions"><button class="btn btn-sm btn-warning" data-tooltip="Alternar Status" onclick="app.toggleUserStatus('${u.id}')"><i class="fa-solid fa-arrows-rotate"></i></button><button class="btn btn-sm btn-danger" data-tooltip="Excluir Usuário" onclick="app.deletarUsuario('${u.id}')"><i class="fa-solid fa-trash"></i></button></div></td></tr>`;
-            });
-            html += `</tbody></table></div>`;
-            container.innerHTML = html;
-        },
-        async loadUsuarios() {
-            const container = el('usuariosContent');
-            container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando usuários...</p></div>`;
-            try {
-                const response = await api.getUsers();
-                const users = response.data?.data || [];
-                this.ultimoResultadoUsuarios = users;
-                this.renderUsuarios();
-            }
-            catch (error) {
-                container.innerHTML = `<p class="text-muted text-center">Erro ao carregar usuários: ${error.message}</p>`;
-            }
-        },
-        // ============================================
-        // ANIMAIS - CRUD
-        // ============================================
-        // Popula os <select> de brinco do pai/mãe com os machos/fêmeas disponíveis
-        // (excluindo o próprio animal, no caso de edição) e pré-seleciona o valor atual.
-        async carregarSelectsPaiMae(excluirBrinco, paiSelecionado, maeSelecionado) {
-            try {
-                const [resMachos, resFemeas] = await Promise.all([
-                    api.getMachosParaSelecao(excluirBrinco),
-                    api.getFemeasParaSelecao(excluirBrinco)
-                ]);
-                const machos = resMachos.data?.data || [];
-                const femeas = resFemeas.data?.data || [];
-                const selectPai = el('animalBrincoPai');
-                selectPai.innerHTML =
-                    '<option value="">Nenhum</option>' +
-                        machos
-                            .map(m => `<option value="${m.brinco}" ${m.brinco === paiSelecionado ? 'selected' : ''}>${m.brinco} - ${m.nome}</option>`)
-                            .join('');
-                const selectMae = el('animalBrincoMae');
-                selectMae.innerHTML =
-                    '<option value="">Nenhuma</option>' +
-                        femeas
-                            .map(f => `<option value="${f.brinco}" ${f.brinco === maeSelecionado ? 'selected' : ''}>${f.brinco} - ${f.nome}</option>`)
-                            .join('');
-            }
-            catch (error) {
-                this.toast('Erro ao carregar lista de pai/mãe', 'error');
-            }
-        },
-        // Atualiza o texto ao lado do switch conforme o estado marcado/desmarcado.
-        atualizarLabelStatusAnimal() {
-            const checkbox = document.getElementById('animalAtivo');
-            const label = document.getElementById('animalAtivoLabel');
-            if (checkbox && label) {
-                label.textContent = checkbox.checked ? 'Ativo' : 'Inativo';
-            }
-        },
-        async novoAnimal() {
-            el('modalAnimalTitle').innerHTML = '<i class="fa-solid fa-cow"></i> Novo Animal';
-            el('animalSubmitBtn').textContent = 'Salvar';
-            el('animalEditBrinco').value = '';
-            el('animalBrinco').disabled = false;
-            el('animalForm').reset();
-            el('animalAtivo').checked = true;
-            this.atualizarLabelStatusAnimal();
-            await this.carregarSelectsPaiMae();
-            this.showModal('animal');
-        },
-        async editarAnimal(brinco) {
-            try {
-                const response = await api.getAnimal(brinco);
-                const animal = response.data?.data;
-                if (!animal) {
-                    this.toast('Animal não encontrado', 'error');
-                    return;
-                }
-                el('modalAnimalTitle').innerHTML = `<i class="fa-solid fa-pen"></i> Editando ${animal.nome}`;
-                el('animalSubmitBtn').textContent = 'Atualizar';
-                el('animalEditBrinco').value = String(animal.brinco);
-                el('animalBrinco').value = String(animal.brinco);
-                el('animalBrinco').disabled = true;
-                el('animalNome').value = animal.nome;
-                el('animalSexo').value = animal.sexo;
-                el('animalRaca').value = animal.raca || '';
-                el('animalPeso').value = String(animal.peso);
-                el('animalDataNascimento').value = animal.data_nascimento?.split('T')[0] || '';
-                el('animalAtivo').checked = !!animal.ativo;
-                this.atualizarLabelStatusAnimal();
-                await this.carregarSelectsPaiMae(animal.brinco, animal.brinco_pai, animal.brinco_mae);
-                this.showModal('animal');
-            }
-            catch (error) {
-                this.toast('Erro ao carregar animal', 'error');
-            }
-        },
-        async saveAnimal() {
-            const isEdit = !!el('animalEditBrinco').value;
-            const data = {
-                brinco: parseInt(el('animalBrinco').value),
-                nome: el('animalNome').value,
-                sexo: el('animalSexo').value,
-                raca: el('animalRaca').value || undefined,
-                peso: parseFloat(el('animalPeso').value),
-                data_nascimento: el('animalDataNascimento').value,
-                ativo: el('animalAtivo').checked,
-                brinco_pai: el('animalBrincoPai').value
-                    ? parseInt(el('animalBrincoPai').value)
-                    : undefined,
-                brinco_mae: el('animalBrincoMae').value
-                    ? parseInt(el('animalBrincoMae').value)
-                    : undefined
-            };
-            const erroData = this.validarDataNascimento(data.data_nascimento);
-            if (erroData) {
-                this.toast(erroData, 'error');
-                return;
-            }
-            try {
-                const response = isEdit ? await api.updateAnimal(data.brinco, data) : await api.createAnimal(data);
-                if (response.status >= 200 && response.status < 300) {
-                    this.toast(isEdit ? 'Animal atualizado!' : 'Animal cadastrado!', 'success');
-                    this.closeModal('animal');
-                    this.loadAnimais();
-                    if (this.currentPage === 'dashboard')
-                        this.loadDashboard();
-                }
-                else {
-                    this.toast(response.data?.message || 'Erro ao salvar', 'error');
-                }
-            }
-            catch (error) {
-                this.toast('Erro ao salvar animal', 'error');
-            }
-        },
-        async deletarAnimal(brinco) {
-            if (!confirm(`Excluir animal ${brinco}?`))
-                return;
-            try {
-                const response = await api.deleteAnimal(brinco);
-                if (response.status >= 200 && response.status < 300) {
-                    this.toast('Animal excluído!', 'success');
-                    this.loadAnimais();
-                    if (this.currentPage === 'dashboard')
-                        this.loadDashboard();
-                }
-                else {
-                    this.toast(response.data?.message || 'Erro ao excluir', 'error');
-                }
-            }
-            catch (error) {
-                this.toast('Erro ao excluir animal', 'error');
-            }
-        },
-        async verArvore(brinco) {
-            try {
-                const response = await api.getAnimalTree(brinco);
-                const data = response.data?.data;
-                if (!data) {
-                    this.toast('Árvore não encontrada', 'error');
-                    return;
-                }
-                const html = `
-                    ${Components.renderArvoreGenealogica(data)}
-                    <div class="tree-back-action"><button class="btn btn-secondary btn-sm" onclick="app.loadAnimais()"><i class="fa-solid fa-arrow-left"></i> Voltar para a lista</button></div>
-                `;
-                el('animaisContent').innerHTML = html;
-            }
-            catch (error) {
-                this.toast('Erro ao carregar árvore', 'error');
-            }
-        },
-        // ============================================
-        // PRODUÇÕES - CRUD
-        // ============================================
-        async novaProducao() {
-            try {
-                const response = await api.getAnimais();
-                const animais = response.data?.data?.animais || [];
-                const femeas = animais.filter(a => a.sexo === 'F' && a.ativo);
-                const select = el('producaoAnimal');
-                select.innerHTML =
-                    '<option value="">Selecione...</option>' +
-                        femeas.map(a => `<option value="${a.brinco}">${a.brinco} - ${a.nome}</option>`).join('');
-                el('modalProducaoTitle').innerHTML = '<i class="fa-solid fa-droplet"></i> Nova Produção';
-                el('producaoSubmitBtn').textContent = 'Salvar';
-                el('producaoEditId').value = '';
-                el('producaoForm').reset();
-                el('producaoData').value = Components.dataLocalIso();
-                this.showModal('producao');
-            }
-            catch (error) {
-                this.toast('Erro ao carregar animais', 'error');
-            }
-        },
-        async editarProducao(id) {
-            try {
-                const response = await api.getProducao(id);
-                const producao = response.data?.data;
-                if (!producao) {
-                    this.toast('Produção não encontrada', 'error');
-                    return;
-                }
-                const resAnimais = await api.getAnimais();
-                const animais = resAnimais.data?.data?.animais || [];
-                const femeas = animais.filter(a => a.sexo === 'F' && a.ativo);
-                const select = el('producaoAnimal');
-                select.innerHTML =
-                    '<option value="">Selecione...</option>' +
-                        femeas
-                            .map(a => `<option value="${a.brinco}" ${a.brinco === producao.animal_brinco ? 'selected' : ''}>${a.brinco} - ${a.nome}</option>`)
-                            .join('');
-                el('modalProducaoTitle').innerHTML = `<i class="fa-solid fa-pen"></i> Editando #${id}`;
-                el('producaoSubmitBtn').textContent = 'Atualizar';
-                el('producaoEditId').value = String(id);
-                el('producaoData').value = producao.data_coleta?.split('T')[0] || '';
-                el('producaoLitros').value = String(producao.litros);
-                el('producaoPeriodo').value = producao.periodo;
-                this.showModal('producao');
-            }
-            catch (error) {
-                this.toast('Erro ao carregar produção', 'error');
-            }
-        },
-        async saveProducao() {
-            const isEdit = !!el('producaoEditId').value;
-            const id = el('producaoEditId').value;
-            const data = {
-                animal_brinco: parseInt(el('producaoAnimal').value),
-                data_coleta: el('producaoData').value,
-                litros: parseFloat(el('producaoLitros').value),
-                periodo: el('producaoPeriodo').value
-            };
-            if (!data.animal_brinco) {
-                this.toast('Selecione um animal', 'error');
-                return;
-            }
-            if (isNaN(data.litros) || data.litros < 0) {
-                this.toast('A quantidade de litros não pode ser negativa', 'error');
-                return;
-            }
-            try {
-                const response = isEdit ? await api.updateProducao(parseInt(id), data) : await api.createProducao(data);
-                if (response.status >= 200 && response.status < 300) {
-                    this.toast(isEdit ? 'Produção atualizada!' : 'Produção registrada!', 'success');
-                    this.closeModal('producao');
-                    this.loadProducoes();
-                    if (this.currentPage === 'dashboard')
-                        this.loadDashboard();
-                }
-                else {
-                    this.toast(response.data?.message || 'Erro ao salvar', 'error');
-                }
-            }
-            catch (error) {
-                this.toast('Erro ao salvar produção', 'error');
-            }
-        },
-        async deletarProducao(id) {
-            if (!confirm(`Excluir produção ${id}?`))
-                return;
-            try {
-                const response = await api.deleteProducao(id);
-                if (response.status >= 200 && response.status < 300) {
-                    this.toast('Produção excluída!', 'success');
-                    this.loadProducoes();
-                    if (this.currentPage === 'dashboard')
-                        this.loadDashboard();
-                }
-                else {
-                    this.toast(response.data?.message || 'Erro ao excluir', 'error');
-                }
-            }
-            catch (error) {
-                this.toast('Erro ao excluir produção', 'error');
-            }
-        },
-        // ============================================
-        // USUÁRIOS - Admin
-        // ============================================
-        async toggleUserStatus(id) {
-            try {
-                const response = await api.toggleUserStatus(id);
-                if (response.status >= 200 && response.status < 300) {
-                    this.toast('Status alterado!', 'success');
-                    this.loadUsuarios();
-                }
-                else {
-                    this.toast(response.data?.message || 'Erro ao alterar', 'error');
-                }
-            }
-            catch (error) {
-                this.toast('Erro ao alterar status', 'error');
-            }
-        },
-        async deletarUsuario(id) {
-            if (!confirm('Excluir usuário?'))
-                return;
-            try {
-                const response = await api.deleteUser(id);
-                if (response.status >= 200 && response.status < 300) {
-                    this.toast('Usuário excluído!', 'success');
-                    this.loadUsuarios();
-                }
-                else {
-                    this.toast(response.data?.message || 'Erro ao excluir', 'error');
-                }
-            }
-            catch (error) {
-                this.toast('Erro ao excluir usuário', 'error');
-            }
-        },
-        // ============================================
-        // LOGOUT
-        // ============================================
         logout() {
             api.clearToken();
             this.toast('Desconectado!', 'warning');
             setTimeout(() => (window.location.href = '/'), 500);
         },
-        // ============================================
-        // MODAL
-        // ============================================
-        showModal(name) {
-            el(`modal${name.charAt(0).toUpperCase() + name.slice(1)}`).classList.add('active');
-            document.body.style.overflow = 'hidden';
-        },
-        closeModal(name) {
-            el(`modal${name.charAt(0).toUpperCase() + name.slice(1)}`).classList.remove('active');
-            document.body.style.overflow = '';
-        },
-        // ============================================
-        // TOAST
-        // ============================================
         toast(message, type = 'info') {
             const toast = el('toast');
             toast.textContent = message;
@@ -875,7 +177,6 @@
         }
     };
     document.addEventListener('DOMContentLoaded', () => {
-        console.log('🚀 Inicializando aplicação...');
         window.app = app;
         app.init();
     });

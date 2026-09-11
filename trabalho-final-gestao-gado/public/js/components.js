@@ -1,22 +1,47 @@
 /// <reference path="./types.ts" />
 /**
- * Components - navbar compartilhada entre todas as páginas.
+ * Components - navbar compartilhada entre todas as páginas (MPA).
  *
- * Nota de migração: o antigo components.js também tinha funções
- * (statsGrid, animalTable, producaoTable, userTable, arvoreGenealogica,
- * dashboard) que nunca eram chamadas por nenhuma página — cada página
- * monta seu próprio HTML diretamente. Foram removidas nesta migração
- * por serem código morto; only renderNavbar/setNavbarActivePage são
- * usadas de fato.
+ * Nota de migração: em MPA cada aba é um .html próprio e a navbar é injetada
+ * aqui via renderNavbar(). O botão "Sair" chama uma função global
+ * (logoutGlobal) definida neste arquivo, em vez de depender do `app.logout()`
+ * de cada página — assim ele funciona em qualquer aba sem precisar que cada
+ * .ts lembre de expor o próprio `app`.
  */
+/**
+ * Encerra a sessão em qualquer página.
+ *
+ * Por que global: o botão "Sair" vive na navbar, que é injetada em todas as
+ * páginas. Se cada página tivesse que definir `app.logout`, qualquer página
+ * que esquecesse deixaria o botão inerte (foi o que acontecia em Usuários).
+ */
+function logoutGlobal() {
+    localStorage.removeItem('token');
+    // Redireciona para a landing. O hard reload garante que qualquer estado
+    // em memória (token em api.ts, caches de módulo) seja descartado.
+    window.location.href = '/';
+}
+// Exposto em window para o onclick inline do botão "Sair" funcionar.
+window.logoutGlobal = logoutGlobal;
+/**
+ * Calcula as iniciais a partir do nome.
+ *
+ * Regra: pega a primeira letra do primeiro nome e a primeira letra do último
+ * nome (ex.: "Maria Souza" → "MS"; "admin" → "A"; "João Pedro Silva" → "JS").
+ * Se só tiver um nome, usa só a primeira letra.
+ */
+function iniciaisDoNome(nome) {
+    const partes = nome.trim().split(/\s+/).filter(Boolean);
+    if (partes.length === 0)
+        return '?';
+    if (partes.length === 1)
+        return partes[0].charAt(0).toUpperCase();
+    return (partes[0].charAt(0) + partes[partes.length - 1].charAt(0)).toUpperCase();
+}
 const Components = {
     /**
      * Formata uma data no formato ISO (yyyy-mm-dd) usando o horário LOCAL do
-     * navegador — não `toISOString()`, que sempre converte para UTC. Isso
-     * importa porque o Brasil está atrás de UTC (UTC-3): entre ~21h e 23h59,
-     * o UTC já virou o dia seguinte enquanto aqui ainda é "hoje", então
-     * `data.toISOString().split('T')[0]` devolveria amanhã em vez de hoje
-     * nesse intervalo.
+     * navegador — não `toISOString()`, que sempre converte para UTC.
      */
     dataParaIsoLocal(data) {
         const ano = data.getFullYear();
@@ -24,19 +49,13 @@ const Components = {
         const dia = String(data.getDate()).padStart(2, '0');
         return `${ano}-${mes}-${dia}`;
     },
-    /** Data de hoje (ou hoje +/- `offsetDias`) no formato ISO local — ver `dataParaIsoLocal`.
-     *  Usado para limites de `<input type="date">` e para preencher "hoje" como valor padrão. */
+    /** Data de hoje (ou hoje +/- `offsetDias`) no formato ISO local. */
     dataLocalIso(offsetDias = 0) {
         const d = new Date();
         d.setDate(d.getDate() + offsetDias);
         return this.dataParaIsoLocal(d);
     },
-    /**
-     * Ordena uma lista sem alterar o array original — usado pelas tabelas
-     * clicáveis (clicar no título da coluna muda a ordem). `acessor` deixa
-     * ordenar por um campo "calculado" (ex.: nome do animal dentro de uma
-     * produção), por padrão lê `item[campo]` direto.
-     */
+    /** Ordena uma lista sem alterar o array original. */
     ordenarLista(lista, campo, dir, acessor) {
         const getVal = acessor || ((item, c) => item[c]);
         return [...lista].sort((a, b) => {
@@ -57,18 +76,13 @@ const Components = {
             return 0;
         });
     },
-    /** Gera um <th> clicável que chama `onclick` e mostra uma setinha indicando a ordenação ativa. */
+    /** Gera um <th> clicável com setinha indicando a ordenação ativa. */
     thOrdenavel(label, campo, sortCampo, sortDir, onclick) {
         const ativo = campo === sortCampo;
         const icone = ativo ? (sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort';
         return `<th class="th-sortable" onclick="${onclick}" title="Ordenar por ${label}">${label} <i class="fa-solid ${icone}"></i></th>`;
     },
-    /**
-     * Renderiza a navbar e a injeta no elemento #navbar da página.
-     * @param activePage - nome da página ativa ('dashboard'|'animais'|'producoes'|'relatorios'|'usuarios')
-     * @param user - dados do usuário logado (ou null)
-     * @param mode - 'spa': navegação interna (data-page); 'mpa': redireciona para /app/<page>.html
-     */
+    /** Renderiza a navbar e a injeta no elemento #navbar da página. */
     renderNavbar(activePage, user, mode) {
         const container = document.getElementById('navbar');
         if (!container)
@@ -78,28 +92,11 @@ const Components = {
         const userInitial = user ? (user.nome ? user.nome.charAt(0).toUpperCase() : '?') : '?';
         const userName = user ? user.nome : 'Usuário';
         const items = [
-            {
-                id: 'dashboard',
-                label: '<i class="fa-solid fa-chart-column"></i> Dashboard',
-                title: 'Visualizar resumo e estatísticas'
-            },
+            { id: 'dashboard', label: '<i class="fa-solid fa-chart-column"></i> Dashboard', title: 'Visualizar resumo e estatísticas' },
             { id: 'animais', label: '<i class="fa-solid fa-cow"></i> Rebanho', title: 'Gerenciar rebanho de animais' },
-            {
-                id: 'producoes',
-                label: '<i class="fa-solid fa-droplet"></i> Produções',
-                title: 'Registros de produção de leite'
-            },
-            {
-                id: 'relatorios',
-                label: '<i class="fa-solid fa-clipboard-list"></i> Relatórios',
-                title: 'Relatórios e gráficos estatísticos'
-            },
-            {
-                id: 'usuarios',
-                label: '<i class="fa-solid fa-user"></i> Usuários',
-                title: 'Gerenciar usuários do sistema',
-                adminOnly: true
-            }
+            { id: 'producoes', label: '<i class="fa-solid fa-droplet"></i> Produções', title: 'Registros de produção de leite' },
+            { id: 'relatorios', label: '<i class="fa-solid fa-clipboard-list"></i> Relatórios', title: 'Relatórios e gráficos estatísticos' },
+            { id: 'usuarios', label: '<i class="fa-solid fa-user"></i> Usuários', title: 'Gerenciar usuários do sistema', adminOnly: true }
         ];
         const navLinks = items
             .filter(item => !item.adminOnly || isAdmin)
@@ -111,6 +108,37 @@ const Components = {
             .join('\n                ');
         const brandHref = navMode === 'spa' ? '#' : '/app/dashboard.html';
         const brandClick = navMode === 'spa' ? 'onclick="event.preventDefault(); window.app && window.app.navigateTo(\'dashboard\');"' : '';
+        // Bloco de autenticação: avatar + nome + badge de papel + caret, tudo
+        // clicável para abrir o menu. O botão Sair vive DENTRO do menu (não mais
+        // solto na navbar), seguindo o padrão de GitHub/Google. Assim ganha-se
+        // espaço horizontal e o menu pode mostrar mais info (nome, email, papel).
+        const authBlock = user
+            ? `
+        <div class="user-menu" id="userMenu">
+          <button class="user-menu-trigger" id="userMenuTrigger" type="button" title="Menu do usuário">
+            <span class="user-avatar role-${user.role.toLowerCase()}" id="userAvatar">${iniciaisDoNome(user.nome)}</span>
+            <span class="user-name" id="userName">${userName}</span>
+            <span class="user-role-badge role-${user.role.toLowerCase()}" id="userRoleBadge">${user.role}</span>
+            <i class="fa-solid fa-chevron-down user-menu-caret" id="userMenuCaret"></i>
+          </button>
+
+          <div class="user-menu-dropdown" id="userMenuDropdown">
+            <div class="user-menu-header">
+              <span class="user-avatar user-avatar-lg role-${user.role.toLowerCase()}">${iniciaisDoNome(user.nome)}</span>
+              <div class="user-menu-header-info">
+                <strong class="user-menu-nome">${userName}</strong>
+                <span class="user-menu-email">${user.email || ''}</span>
+                <span class="user-role-badge role-${user.role.toLowerCase()}">${user.role}</span>
+              </div>
+            </div>
+            <div class="user-menu-separator"></div>
+            <button class="user-menu-item user-menu-item-danger" type="button" onclick="logoutGlobal()">
+              <i class="fa-solid fa-right-from-bracket"></i> Sair
+            </button>
+          </div>
+        </div>
+      `
+            : '';
         container.innerHTML = `
             <nav class="navbar">
                 <div class="container">
@@ -119,11 +147,7 @@ const Components = {
                         ${navLinks}
                     </div>
                     <div class="navbar-auth">
-                        <div class="user-info" id="userInfo"${user ? '' : ' hidden'}>
-                            <span class="user-avatar" id="userAvatar">${userInitial}</span>
-                            <span class="user-name" id="userName">${userName}</span>
-                            <button class="btn btn-sm btn-danger" title="Encerrar sessão" onclick="app.logout()">Sair</button>
-                        </div>
+                        ${authBlock}
                     </div>
                     <button class="mobile-toggle" id="mobileToggle" title="Menu principal"><i class="fa-solid fa-bars"></i></button>
                 </div>
@@ -148,21 +172,41 @@ const Components = {
                 container.querySelector('#navMenu')?.classList.toggle('open');
             });
         }
+        // ---- Menu do usuário ----
+        const menu = container.querySelector('#userMenu');
+        const trigger = container.querySelector('#userMenuTrigger');
+        const dropdown = container.querySelector('#userMenuDropdown');
+        if (menu && trigger && dropdown) {
+            // Abre/fecha ao clicar no bloco. `stopPropagation` evita que o mesmo
+            // clique que abre seja pego pelo listener global de "clicar fora".
+            const toggleMenu = (e) => {
+                e.stopPropagation();
+                menu.classList.toggle('open');
+            };
+            trigger.addEventListener('click', toggleMenu);
+            // Fecha ao clicar em qualquer lugar fora do menu.
+            document.addEventListener('click', (e) => {
+                if (menu.classList.contains('open') && !menu.contains(e.target)) {
+                    menu.classList.remove('open');
+                }
+            });
+            // Fecha com ESC.
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && menu.classList.contains('open')) {
+                    menu.classList.remove('open');
+                }
+            });
+        }
     },
-    /**
-     * Atualiza o item ativo da navbar (usado pela SPA ao navegar).
-     */
+    /** Atualiza o item ativo da navbar (usado pela SPA, se um dia voltar a ter). */
     setNavbarActivePage(activePage) {
         document.querySelectorAll('#navbar [data-page]').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.page === activePage);
         });
     },
     /**
-     * Renderiza a árvore genealógica em posições fixas — avós (se existirem)
-     * e pais sempre ACIMA do animal atual, filhos sempre abaixo — com uma
-     * linha conectando cada nível ao seguinte. Cada card de um parente
-     * cadastrado é clicável e chama `app.verArvore(brinco)`, ou seja,
-     * clicar em alguém da família recentraliza a árvore nele.
+     * Renderiza a árvore genealógica em posições fixas — avós e pais acima do
+     * animal atual, filhos abaixo, com uma linha conectando cada nível.
      */
     renderArvoreGenealogica(data) {
         const animal = data.animal;
@@ -189,30 +233,18 @@ const Components = {
                 <span class="tree-card-brinco">Brinco: ${a.brinco}</span>
             </div>`;
         };
-        // Linha vertical que liga um nível ao de baixo (o "tronco" da forquilha).
         const tronco = '<div class="tree-stem"></div>';
-        // Um casal (2 cards lado a lado). O CSS desenha a forquilha: cada card
-        // solta uma perna vertical que se junta na barra horizontal, e do meio
-        // dela sai o tronco que desce até o filho — em vez de um traço único
-        // saindo do meio do nada.
         const casal = (esquerda, direita) => `<div class="tree-couple">
                 <div class="tree-slot">${esquerda}</div>
                 <div class="tree-slot">${direita}</div>
             </div>`;
-        // Casal de avós de um dos lados. Só aparece se aquele pai/mãe existir e
-        // tiver ao menos um progenitor cadastrado (limite de gerações: avós).
         const casalAvos = (progenitor, tituloAvo, tituloAva) => {
             if (!progenitor || (!progenitor.pai && !progenitor.mae))
                 return '';
             return (casal(card({ titulo: tituloAvo, animal: progenitor.pai, tamanho: 'sm' }), card({ titulo: tituloAva, animal: progenitor.mae, tamanho: 'sm' })) + tronco);
         };
-        // Um lado da família: os avós daquele lado (quando houver) ligados por
-        // forquilha ao card do Pai ou da Mãe. É o mesmo padrão do nível de baixo,
-        // só que aninhado — dá pra repetir para mais gerações se um dia precisar.
         const ladoFamilia = (titulo, progenitor, tituloAvo, tituloAva) => `${casalAvos(progenitor, tituloAvo, tituloAva)}${card({ titulo, animal: progenitor })}`;
-        // ---------- Ascendentes: pais (com os avós acima de cada um) ----------
         const ascendentes = casal(ladoFamilia('Pai', pai, 'Avô paterno', 'Avó paterna'), ladoFamilia('Mãe', mae, 'Avô materno', 'Avó materna')) + tronco;
-        // ---------- Descendentes: filhos — "Filho" se macho, "Filha" se fêmea ----------
         const descendentes = filhos.length > 0
             ? `${tronco}
                    <div class="tree-children">
@@ -225,8 +257,6 @@ const Components = {
                 .join('')}
                    </div>`
             : '';
-        // O wrapper interno (width: max-content + margin auto) mantém a árvore
-        // centralizada quando cabe na tela e totalmente rolável quando não cabe.
         return `
             <div class="genealogy-tree">
                 <div class="genealogy-tree-inner">

@@ -40,6 +40,74 @@
       </div>
     </footer>
 
+    <!-- ============================================ -->
+    <!-- MODAL: EDITAR USUÁRIO -->
+    <!-- ============================================ -->
+    <div class="modal-overlay" id="modalUsuario">
+      <div class="modal modal-lg">
+        <div class="modal-header">
+          <h3 id="modalUsuarioTitle"><i class="fa-solid fa-pen"></i> Editar Usuário</h3>
+          <button class="modal-close" onclick="app.closeModal('usuario')">×</button>
+        </div>
+        <div class="modal-body">
+          <form
+            id="usuarioForm"
+            onsubmit="
+              event.preventDefault();
+              app.salvarEdicao();
+            "
+          >
+            <!-- Aviso exibido só quando o alvo é o admin principal -->
+            <div id="usuarioAvisoPrincipal" style="display: none" class="mb-10">
+              <div class="badge badge-warning" style="padding: 8px 12px; white-space: normal">
+                <i class="fa-solid fa-shield-halved"></i>
+                Administrador Principal: perfil e status são fixos e não podem ser alterados.
+              </div>
+            </div>
+
+            <input type="hidden" id="usuarioEditId" />
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nome *</label>
+                <input type="text" id="usuarioNome" placeholder="Nome completo" required />
+              </div>
+              <div class="form-group">
+                <label>Email (não editável)</label>
+                <input type="email" id="usuarioEmail" disabled />
+              </div>
+            </div>
+
+            <div class="form-row-3">
+              <div class="form-group">
+                <label>CPF</label>
+                <input type="text" id="usuarioCpf" placeholder="000.000.000-00" maxlength="14" />
+              </div>
+              <div class="form-group">
+                <label>Perfil *</label>
+                <select id="usuarioRole">
+                  <option value="Cliente">Cliente</option>
+                  <option value="Admin">Admin</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Status</label>
+                <label class="switch" title="Alternar entre Ativo e Inativo">
+                  <input type="checkbox" id="usuarioAtivo" />
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" onclick="app.closeModal('usuario')">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <div id="toast" class="toast"></div>
 
     <script src="/js/api.js"></script>

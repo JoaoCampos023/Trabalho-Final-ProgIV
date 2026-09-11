@@ -1150,3 +1150,241 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================
+   MENU DO USUÁRIO (navbar)
+   ============================================
+   Bloco avatar + nome + badge + caret que, ao clicar, abre um dropdown
+   com nome completo, email, papel e o botão Sair. Substitui o antigo
+   "avatar + nome + botão Sair solto" — mais limpo e libera espaço na navbar. */
+
+.user-menu {
+  position: relative;
+}
+
+/* Gatilho: alinha avatar, nome, badge e caret numa "pílula" horizontal.
+   `cursor: pointer` e `user-select: none` deixam claro que é clicável. */
+.user-menu-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 4px 10px 4px 4px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  user-select: none;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.user-menu-trigger:hover,
+.user-menu.open .user-menu-trigger {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Avatar: mesmas dimensões de antes, mas com cor condicional ao papel.
+   Admin = azul (padrão antigo); Cliente = cinza. Assim dá para diferenciar
+   "quem manda" só de bater o olho na navbar. */
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+}
+
+.user-avatar.role-admin {
+  background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+}
+
+.user-avatar.role-cliente {
+  background: linear-gradient(135deg, #6c757d, #adb5bd);
+}
+
+.user-avatar-lg {
+  width: 44px;
+  height: 44px;
+  font-size: 0.95rem;
+}
+
+.user-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: white;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Badge do papel ao lado do nome — pequeno e discreto, cor por papel. */
+.user-role-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  line-height: 1.4;
+}
+
+.user-role-badge.role-admin {
+  background: rgba(13, 202, 240, 0.15);
+  color: #0dcaf0;
+}
+
+.user-role-badge.role-cliente {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Caret (chevron) que gira ao abrir o menu. */
+.user-menu-caret {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+  transition: transform 0.2s ease;
+}
+
+.user-menu.open .user-menu-caret {
+  transform: rotate(180deg);
+}
+
+/* Dropdown: posicionado em absolute abaixo do bloco, com fundo escuro
+   igual ao da navbar. Fica escondido por padrão e aparece com a classe
+   `.open` no `.user-menu` — o JS só adiciona/remove essa classe. */
+.user-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 260px;
+  background: #1a1a2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  padding: 8px;
+  z-index: 1100;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.user-menu.open .user-menu-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Cabeçalho do dropdown: avatar grande + nome/email/papel. */
+.user-menu-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 12px;
+}
+
+.user-menu-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.user-menu-nome {
+  color: white;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-menu-email {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* O badge dentro do menu tem que ficar alinhado à esquerda, não centralizado. */
+.user-menu-header-info .user-role-badge {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.user-menu-separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
+}
+
+/* Item do menu (usado para "Sair"). Hover suave, ícone alinhado. */
+.user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.user-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+}
+
+.user-menu-item i {
+  width: 16px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.user-menu-item-danger {
+  color: #f87171;
+}
+
+.user-menu-item-danger:hover {
+  background: rgba(220, 53, 69, 0.15);
+  color: #fca5a5;
+}
+
+/* ---------- RESPONSIVO ---------- */
+/* Em telas pequenas, esconde o nome e o badge do gatilho (o usuário já
+   sabe quem está logado) e mantém só o avatar + caret. Nome, email e
+   papel continuam visíveis dentro do dropdown. */
+@media (max-width: 768px) {
+  .user-menu-trigger .user-name,
+  .user-menu-trigger .user-role-badge {
+    display: none;
+  }
+
+  .user-menu-trigger {
+    padding: 4px;
+    gap: 6px;
+  }
+
+  .user-menu-dropdown {
+    right: -8px;
+    min-width: 240px;
+  }
+}
