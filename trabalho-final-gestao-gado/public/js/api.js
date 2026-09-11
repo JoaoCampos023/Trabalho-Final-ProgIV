@@ -116,6 +116,14 @@ class Api {
     async getAnimalStats() {
         return this.request('GET', '/animais/stats');
     }
+    async getMachosParaSelecao(excluirBrinco) {
+        const endpoint = excluirBrinco ? `/animais/machos/selecao?excluir=${excluirBrinco}` : '/animais/machos/selecao';
+        return this.request('GET', endpoint);
+    }
+    async getFemeasParaSelecao(excluirBrinco) {
+        const endpoint = excluirBrinco ? `/animais/femeas/selecao?excluir=${excluirBrinco}` : '/animais/femeas/selecao';
+        return this.request('GET', endpoint);
+    }
     // ============================================
     // PRODUÇÕES
     // ============================================

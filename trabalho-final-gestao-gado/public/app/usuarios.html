@@ -1,36 +1,49 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>👤 Usuários - Gestão de Gado</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>"
+    />
     <link rel="stylesheet" href="/css/style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-</head>
-<body>
-
+  </head>
+  <body>
     <!-- NAVBAR (injetada por components.js) -->
     <div id="navbar"></div>
 
     <main class="main-content">
-        <div class="card">
-            <div class="card-header">
-                <h2><i class="fa-solid fa-user"></i> Usuários</h2>
-                <div class="card-actions">
-                    <button class="btn btn-secondary btn-sm" onclick="app.loadUsuarios()"><i class="fa-solid fa-arrows-rotate"></i> Atualizar</button>
-                </div>
-            </div>
-            <div id="usuariosContent"><div class="loading"><div class="spinner"></div><p>Carregando usuários...</p></div></div>
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-user"></i> Usuários</h2>
+          <div class="card-actions">
+            <button class="btn btn-secondary btn-sm" onclick="app.loadUsuarios()">
+              <i class="fa-solid fa-arrows-rotate"></i> Atualizar
+            </button>
+          </div>
         </div>
+        <div id="usuariosContent">
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Carregando usuários...</p>
+          </div>
+        </div>
+      </div>
     </main>
 
-    <footer class="footer"><div class="container"><p><i class="fa-solid fa-cow"></i> Gestão de Gado &copy; 2026 - Todos os direitos reservados</p></div></footer>
+    <footer class="footer">
+      <div class="container">
+        <p><i class="fa-solid fa-cow"></i> Gestão de Gado &copy; 2026 - Todos os direitos reservados</p>
+      </div>
+    </footer>
 
     <div id="toast" class="toast"></div>
 
     <script src="/js/api.js"></script>
     <script src="/js/components.js"></script>
     <script src="/js/pages/usuarios.js"></script>
-</body>
+  </body>
 </html>

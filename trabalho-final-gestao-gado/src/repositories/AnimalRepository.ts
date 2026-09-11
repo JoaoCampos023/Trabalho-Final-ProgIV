@@ -63,16 +63,16 @@ export class AnimalRepository {
       }
     });
     if (!animal) return null;
-    
+
     const result = toAnimal(animal);
-    
+
     if (animal.pai) {
       result.pai = toAnimal(animal.pai);
     }
     if (animal.mae) {
       result.mae = toAnimal(animal.mae);
     }
-    
+
     return result;
   }
 
@@ -97,11 +97,11 @@ export class AnimalRepository {
         }
       }
     });
-    
+
     if (!animal) return null;
-    
+
     const result = toAnimal(animal);
-    
+
     if (animal.pai) {
       result.pai = toAnimal(animal.pai);
       if (animal.pai.pai) {
@@ -111,7 +111,7 @@ export class AnimalRepository {
         result.pai.mae = toAnimal(animal.pai.mae);
       }
     }
-    
+
     if (animal.mae) {
       result.mae = toAnimal(animal.mae);
       if (animal.mae.pai) {
@@ -121,10 +121,10 @@ export class AnimalRepository {
         result.mae.mae = toAnimal(animal.mae.mae);
       }
     }
-    
+
     result.filhos_por_pai = animal.filhos_pai.map(toAnimal);
     result.filhos_por_mae = animal.filhos_mae.map(toAnimal);
-    
+
     return result;
   }
 
@@ -237,8 +237,7 @@ export class AnimalRepository {
     }
 
     // Validar se pai e mãe não são o mesmo
-    if (animalData.brinco_pai && animalData.brinco_mae && 
-        animalData.brinco_pai === animalData.brinco_mae) {
+    if (animalData.brinco_pai && animalData.brinco_mae && animalData.brinco_pai === animalData.brinco_mae) {
       throw new Error('O pai e a mãe não podem ser o mesmo animal');
     }
 
@@ -386,9 +385,7 @@ export class AnimalRepository {
       totalMacho,
       totalFemea,
       pesoMedio: Number(pesoMedioResult._avg.peso) || 0,
-      racas: racas
-        .filter(r => r.raca !== null)
-        .map(r => ({ raca: r.raca as string, quantidade: r._count }))
+      racas: racas.filter(r => r.raca !== null).map(r => ({ raca: r.raca as string, quantidade: r._count }))
     };
   }
 }

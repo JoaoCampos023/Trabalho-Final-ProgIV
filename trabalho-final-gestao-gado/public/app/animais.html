@@ -1,70 +1,118 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🐮 Rebanho - Gestão de Gado</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>"
+    />
     <link rel="stylesheet" href="/css/style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-</head>
-<body>
-
+  </head>
+  <body>
     <!-- NAVBAR (injetada por components.js) -->
     <div id="navbar"></div>
 
     <!-- MAIN CONTENT -->
     <main class="main-content">
-        <div class="card">
-            <div class="card-header">
-                <h2><i class="fa-solid fa-cow"></i> Rebanho</h2>
-                <div class="card-actions">
-                    <button class="btn btn-primary btn-sm" onclick="app.novoAnimal()"><i class="fa-solid fa-plus"></i> Novo Animal</button>
-                    <button class="btn btn-secondary btn-sm" onclick="app.loadAnimais()"><i class="fa-solid fa-arrows-rotate"></i> Atualizar</button>
-                </div>
-            </div>
-            <div id="animaisContent">
-                <div class="loading"><div class="spinner"></div><p>Carregando animais...</p></div>
-            </div>
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-cow"></i> Rebanho</h2>
+          <div class="card-actions">
+            <button class="btn btn-primary btn-sm" onclick="app.novoAnimal()">
+              <i class="fa-solid fa-plus"></i> Novo Animal
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="app.loadAnimais()">
+              <i class="fa-solid fa-arrows-rotate"></i> Atualizar
+            </button>
+          </div>
         </div>
+        <div id="animaisContent">
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Carregando animais...</p>
+          </div>
+        </div>
+      </div>
     </main>
 
     <!-- FOOTER -->
-    <footer class="footer"><div class="container"><p><i class="fa-solid fa-cow"></i> Gestão de Gado &copy; 2026 - Todos os direitos reservados</p></div></footer>
+    <footer class="footer">
+      <div class="container">
+        <p><i class="fa-solid fa-cow"></i> Gestão de Gado &copy; 2026 - Todos os direitos reservados</p>
+      </div>
+    </footer>
 
     <!-- MODALS -->
     <div class="modal-overlay" id="modalAnimal">
-        <div class="modal modal-lg">
-            <div class="modal-header">
-                <h3 id="modalAnimalTitle"><i class="fa-solid fa-cow"></i> Novo Animal</h3>
-                <button class="modal-close" onclick="app.closeModal('animal')">×</button>
-            </div>
-            <div class="modal-body">
-                <form id="animalForm">
-                    <div class="form-row">
-                        <div class="form-group"><label>Brinco *</label><input type="number" id="animalBrinco" required /></div>
-                        <div class="form-group"><label>Nome *</label><input type="text" id="animalNome" required /></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Sexo *</label><select id="animalSexo"><option value="F">Fêmea</option><option value="M">Macho</option></select></div>
-                        <div class="form-group"><label>Raça</label><input type="text" id="animalRaca" /></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Peso (kg) *</label><input type="number" id="animalPeso" step="0.1" required /></div>
-                        <div class="form-group"><label>Data Nascimento *</label><input type="date" id="animalDataNascimento" required /></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Brinco do Pai</label><input type="number" id="animalBrincoPai" /></div>
-                        <div class="form-group"><label>Brinco da Mãe</label><input type="number" id="animalBrincoMae" /></div>
-                    </div>
-                    <input type="hidden" id="animalEditBrinco" />
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary" onclick="app.closeModal('animal')">Cancelar</button>
-                        <button type="submit" class="btn btn-primary" id="animalSubmitBtn">Salvar</button>
-                    </div>
-                </form>
-            </div>
+      <div class="modal modal-lg">
+        <div class="modal-header">
+          <h3 id="modalAnimalTitle"><i class="fa-solid fa-cow"></i> Novo Animal</h3>
+          <button class="modal-close" onclick="app.closeModal('animal')">×</button>
         </div>
+        <div class="modal-body">
+          <form id="animalForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Brinco *</label><input type="number" id="animalBrinco" placeholder="Ex: 1015" required />
+              </div>
+              <div class="form-group">
+                <label>Nome *</label><input type="text" id="animalNome" placeholder="Ex: Mimosa" required />
+              </div>
+            </div>
+            <div class="form-row-3">
+              <div class="form-group">
+                <label>Sexo *</label
+                ><select id="animalSexo">
+                  <option value="F">Fêmea</option>
+                  <option value="M">Macho</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Raça</label><input type="text" id="animalRaca" placeholder="Ex: Holandesa" />
+              </div>
+              <div class="form-group">
+                <label>Status</label>
+                <label class="switch" title="Clique para alternar entre Ativo e Inativo">
+                  <input type="checkbox" id="animalAtivo" checked onchange="app.atualizarLabelStatusAnimal()" />
+                  <span class="switch-slider"></span>
+                  <span class="switch-label" id="animalAtivoLabel">Ativo</span>
+                </label>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Peso (kg) *</label
+                ><input type="number" id="animalPeso" step="0.1" placeholder="Ex: 420.5" required />
+              </div>
+              <div class="form-group">
+                <label>Data Nascimento *</label><input type="date" id="animalDataNascimento" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Brinco do Pai</label
+                ><select id="animalBrincoPai">
+                  <option value="">Nenhum</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Brinco da Mãe</label
+                ><select id="animalBrincoMae">
+                  <option value="">Nenhuma</option>
+                </select>
+              </div>
+            </div>
+            <input type="hidden" id="animalEditBrinco" />
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" onclick="app.closeModal('animal')">Cancelar</button>
+              <button type="submit" class="btn btn-primary" id="animalSubmitBtn">Salvar</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
     <!-- TOAST -->
@@ -74,5 +122,5 @@
     <script src="/js/api.js"></script>
     <script src="/js/components.js"></script>
     <script src="/js/pages/animais.js"></script>
-</body>
+  </body>
 </html>

@@ -27,12 +27,7 @@ export class ProducaoService {
     animalBrinco?: number,
     periodo?: PeriodoProducao
   ): Promise<ProducaoLeite[]> {
-    return await this.producaoRepository.findWithFilters(
-      dataInicio,
-      dataFim,
-      animalBrinco,
-      periodo
-    );
+    return await this.producaoRepository.findWithFilters(dataInicio, dataFim, animalBrinco, periodo);
   }
 
   /**
@@ -51,7 +46,7 @@ export class ProducaoService {
     if (!animal) {
       throw new Error(`Animal com brinco ${animalBrinco} não encontrado.`);
     }
-    
+
     return await this.producaoRepository.findByAnimal(animalBrinco);
   }
 
@@ -65,9 +60,7 @@ export class ProducaoService {
   /**
    * Registrar uma nova produção
    */
-  async registrarProducao(
-    data: Omit<IProducaoLeite, 'id' | 'criado_em' | 'atualizado_em'>
-  ): Promise<ProducaoLeite> {
+  async registrarProducao(data: Omit<IProducaoLeite, 'id' | 'criado_em' | 'atualizado_em'>): Promise<ProducaoLeite> {
     // Validações (igual ao projeto original em C#)
 
     // 1. Litros não pode ser negativo (zero é permitido)
@@ -110,10 +103,7 @@ export class ProducaoService {
   /**
    * Atualizar uma produção
    */
-  async atualizarProducao(
-    id: number,
-    data: Partial<IProducaoLeite>
-  ): Promise<ProducaoLeite> {
+  async atualizarProducao(id: number, data: Partial<IProducaoLeite>): Promise<ProducaoLeite> {
     const producaoExistente = await this.producaoRepository.findById(id);
     if (!producaoExistente) {
       throw new Error(`Produção com ID ${id} não encontrada.`);
@@ -182,11 +172,7 @@ export class ProducaoService {
   /**
    * Obter produção por período
    */
-  async getProducaoPorPeriodo(
-    dataInicio: Date,
-    dataFim: Date,
-    periodo?: PeriodoProducao
-  ): Promise<number> {
+  async getProducaoPorPeriodo(dataInicio: Date, dataFim: Date, periodo?: PeriodoProducao): Promise<number> {
     return await this.producaoRepository.getTotalPorPeriodo(dataInicio, dataFim, periodo);
   }
 
@@ -207,7 +193,10 @@ export class ProducaoService {
   /**
    * Obter estatísticas de produção
    */
-  async getStats(dataInicio?: Date, dataFim?: Date): Promise<{
+  async getStats(
+    dataInicio?: Date,
+    dataFim?: Date
+  ): Promise<{
     totalLitros: number;
     mediaPorOrdenha: number;
     totalRegistros: number;
@@ -233,12 +222,7 @@ export class ProducaoService {
     totalPorAnimal: { brinco: number; nome: string; total: number }[];
   }> {
     // Buscar produções com filtros
-    const producoes = await this.producaoRepository.findWithFilters(
-      dataInicio,
-      dataFim,
-      animalBrinco,
-      periodo
-    );
+    const producoes = await this.producaoRepository.findWithFilters(dataInicio, dataFim, animalBrinco, periodo);
 
     // Estatísticas
     const stats = await this.producaoRepository.getStats(dataInicio, dataFim);
@@ -246,7 +230,7 @@ export class ProducaoService {
     // Total por animal
     const animais = await this.animalRepository.findAll();
     const totalPorAnimal = await Promise.all(
-      animais.map(async (animal) => ({
+      animais.map(async animal => ({
         brinco: animal.brinco,
         nome: animal.nome,
         total: await this.producaoRepository.getTotalPorAnimal(animal.brinco)

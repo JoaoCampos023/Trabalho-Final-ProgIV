@@ -10,6 +10,9 @@
     }
     const app = {
         user: null,
+        sortCampo: 'nome',
+        sortDir: 'asc',
+        ultimoResultado: null,
         init() {
             if (!api.isAuthenticated()) {
                 window.location.href = '/';
@@ -44,28 +47,50 @@
             clearTimeout(this.toastTimeout);
             this.toastTimeout = window.setTimeout(() => toast.classList.remove('show'), 3000);
         },
+        // Clicar no título de uma coluna ordena por ela; clicar de novo inverte a ordem.
+        // Reordena a partir dos dados já carregados (sem novo fetch/spinner) para não piscar a tela.
+        ordenarPor(campo) {
+            if (this.sortCampo === campo) {
+                this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+            }
+            else {
+                this.sortCampo = campo;
+                this.sortDir = 'asc';
+            }
+            this.renderUsuarios();
+        },
+        renderUsuarios() {
+            const resultado = this.ultimoResultado;
+            if (!resultado)
+                return;
+            const container = el('usuariosContent');
+            if (resultado.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">Nenhum usuário cadastrado.</p>';
+                return;
+            }
+            const users = Components.ordenarLista(resultado, this.sortCampo, this.sortDir);
+            const th = (label, campo) => Components.thOrdenavel(label, campo, this.sortCampo, this.sortDir, `app.ordenarPor('${campo}')`);
+            let html = `<div class="table-responsive"><table><thead><tr>${th('Nome', 'nome')}${th('Email', 'email')}${th('Perfil', 'role')}${th('Status', 'ativo')}<th>Ações</th></tr></thead><tbody>`;
+            users.forEach(u => {
+                const role = u.role === 'Admin'
+                    ? '<span class="badge badge-danger">Admin</span>'
+                    : '<span class="badge badge-info">Cliente</span>';
+                const status = u.ativo
+                    ? '<span class="badge badge-success">Ativo</span>'
+                    : '<span class="badge badge-danger">Inativo</span>';
+                html += `<tr><td><strong>${u.nome}</strong></td><td>${u.email}</td><td>${role}</td><td>${status}</td><td><div class="actions"><button class="btn btn-sm btn-warning" onclick="app.toggleUserStatus('${u.id}')"><i class="fa-solid fa-arrows-rotate"></i></button><button class="btn btn-sm btn-danger" onclick="app.deletarUsuario('${u.id}')"><i class="fa-solid fa-trash"></i></button></div></td></tr>`;
+            });
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        },
         async loadUsuarios() {
             const container = el('usuariosContent');
             container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando usuários...</p></div>`;
             try {
                 const response = await api.getUsers();
                 const users = response.data?.data || [];
-                if (!users || users.length === 0) {
-                    container.innerHTML = '<p class="text-muted text-center">Nenhum usuário cadastrado.</p>';
-                    return;
-                }
-                let html = `<div class="table-responsive"><table><thead><tr><th>Nome</th><th>Email</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead><tbody>`;
-                users.forEach(u => {
-                    const role = u.role === 'Admin'
-                        ? '<span class="badge badge-danger">Admin</span>'
-                        : '<span class="badge badge-info">Cliente</span>';
-                    const status = u.ativo
-                        ? '<span class="badge badge-success">Ativo</span>'
-                        : '<span class="badge badge-danger">Inativo</span>';
-                    html += `<tr><td><strong>${u.nome}</strong></td><td>${u.email}</td><td>${role}</td><td>${status}</td><td><div class="actions"><button class="btn btn-sm btn-warning" onclick="app.toggleUserStatus('${u.id}')"><i class="fa-solid fa-arrows-rotate"></i></button><button class="btn btn-sm btn-danger" onclick="app.deletarUsuario('${u.id}')"><i class="fa-solid fa-trash"></i></button></div></td></tr>`;
-                });
-                html += `</tbody></table></div>`;
-                container.innerHTML = html;
+                this.ultimoResultado = users;
+                this.renderUsuarios();
             }
             catch (error) {
                 container.innerHTML = `<p class="text-muted text-center">Erro ao carregar usuários: ${error.message}</p>`;

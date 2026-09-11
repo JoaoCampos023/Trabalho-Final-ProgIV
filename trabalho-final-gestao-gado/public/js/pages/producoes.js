@@ -10,6 +10,9 @@
     }
     const app = {
         user: null,
+        sortCampo: 'data_coleta',
+        sortDir: 'desc',
+        ultimoResultado: null,
         init() {
             if (!api.isAuthenticated()) {
                 window.location.href = '/';
@@ -48,6 +51,43 @@
             clearTimeout(this.toastTimeout);
             this.toastTimeout = window.setTimeout(() => toast.classList.remove('show'), 3000);
         },
+        // Clicar no título de uma coluna ordena por ela; clicar de novo inverte a ordem.
+        // Reordena a partir dos dados já carregados (sem novo fetch/spinner) para não piscar a tela.
+        ordenarPor(campo) {
+            if (this.sortCampo === campo) {
+                this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+            }
+            else {
+                this.sortCampo = campo;
+                this.sortDir = 'asc';
+            }
+            this.renderProducoes();
+        },
+        renderProducoes() {
+            const resultado = this.ultimoResultado;
+            if (!resultado)
+                return;
+            const container = el('producoesContent');
+            if (resultado.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">Nenhuma produção registrada.</p>';
+                return;
+            }
+            const totalLitros = resultado.reduce((sum, p) => sum + p.litros, 0);
+            const periodoLabel = {
+                Manha: '<i class="fa-solid fa-cloud-sun"></i> Manhã',
+                Tarde: '<i class="fa-solid fa-sun"></i> Tarde',
+                Noite: '<i class="fa-solid fa-moon"></i> Noite'
+            };
+            const producoes = Components.ordenarLista(resultado, this.sortCampo, this.sortDir, (p, campo) => campo === 'animal' ? p.animal?.nome || p.animal_brinco : p[campo]);
+            const th = (label, campo) => Components.thOrdenavel(label, campo, this.sortCampo, this.sortDir, `app.ordenarPor('${campo}')`);
+            let html = `<div class="table-responsive"><table><thead><tr>${th('ID', 'id')}${th('Animal', 'animal')}${th('Data', 'data_coleta')}${th('Período', 'periodo')}${th('Litros', 'litros')}<th>Ações</th></tr></thead><tbody>`;
+            producoes.forEach(p => {
+                const periodo = periodoLabel[p.periodo] || p.periodo;
+                html += `<tr><td>${p.id}</td><td>${p.animal?.nome || p.animal_brinco}</td><td>${new Date(p.data_coleta).toLocaleDateString()}</td><td>${periodo}</td><td><strong>${p.litros.toFixed(1)} L</strong></td><td><div class="actions"><button class="btn btn-sm btn-primary" onclick="app.editarProducao(${p.id})"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-danger" onclick="app.deletarProducao(${p.id})"><i class="fa-solid fa-trash"></i></button></div></td></tr>`;
+            });
+            html += `</tbody><tfoot><tr><td colspan="4" class="table-footer-label">Total:</td><td class="table-footer-value">${totalLitros.toFixed(1)} L</td><td></td></tr></tfoot></table></div>`;
+            container.innerHTML = html;
+        },
         async loadProducoes() {
             const container = el('producoesContent');
             container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando produções...</p></div>`;
@@ -58,23 +98,8 @@
                     ...p,
                     litros: typeof p.litros === 'number' ? p.litros : parseFloat(String(p.litros)) || 0
                 }));
-                if (!producoes || producoes.length === 0) {
-                    container.innerHTML = '<p class="text-muted text-center">Nenhuma produção registrada.</p>';
-                    return;
-                }
-                const totalLitros = producoes.reduce((sum, p) => sum + p.litros, 0);
-                const periodoLabel = {
-                    Manha: '<i class="fa-solid fa-cloud-sun"></i> Manhã',
-                    Tarde: '<i class="fa-solid fa-sun"></i> Tarde',
-                    Noite: '<i class="fa-solid fa-moon"></i> Noite'
-                };
-                let html = `<div class="table-responsive"><table><thead><tr><th>ID</th><th>Animal</th><th>Data</th><th>Período</th><th>Litros</th><th>Ações</th></tr></thead><tbody>`;
-                producoes.forEach(p => {
-                    const periodo = periodoLabel[p.periodo] || p.periodo;
-                    html += `<tr><td>${p.id}</td><td>${p.animal?.nome || p.animal_brinco}</td><td>${new Date(p.data_coleta).toLocaleDateString()}</td><td>${periodo}</td><td><strong>${p.litros.toFixed(1)} L</strong></td><td><div class="actions"><button class="btn btn-sm btn-primary" onclick="app.editarProducao(${p.id})"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-danger" onclick="app.deletarProducao(${p.id})"><i class="fa-solid fa-trash"></i></button></div></td></tr>`;
-                });
-                html += `</tbody><tfoot><tr><td colspan="4" class="table-footer-label">Total:</td><td class="table-footer-value">${totalLitros.toFixed(1)} L</td><td></td></tr></tfoot></table></div>`;
-                container.innerHTML = html;
+                this.ultimoResultado = producoes;
+                this.renderProducoes();
             }
             catch (error) {
                 container.innerHTML = `<p class="text-muted text-center">Erro ao carregar produções: ${error.message}</p>`;
@@ -93,7 +118,7 @@
                 el('producaoSubmitBtn').textContent = 'Salvar';
                 el('producaoEditId').value = '';
                 el('producaoForm').reset();
-                el('producaoData').value = new Date().toISOString().split('T')[0];
+                el('producaoData').value = Components.dataLocalIso();
                 this.showModal('producao');
             }
             catch (error) {

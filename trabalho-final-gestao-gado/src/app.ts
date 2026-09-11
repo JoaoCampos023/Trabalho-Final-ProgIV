@@ -19,6 +19,11 @@ import { runAutoSeedIfNeeded } from './config/autoSeed';
 
 dotenv.config();
 
+// Garante horário de Brasília mesmo se ninguém tiver definido TZ em lugar
+// nenhum (Dockerfile/docker-compose/.env já definem, mas isso é um último
+// fallback para rodar `npm run dev` sem nenhum deles configurado).
+process.env.TZ = process.env.TZ || 'America/Sao_Paulo';
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -26,11 +31,13 @@ const PORT = process.env.PORT || 3000;
 // MIDDLEWARES
 // ============================================
 
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(
+  cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -82,17 +89,17 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   if (req.path.startsWith('/api')) {
     return next();
   }
-  
+
   // Se a requisição for para a raiz, envia a landing page
   if (req.path === '/' || req.path === '') {
     return res.sendFile(path.join(__dirname, '../public/index.html'));
   }
-  
+
   // Se a requisição for para /app ou subpastas, envia o dashboard
   if (req.path.startsWith('/app')) {
     return res.sendFile(path.join(__dirname, '../public/app/dashboard.html'));
   }
-  
+
   // Para qualquer outra rota, verifica se é um arquivo estático
   // Se não for, redireciona para a landing page
   res.sendFile(path.join(__dirname, '../public/index.html'));
@@ -104,13 +111,16 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error('❌ Erro:', err.stack);
-  
-  const status = 
-    err.message.includes('não encontrado') ? 404 :
-    err.message.includes('inválido') ? 400 :
-    err.message.includes('não permitido') ? 403 :
-    err.message.includes('já cadastrado') ? 409 :
-    500;
+
+  const status = err.message.includes('não encontrado')
+    ? 404
+    : err.message.includes('inválido')
+      ? 400
+      : err.message.includes('não permitido')
+        ? 403
+        : err.message.includes('já cadastrado')
+          ? 409
+          : 500;
 
   res.status(status).json({
     success: false,
@@ -129,7 +139,7 @@ const server = http.createServer(app);
 // WEBSOCKET
 // ============================================
 
-const wss = new WebSocketServer({ 
+const wss = new WebSocketServer({
   server,
   path: '/ws'
 });
@@ -138,28 +148,30 @@ const clients = new Set<any>();
 
 wss.on('connection', (ws, req) => {
   console.log('📡 Cliente conectado ao WebSocket');
-  
+
   const url = new URL(req.url || '', `http://${req.headers.host}`);
   const token = url.searchParams.get('token');
-  
+
   if (!token) {
-    ws.send(JSON.stringify({
-      type: 'error',
-      message: 'Token não fornecido'
-    }));
+    ws.send(
+      JSON.stringify({
+        type: 'error',
+        message: 'Token não fornecido'
+      })
+    );
     ws.close();
     return;
   }
 
   clients.add(ws);
-  
+
   sendDashboardData(ws);
 
-  ws.on('message', (message) => {
+  ws.on('message', message => {
     try {
       const data = JSON.parse(message.toString());
       console.log('📩 Mensagem recebida:', data);
-      
+
       if (data.type === 'ping') {
         ws.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
       }
@@ -177,7 +189,7 @@ wss.on('connection', (ws, req) => {
 async function sendDashboardData(ws: any) {
   try {
     const prisma = (await import('./config/database')).default;
-    
+
     const [totalAnimais, totalFemeas, totalMachos, producaoTotal, producoesDia] = await Promise.all([
       prisma.animal.count({ where: { ativo: true } }),
       prisma.animal.count({ where: { ativo: true, sexo: 'F' } }),
@@ -192,23 +204,27 @@ async function sendDashboardData(ws: any) {
       })
     ]);
 
-    ws.send(JSON.stringify({
-      type: 'dashboard',
-      data: {
-        totalAnimais,
-        totalFemeas,
-        totalMachos,
-        producaoTotal: Number(producaoTotal._sum.litros) || 0,
-        producoesHoje: producoesDia,
-        timestamp: new Date().toISOString()
-      }
-    }));
+    ws.send(
+      JSON.stringify({
+        type: 'dashboard',
+        data: {
+          totalAnimais,
+          totalFemeas,
+          totalMachos,
+          producaoTotal: Number(producaoTotal._sum.litros) || 0,
+          producoesHoje: producoesDia,
+          timestamp: new Date().toISOString()
+        }
+      })
+    );
   } catch (error) {
     console.error('Erro ao enviar dados do dashboard:', error);
-    ws.send(JSON.stringify({
-      type: 'error',
-      message: 'Erro ao buscar dados do dashboard'
-    }));
+    ws.send(
+      JSON.stringify({
+        type: 'error',
+        message: 'Erro ao buscar dados do dashboard'
+      })
+    );
   }
 }
 

@@ -1,13 +1,20 @@
 import { AnimalRepository } from '../repositories/AnimalRepository';
+import { ProducaoRepository } from '../repositories/ProducaoRepository';
 import { Animal, IAnimal } from '../models/Animal';
 
 const IDADE_MAXIMA_ANOS = 50;
+// Coluna "peso" é Decimal(10,2) no banco — até 8 dígitos antes da vírgula.
+// Na prática nenhum bovino pesa isso; usamos um teto bem generoso (5 toneladas)
+// só pra rejeitar valores digitados errado antes de virarem erro cru do Postgres.
+const PESO_MAXIMO_KG = 5000;
 
 export class AnimalService {
   private animalRepository: AnimalRepository;
+  private producaoRepository: ProducaoRepository;
 
   constructor() {
     this.animalRepository = new AnimalRepository();
+    this.producaoRepository = new ProducaoRepository();
   }
 
   /**
@@ -104,15 +111,21 @@ export class AnimalService {
     raca?: string,
     faixaPeso?: string,
     ordenarPor: string = 'brinco',
-    ordem: 'asc' | 'desc' = 'asc'
+    ordem: 'asc' | 'desc' = 'asc',
+    status: 'ativos' | 'inativos' | 'todos' = 'ativos'
   ): Promise<Animal[]> {
-    let animais = await this.animalRepository.findAll();
+    let animais = await this.animalRepository.findAllIncludingInactive();
+
+    // Filtrar por status (ativo/inativo)
+    if (status === 'ativos') {
+      animais = animais.filter(a => a.ativo);
+    } else if (status === 'inativos') {
+      animais = animais.filter(a => !a.ativo);
+    }
 
     // Filtrar por nome
     if (searchNome) {
-      animais = animais.filter(a => 
-        a.nome.toLowerCase().includes(searchNome.toLowerCase())
-      );
+      animais = animais.filter(a => a.nome.toLowerCase().includes(searchNome.toLowerCase()));
     }
 
     // Filtrar por sexo
@@ -122,9 +135,7 @@ export class AnimalService {
 
     // Filtrar por raça
     if (raca) {
-      animais = animais.filter(a => 
-        a.raca && a.raca.toLowerCase().includes(raca.toLowerCase())
-      );
+      animais = animais.filter(a => a.raca && a.raca.toLowerCase().includes(raca.toLowerCase()));
     }
 
     // Filtrar por faixa de peso
@@ -145,28 +156,20 @@ export class AnimalService {
     // Ordenar
     switch (ordenarPor) {
       case 'nome':
-        animais.sort((a, b) => ordem === 'asc' 
-          ? a.nome.localeCompare(b.nome)
-          : b.nome.localeCompare(a.nome)
-        );
+        animais.sort((a, b) => (ordem === 'asc' ? a.nome.localeCompare(b.nome) : b.nome.localeCompare(a.nome)));
         break;
       case 'peso':
-        animais.sort((a, b) => ordem === 'asc'
-          ? a.peso - b.peso
-          : b.peso - a.peso
-        );
+        animais.sort((a, b) => (ordem === 'asc' ? a.peso - b.peso : b.peso - a.peso));
         break;
       case 'data_nascimento':
-        animais.sort((a, b) => ordem === 'asc'
-          ? a.data_nascimento.getTime() - b.data_nascimento.getTime()
-          : b.data_nascimento.getTime() - a.data_nascimento.getTime()
+        animais.sort((a, b) =>
+          ordem === 'asc'
+            ? a.data_nascimento.getTime() - b.data_nascimento.getTime()
+            : b.data_nascimento.getTime() - a.data_nascimento.getTime()
         );
         break;
       default: // brinco
-        animais.sort((a, b) => ordem === 'asc'
-          ? a.brinco - b.brinco
-          : b.brinco - a.brinco
-        );
+        animais.sort((a, b) => (ordem === 'asc' ? a.brinco - b.brinco : b.brinco - a.brinco));
         break;
     }
 
@@ -219,6 +222,9 @@ export class AnimalService {
     if (data.peso <= 0) {
       throw new Error('O peso deve ser maior que zero.');
     }
+    if (data.peso > PESO_MAXIMO_KG) {
+      throw new Error(`O peso não pode ser maior que ${PESO_MAXIMO_KG} kg.`);
+    }
     this.validarDataNascimento(data.data_nascimento);
     if (data.sexo !== 'M' && data.sexo !== 'F') {
       throw new Error("O sexo deve ser 'M' (Macho) ou 'F' (Fêmea).");
@@ -240,10 +246,7 @@ export class AnimalService {
   /**
    * Atualizar um animal
    */
-  async atualizarAnimal(
-    brinco: number,
-    data: Partial<IAnimal>
-  ): Promise<Animal> {
+  async atualizarAnimal(brinco: number, data: Partial<IAnimal>): Promise<Animal> {
     const animalExistente = await this.animalRepository.findByBrinco(brinco);
     if (!animalExistente) {
       throw new Error(`Animal com brinco ${brinco} não encontrado.`);
@@ -256,8 +259,20 @@ export class AnimalService {
     if (data.peso !== undefined && data.peso <= 0) {
       throw new Error('O peso deve ser maior que zero.');
     }
+    if (data.peso !== undefined && data.peso > PESO_MAXIMO_KG) {
+      throw new Error(`O peso não pode ser maior que ${PESO_MAXIMO_KG} kg.`);
+    }
     if (data.data_nascimento !== undefined) {
       this.validarDataNascimento(data.data_nascimento);
+    }
+
+    // Um animal com produções de leite registradas só pode ter sido fêmea
+    // (só fêmeas produzem leite) — não faz sentido trocar o sexo dele depois.
+    if (data.sexo !== undefined && data.sexo !== animalExistente.sexo) {
+      const producoes = await this.producaoRepository.findByAnimal(brinco);
+      if (producoes.length > 0) {
+        throw new Error('Não é possível alterar o sexo deste animal: ele já possui produções de leite registradas.');
+      }
     }
 
     // Validar linhagem

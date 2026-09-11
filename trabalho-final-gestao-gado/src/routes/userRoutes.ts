@@ -26,8 +26,15 @@ router.use(authMiddleware);
 // Listar todos os usuários (Admin)
 router.get('/', roleMiddleware(['Admin']), userController.listarTodos.bind(userController));
 
+// IMPORTANTE: rotas literais de um segmento (/paginated, /stats, ...)
+// precisam vir ANTES de '/:id', senão o Express casa "stats"/"paginated"
+// como se fosse o valor de :id e a rota nunca é alcançada.
+
 // Listar com paginação e filtros (Admin)
 router.get('/paginated', roleMiddleware(['Admin']), userController.listarComFiltros.bind(userController));
+
+// Estatísticas de usuários (Admin)
+router.get('/stats', roleMiddleware(['Admin']), userController.getStats.bind(userController));
 
 // Buscar usuário por ID (Admin)
 router.get('/:id', roleMiddleware(['Admin']), userController.buscarPorId.bind(userController));
@@ -46,8 +53,5 @@ router.post('/:id/reset-password', roleMiddleware(['Admin']), userController.res
 
 // Excluir usuário (Admin)
 router.delete('/:id', roleMiddleware(['Admin']), userController.excluir.bind(userController));
-
-// Estatísticas de usuários (Admin)
-router.get('/stats', roleMiddleware(['Admin']), userController.getStats.bind(userController));
 
 export default router;

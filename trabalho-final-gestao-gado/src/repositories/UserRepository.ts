@@ -6,17 +6,20 @@ export class UserRepository {
     const users = await prisma.user.findMany({
       orderBy: { nome: 'asc' }
     });
-    return users.map(u => new User({
-      id: u.id,
-      nome: u.nome,
-      email: u.email,
-      senha_hash: u.senha_hash,
-      cpf: u.cpf,
-      ativo: u.ativo,
-      role: u.role,
-      criado_em: u.criado_em,
-      atualizado_em: u.atualizado_em
-    }));
+    return users.map(
+      u =>
+        new User({
+          id: u.id,
+          nome: u.nome,
+          email: u.email,
+          senha_hash: u.senha_hash,
+          cpf: u.cpf,
+          ativo: u.ativo,
+          role: u.role,
+          criado_em: u.criado_em,
+          atualizado_em: u.atualizado_em
+        })
+    );
   }
 
   async findById(id: string): Promise<User | null> {
@@ -78,17 +81,20 @@ export class UserRepository {
       where: { ativo },
       orderBy: { nome: 'asc' }
     });
-    return users.map(u => new User({
-      id: u.id,
-      nome: u.nome,
-      email: u.email,
-      senha_hash: u.senha_hash,
-      cpf: u.cpf,
-      ativo: u.ativo,
-      role: u.role,
-      criado_em: u.criado_em,
-      atualizado_em: u.atualizado_em
-    }));
+    return users.map(
+      u =>
+        new User({
+          id: u.id,
+          nome: u.nome,
+          email: u.email,
+          senha_hash: u.senha_hash,
+          cpf: u.cpf,
+          ativo: u.ativo,
+          role: u.role,
+          criado_em: u.criado_em,
+          atualizado_em: u.atualizado_em
+        })
+    );
   }
 
   async findByRole(role: 'Admin' | 'Cliente'): Promise<User[]> {
@@ -96,17 +102,20 @@ export class UserRepository {
       where: { role },
       orderBy: { nome: 'asc' }
     });
-    return users.map(u => new User({
-      id: u.id,
-      nome: u.nome,
-      email: u.email,
-      senha_hash: u.senha_hash,
-      cpf: u.cpf,
-      ativo: u.ativo,
-      role: u.role,
-      criado_em: u.criado_em,
-      atualizado_em: u.atualizado_em
-    }));
+    return users.map(
+      u =>
+        new User({
+          id: u.id,
+          nome: u.nome,
+          email: u.email,
+          senha_hash: u.senha_hash,
+          cpf: u.cpf,
+          ativo: u.ativo,
+          role: u.role,
+          criado_em: u.criado_em,
+          atualizado_em: u.atualizado_em
+        })
+    );
   }
 
   async create(userData: Omit<IUser, 'id' | 'criado_em' | 'atualizado_em'>): Promise<User> {
@@ -273,17 +282,20 @@ export class UserRepository {
     ]);
 
     return {
-      users: users.map(u => new User({
-        id: u.id,
-        nome: u.nome,
-        email: u.email,
-        senha_hash: u.senha_hash,
-        cpf: u.cpf,
-        ativo: u.ativo,
-        role: u.role,
-        criado_em: u.criado_em,
-        atualizado_em: u.atualizado_em
-      })),
+      users: users.map(
+        u =>
+          new User({
+            id: u.id,
+            nome: u.nome,
+            email: u.email,
+            senha_hash: u.senha_hash,
+            cpf: u.cpf,
+            ativo: u.ativo,
+            role: u.role,
+            criado_em: u.criado_em,
+            atualizado_em: u.atualizado_em
+          })
+      ),
       total,
       page,
       totalPages: Math.ceil(total / limit)

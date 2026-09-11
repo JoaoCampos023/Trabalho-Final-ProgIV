@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
+import { friendlyMessage } from '../utils/errorMessage';
+import { DateUtils } from '../utils/dateUtils';
 
 export class RelatorioController {
   async getRelatorioProducao(req: Request, res: Response): Promise<Response> {
@@ -28,7 +30,7 @@ export class RelatorioController {
         const nome = p.animal?.nome || `Animal ${p.animal_brinco}`;
         topAnimaisMap.set(nome, (topAnimaisMap.get(nome) || 0) + Number(p.litros));
       });
-      
+
       const topAnimais = Array.from(topAnimaisMap.entries())
         .map(([nome, total]) => ({ nome, total: Number(total) }))
         .sort((a, b) => b.total - a.total)
@@ -52,7 +54,7 @@ export class RelatorioController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao gerar relatório',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -90,7 +92,7 @@ export class RelatorioController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao gerar relatório do rebanho',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -105,8 +107,8 @@ export class RelatorioController {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - dias);
 
-      const results = await prisma.$queryRaw<{ data: string; total: number }[]>`
-        SELECT 
+      const results = await prisma.$queryRaw<{ data: string | Date; total: number }[]>`
+        SELECT
           DATE(data_coleta) as data,
           COALESCE(SUM(litros), 0) as total
         FROM producoes_leite
@@ -115,13 +117,23 @@ export class RelatorioController {
         ORDER BY data ASC
       `;
 
-      const resultMap = new Map(results.map(r => [r.data, Number(r.total)]));
+      // O driver do Postgres devolve a coluna DATE(...) como objeto Date, não string —
+      // usar isso direto como chave do Map nunca bate com a busca por string (dateStr)
+      // logo embaixo, e o gráfico sempre aparecia com 0 em todos os dias.
+      const resultMap = new Map(
+        results.map(r => {
+          const chave = r.data instanceof Date ? r.data.toISOString().split('T')[0] : String(r.data).split('T')[0];
+          return [chave, Number(r.total)];
+        })
+      );
       const finalResults = [];
 
       for (let i = dias - 1; i >= 0; i--) {
         const date = new Date();
         date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
+        // formatarDataIso usa getters locais (horário de Brasília), não toISOString
+        // (que é sempre UTC e "vira o dia" 3h antes da meia-noite local).
+        const dateStr = DateUtils.formatarDataIso(date);
         finalResults.push({ data: dateStr, total: resultMap.get(dateStr) || 0 });
       }
 
@@ -131,7 +143,7 @@ export class RelatorioController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao buscar dados do gráfico',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -152,7 +164,7 @@ export class RelatorioController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao buscar dados do gráfico',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -181,39 +193,7 @@ export class RelatorioController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao buscar dados do dashboard',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
-    }
-  }
-
-  // ✅ ENDPOINT DE DEBUG
-  async debugDados(_req: Request, res: Response): Promise<Response> {
-    try {
-      const [animais, producoes, stats] = await Promise.all([
-        prisma.animal.findMany(),
-        prisma.producaoLeite.findMany(),
-        prisma.animal.aggregate({
-          _count: { brinco: true },
-          _avg: { peso: true }
-        })
-      ]);
-
-      return res.json({
-        success: true,
-        data: {
-          totalAnimais: animais.length,
-          animais,
-          producoes,
-          stats: {
-            total: stats._count.brinco,
-            pesoMedio: stats._avg.peso
-          }
-        }
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }

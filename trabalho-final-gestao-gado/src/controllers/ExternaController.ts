@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
+import { friendlyMessage } from '../utils/errorMessage';
 
 export class ExternaController {
   async buscarCep(req: Request, res: Response): Promise<Response> {
@@ -15,7 +16,7 @@ export class ExternaController {
       }
 
       const cepLimpo = cep.replace(/\D/g, '');
-      
+
       const response = await axios.get(`https://viacep.com.br/ws/${cepLimpo}/json/`);
 
       if (response.data.erro) {
@@ -45,7 +46,7 @@ export class ExternaController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao buscar CEP',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -77,7 +78,7 @@ export class ExternaController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao validar CPF',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }

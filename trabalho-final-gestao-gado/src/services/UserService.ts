@@ -18,33 +18,33 @@ export class UserService {
    */
   private validarCpf(cpf: string): boolean {
     if (!cpf) return false;
-    
+
     // Remove caracteres não numéricos
     const cpfLimpo = cpf.replace(/\D/g, '');
-    
+
     if (cpfLimpo.length !== 11) return false;
-    
+
     // Elimina CPFs com todos os dígitos iguais
     if (/^(\d)\1+$/.test(cpfLimpo)) return false;
-    
+
     // Cálculo do primeiro dígito verificador
     let soma = 0;
     for (let i = 0; i < 9; i++) {
       soma += parseInt(cpfLimpo.charAt(i)) * (10 - i);
     }
     let resto = soma % 11;
-    let digito1 = resto < 2 ? 0 : 11 - resto;
-    
+    const digito1 = resto < 2 ? 0 : 11 - resto;
+
     if (parseInt(cpfLimpo.charAt(9)) !== digito1) return false;
-    
+
     // Cálculo do segundo dígito verificador
     soma = 0;
     for (let i = 0; i < 10; i++) {
       soma += parseInt(cpfLimpo.charAt(i)) * (11 - i);
     }
     resto = soma % 11;
-    let digito2 = resto < 2 ? 0 : 11 - resto;
-    
+    const digito2 = resto < 2 ? 0 : 11 - resto;
+
     return parseInt(cpfLimpo.charAt(10)) === digito2;
   }
 
@@ -88,15 +88,13 @@ export class UserService {
   /**
    * Criar um novo usuário
    */
-  async criarUsuario(
-    data: {
-      nome: string;
-      email: string;
-      password: string;
-      cpf: string;
-      role?: 'Admin' | 'Cliente';
-    }
-  ): Promise<User> {
+  async criarUsuario(data: {
+    nome: string;
+    email: string;
+    password: string;
+    cpf: string;
+    role?: 'Admin' | 'Cliente';
+  }): Promise<User> {
     // Validar CPF
     if (!this.validarCpf(data.cpf)) {
       throw new Error('CPF inválido');
@@ -153,7 +151,7 @@ export class UserService {
       if (!this.validarCpf(data.cpf)) {
         throw new Error('CPF inválido');
       }
-      
+
       const cpfExistente = await this.userRepository.findByCpf(data.cpf);
       if (cpfExistente && cpfExistente.id !== id) {
         throw new Error('CPF já cadastrado por outro usuário');
@@ -166,7 +164,7 @@ export class UserService {
       if (data.role && data.role !== 'Admin') {
         throw new Error('Não é permitido alterar o nível de permissão do Administrador Principal');
       }
-      
+
       // Não permite desativar o admin principal
       if (data.ativo === false) {
         throw new Error('Não é permitido desativar o Administrador Principal');
@@ -195,9 +193,7 @@ export class UserService {
       throw new Error('Não é permitido alterar o status do Administrador Principal');
     }
 
-    const updatedUser = user.ativo
-      ? await this.userRepository.deactivate(id)
-      : await this.userRepository.activate(id);
+    const updatedUser = user.ativo ? await this.userRepository.deactivate(id) : await this.userRepository.activate(id);
 
     if (!updatedUser) {
       throw new Error('Erro ao alterar status do usuário');

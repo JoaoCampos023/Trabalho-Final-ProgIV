@@ -216,6 +216,7 @@ Variáveis esperadas (ver `.env.example` para a lista completa e comentada):
 | `DATABASE_URL` | String de conexão que o Prisma de fato usa — monte a partir das variáveis acima |
 | `JWT_SECRET` | Segredo para assinar os tokens JWT — gere um valor forte, ex.: `openssl rand -base64 48` |
 | `AUTO_SEED` | `true`/`false` — se `true` (padrão), popula o banco com dados de exemplo automaticamente na primeira vez que o servidor sobe com o banco vazio |
+| `TZ` | Fuso horário do processo Node — `America/Sao_Paulo` (horário de Brasília). Sem isso, "hoje"/"agora" seriam calculados no fuso do sistema operacional (UTC dentro do Docker), adiantando datas em relatórios/validações à noite |
 
 #### 5. Rode as migrations do Prisma
 
@@ -279,8 +280,9 @@ O frontend **não** tem um serviço/container próprio: os arquivos estáticos d
 cp .env.example .env
 # edite DB_PASSWORD e JWT_SECRET com valores reais
 
-# 2. Suba tudo
-docker compose up -d --build
+# 2. Suba tudo e já veja os links de acesso
+npm run docker:up
+# equivalente a: docker compose up -d --build && sleep 3 && docker compose logs backend --tail 20
 ```
 
 Isso já basta — **sem nenhum passo manual além do `.env`**:
@@ -288,15 +290,17 @@ Isso já basta — **sem nenhum passo manual além do `.env`**:
 - o container `backend` espera o banco ficar saudável, roda `npx prisma migrate deploy` automaticamente a cada boot (`docker-entrypoint.sh`) e só então inicia o servidor;
 - se o banco estiver vazio, o próprio app popula os dados de exemplo sozinho (mesmo mecanismo de `AUTO_SEED` do modo local).
 
+`docker compose up -d` sozinho sobe em background e não mostra o log de boot — por isso `npm run docker:up` já encadeia um `docker compose logs backend --tail 20` no final, que imprime o bloco com todos os links assim que o container inicia. Se já subiu com `docker compose up -d` puro e quer ver esse bloco depois, é só `npm run docker:logs` (ou `docker compose logs backend | tail -20`) a qualquer momento.
+
 A aplicação fica disponível em `http://localhost:${PORT}/` (porta definida no seu `.env`, `3000` por padrão) — mesmas URLs da tabela da seção anterior.
 
 ### Comandos úteis
 
 ```bash
-docker compose logs -f backend     # acompanhar logs do backend
-docker compose down                # parar os containers (mantém o volume/dados)
-docker compose down -v             # parar e apagar os dados do banco também
-docker compose exec backend npx prisma studio   # abrir o Prisma Studio de dentro do container
+npm run docker:logs   # acompanhar logs do backend em tempo real
+npm run docker:down   # parar os containers (mantém o volume/dados)
+docker compose down -v                          # parar e apagar os dados do banco também
+docker compose exec backend npx prisma studio    # abrir o Prisma Studio de dentro do container
 ```
 
 > Se a porta `3000` (ou `5432`) já estiver em uso na sua máquina por outro processo/container, mude `PORT`/`DB_PORT` no `.env` antes de subir.
@@ -462,8 +466,15 @@ Todas as rotas abaixo são prefixadas com `/api`. 🔒 = requer `Authorization: 
 | **Seed** | `npm run seed` | Popula o banco com dados de exemplo (equivalente a `npx prisma db seed`) |
 | **Prisma Studio** | `npx prisma studio` | Abre interface visual do banco de dados |
 | **Prisma Generate** | `npx prisma generate` | (Re)gera o Prisma Client depois de mudar o `schema.prisma` |
-| **Migrations** | `npx prisma migrate dev` / `npx prisma migrate deploy` | Cria/aplica migrations (dev cria novas; deploy só aplica as existentes, uso em produção/CI) |
-| **Lint** | `npm run lint` | ESLint sobre os arquivos `.ts` |
+| **Migrations (dev)** | `npm run migrate` | Cria e aplica novas migrations a partir do `schema.prisma` (equivalente a `npx prisma migrate dev`) |
+| **Migrations (deploy)** | `npm run migrate:deploy` | Só aplica as migrations existentes, sem criar novas — uso em produção/CI (equivalente a `npx prisma migrate deploy`) |
+| **Docker up** | `npm run docker:up` | Builda e sobe backend + banco via Docker Compose, já mostrando o log com os links de acesso |
+| **Docker logs** | `npm run docker:logs` | Acompanha os logs do container `backend` em tempo real |
+| **Docker down** | `npm run docker:down` | Para os containers (mantém os dados do banco) |
+| **Lint** | `npm run lint` | ESLint sobre backend (`src/`, `prisma/`) e frontend (`public/ts/`), config compartilhada em `eslint.config.js` |
+| **Lint (fix)** | `npm run lint:fix` | Aplica as correções automáticas possíveis |
+| **Format** | `npm run format` | Formata o projeto inteiro com Prettier |
+| **Format (check)** | `npm run format:check` | Só verifica se está formatado, sem alterar nada (uso em CI) |
 
 ---
 
@@ -479,7 +490,7 @@ Todas as rotas abaixo são prefixadas com `/api`. 🔒 = requer `Authorization: 
 - [x] ✅ Ícones (Font Awesome) no lugar de emoji na interface
 - [x] ✅ Suporte a contêineres com **Docker** e **Docker Compose**
 - [x] ✅ Seed de dados de exemplo, automático em banco vazio
-- [ ] 🔄 Padronização de lint/formatação em todo o repositório (ESLint + Prettier compartilhados backend/frontend)
+- [x] ✅ Padronização de lint (ESLint compartilhado backend/frontend, `npm run lint` sem erros) e config de formatação (Prettier) — reformatação do código existente ainda pendente (`npm run format` não foi aplicado em massa)
 - [ ] 🔄 Cobertura de testes unitários e de integração com **Jest**
 - [ ] 🔄 Módulo de exportação automática (agendada) de relatórios em **PDF**
 - [ ] 🔄 Validar se o WebSocket (`src/websocket/server.ts`) está de fato integrado ao fluxo de notificações ou é só esqueleto

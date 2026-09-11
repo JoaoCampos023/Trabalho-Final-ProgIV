@@ -1,57 +1,84 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🥛 Produções - Gestão de Gado</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>"
+    />
     <link rel="stylesheet" href="/css/style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-</head>
-<body>
-
+  </head>
+  <body>
     <!-- NAVBAR (injetada por components.js) -->
     <div id="navbar"></div>
 
     <main class="main-content">
-        <div class="card">
-            <div class="card-header">
-                <h2><i class="fa-solid fa-droplet"></i> Produções de Leite</h2>
-                <div class="card-actions">
-                    <button class="btn btn-primary btn-sm" onclick="app.novaProducao()"><i class="fa-solid fa-plus"></i> Nova Produção</button>
-                    <button class="btn btn-secondary btn-sm" onclick="app.loadProducoes()"><i class="fa-solid fa-arrows-rotate"></i> Atualizar</button>
-                </div>
-            </div>
-            <div id="producoesContent"><div class="loading"><div class="spinner"></div><p>Carregando produções...</p></div></div>
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-droplet"></i> Produções de Leite</h2>
+          <div class="card-actions">
+            <button class="btn btn-primary btn-sm" onclick="app.novaProducao()">
+              <i class="fa-solid fa-plus"></i> Nova Produção
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="app.loadProducoes()">
+              <i class="fa-solid fa-arrows-rotate"></i> Atualizar
+            </button>
+          </div>
         </div>
+        <div id="producoesContent">
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Carregando produções...</p>
+          </div>
+        </div>
+      </div>
     </main>
 
-    <footer class="footer"><div class="container"><p><i class="fa-solid fa-cow"></i> Gestão de Gado &copy; 2026 - Todos os direitos reservados</p></div></footer>
+    <footer class="footer">
+      <div class="container">
+        <p><i class="fa-solid fa-cow"></i> Gestão de Gado &copy; 2026 - Todos os direitos reservados</p>
+      </div>
+    </footer>
 
     <div class="modal-overlay" id="modalProducao">
-        <div class="modal modal-lg">
-            <div class="modal-header">
-                <h3 id="modalProducaoTitle"><i class="fa-solid fa-droplet"></i> Nova Produção</h3>
-                <button class="modal-close" onclick="app.closeModal('producao')">×</button>
-            </div>
-            <div class="modal-body">
-                <form id="producaoForm">
-                    <div class="form-row">
-                        <div class="form-group"><label>Animal *</label><select id="producaoAnimal" required></select></div>
-                        <div class="form-group"><label>Data *</label><input type="date" id="producaoData" required /></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Litros *</label><input type="number" id="producaoLitros" step="0.1" min="0" required /></div>
-                        <div class="form-group"><label>Período *</label><select id="producaoPeriodo"><option value="Manha">Manhã</option><option value="Tarde">Tarde</option><option value="Noite">Noite</option></select></div>
-                    </div>
-                    <input type="hidden" id="producaoEditId" />
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary" onclick="app.closeModal('producao')">Cancelar</button>
-                        <button type="submit" class="btn btn-primary" id="producaoSubmitBtn">Salvar</button>
-                    </div>
-                </form>
-            </div>
+      <div class="modal modal-lg">
+        <div class="modal-header">
+          <h3 id="modalProducaoTitle"><i class="fa-solid fa-droplet"></i> Nova Produção</h3>
+          <button class="modal-close" onclick="app.closeModal('producao')">×</button>
         </div>
+        <div class="modal-body">
+          <form id="producaoForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Animal *</label
+                ><select id="producaoAnimal" required></select>
+              </div>
+              <div class="form-group"><label>Data *</label><input type="date" id="producaoData" required /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Litros *</label><input type="number" id="producaoLitros" step="0.1" min="0" required />
+              </div>
+              <div class="form-group">
+                <label>Período *</label
+                ><select id="producaoPeriodo">
+                  <option value="Manha">🌅 Manhã</option>
+                  <option value="Tarde">☀️ Tarde</option>
+                  <option value="Noite">🌙 Noite</option>
+                </select>
+              </div>
+            </div>
+            <input type="hidden" id="producaoEditId" />
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" onclick="app.closeModal('producao')">Cancelar</button>
+              <button type="submit" class="btn btn-primary" id="producaoSubmitBtn">Salvar</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
     <div id="toast" class="toast"></div>
@@ -59,5 +86,5 @@
     <script src="/js/api.js"></script>
     <script src="/js/components.js"></script>
     <script src="/js/pages/producoes.js"></script>
-</body>
+  </body>
 </html>

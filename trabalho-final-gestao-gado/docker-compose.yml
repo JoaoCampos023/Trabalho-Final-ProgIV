@@ -12,6 +12,8 @@ services:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME:-gestao_gado}
+      TZ: ${TZ:-America/Sao_Paulo}
+      PGTZ: ${TZ:-America/Sao_Paulo}
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
@@ -36,6 +38,7 @@ services:
       DB_HOST: db
       DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD}@db:5432/${DB_NAME:-gestao_gado}?schema=public
       PORT: ${PORT:-3000}
+      TZ: ${TZ:-America/Sao_Paulo}
     ports:
       - '${PORT:-3000}:${PORT:-3000}'
     depends_on:

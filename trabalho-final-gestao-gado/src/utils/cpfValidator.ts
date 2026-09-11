@@ -23,24 +23,24 @@ export class CpfValidator {
     // Cálculo do primeiro dígito verificador
     let soma = 0;
     const multiplicador1 = [10, 9, 8, 7, 6, 5, 4, 3, 2];
-    
+
     for (let i = 0; i < 9; i++) {
       soma += parseInt(cpfLimpo.charAt(i)) * multiplicador1[i];
     }
-    
+
     let resto = soma % 11;
     const digito1 = resto < 2 ? 0 : 11 - resto;
-    
+
     if (parseInt(cpfLimpo.charAt(9)) !== digito1) return false;
 
     // Cálculo do segundo dígito verificador
     soma = 0;
     const multiplicador2 = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2];
-    
+
     for (let i = 0; i < 10; i++) {
       soma += parseInt(cpfLimpo.charAt(i)) * multiplicador2[i];
     }
-    
+
     resto = soma % 11;
     const digito2 = resto < 2 ? 0 : 11 - resto;
 
@@ -55,7 +55,7 @@ export class CpfValidator {
   static formatar(cpf: string): string {
     const cpfLimpo = cpf.replace(/\D/g, '');
     if (cpfLimpo.length !== 11) return cpf;
-    
+
     return cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   }
 

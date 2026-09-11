@@ -75,9 +75,8 @@ export class EmailValidator {
     if (!this.validar(email)) return email;
 
     const [usuario, dominio] = email.split('@');
-    const usuarioMascarado = usuario.length <= 2
-      ? usuario
-      : usuario[0] + '*'.repeat(usuario.length - 2) + usuario[usuario.length - 1];
+    const usuarioMascarado =
+      usuario.length <= 2 ? usuario : usuario[0] + '*'.repeat(usuario.length - 2) + usuario[usuario.length - 1];
 
     return `${usuarioMascarado}@${dominio}`;
   }

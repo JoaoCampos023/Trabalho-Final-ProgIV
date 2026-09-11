@@ -9,17 +9,13 @@ export class PasswordGenerator {
    * @param useSpecialChars - Incluir caracteres especiais (padrão: false)
    * @returns Senha gerada
    */
-  static gerarSenha(
-    length: number = 8,
-    useNumbers: boolean = true,
-    useSpecialChars: boolean = false
-  ): string {
+  static gerarSenha(length: number = 8, useNumbers: boolean = true, useSpecialChars: boolean = false): string {
     let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-    
+
     if (useNumbers) {
       chars += '0123456789';
     }
-    
+
     if (useSpecialChars) {
       chars += '!@#$%^&*()_+-=';
     }
@@ -39,7 +35,9 @@ export class PasswordGenerator {
   static gerarSenhaMemoravel(): string {
     const adjetivos = ['Bravo', 'Forte', 'Rapido', 'Gentil', 'Sábio', 'Leal', 'Valente', 'Astuto'];
     const substantivos = ['Leao', 'Tigre', 'Fenix', 'Lobo', 'Águia', 'Dragão', 'Falcao', 'Pantera'];
-    const numeros = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+    const numeros = Math.floor(Math.random() * 100)
+      .toString()
+      .padStart(2, '0');
 
     const adjetivo = adjetivos[Math.floor(Math.random() * adjetivos.length)];
     const substantivo = substantivos[Math.floor(Math.random() * substantivos.length)];

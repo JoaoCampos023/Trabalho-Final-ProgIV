@@ -63,13 +63,13 @@ function anosAtras(anos: number, mesesExtra = 0): Date {
 
 export async function seedDatabase(prisma: PrismaClient): Promise<void> {
   // -------------------- USUÁRIOS --------------------
-  const senhaPadrao = await gerarHash('Senha@123');
+  const senhaPadrao = await gerarHash('123456');
 
   await prisma.user.createMany({
     data: [
       {
-        nome: 'Administrador Geral',
-        email: 'admin@fazenda.com.br',
+        nome: 'admin',
+        email: 'admin@gmail.com',
         senha_hash: senhaPadrao,
         cpf: gerarCpfValido('111444777'),
         role: Role.Admin,
@@ -210,7 +210,12 @@ export async function seedDatabase(prisma: PrismaClient): Promise<void> {
   // o seed ser reprodutível, mas com bastante variação entre vaca/dia/período.
   const padraoLitros = [14.5, 9.2, 11.8, 0, 16.3, 13.1, 8.7, 15.9, 10.4, 12.6, 7.5, 17.2];
 
-  const producoes: Array<{ animal_brinco: number; data_coleta: Date; litros: number; periodo: 'Manha' | 'Tarde' | 'Noite' }> = [];
+  const producoes: Array<{
+    animal_brinco: number;
+    data_coleta: Date;
+    litros: number;
+    periodo: 'Manha' | 'Tarde' | 'Noite';
+  }> = [];
 
   vacasEmLactacao.forEach((brinco, vacaIdx) => {
     for (let dia = 0; dia < 10; dia++) {
@@ -233,6 +238,6 @@ export async function seedDatabase(prisma: PrismaClient): Promise<void> {
   await prisma.producaoLeite.createMany({ data: producoes });
 
   console.log(`🌱 Seed concluído: 4 usuários, ${animais.length} animais, ${producoes.length} produções de leite.`);
-  console.log('   Login de teste → admin@fazenda.com.br / Senha@123 (Admin)');
+  console.log('   Login de teste → admin@admin.com / Senha@123 (Admin)');
   console.log('   Login de teste → maria.souza@fazenda.com.br / Senha@123 (Cliente)');
 }

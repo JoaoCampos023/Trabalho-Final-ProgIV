@@ -25,8 +25,9 @@ router.use(authMiddleware);
 // Listar todas as produções com filtros
 router.get('/', producaoController.listarTodos.bind(producaoController));
 
-// Buscar produção por ID
-router.get('/:id', producaoController.buscarPorId.bind(producaoController));
+// IMPORTANTE: rotas literais de um segmento (/stats, /top-vacas, ...)
+// precisam vir ANTES de '/:id', senão o Express casa "stats" como se
+// fosse o valor de :id e a rota nunca é alcançada.
 
 // Buscar produções por animal
 router.get('/animal/:brinco', producaoController.listarPorAnimal.bind(producaoController));
@@ -45,6 +46,9 @@ router.get('/stats', producaoController.getStats.bind(producaoController));
 
 // Gerar relatório completo
 router.get('/relatorio', producaoController.gerarRelatorio.bind(producaoController));
+
+// Buscar produção por ID
+router.get('/:id', producaoController.buscarPorId.bind(producaoController));
 
 // ============================================
 // ROTAS DE ESCRITA (CRUD)

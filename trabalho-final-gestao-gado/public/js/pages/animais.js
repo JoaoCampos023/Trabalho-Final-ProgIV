@@ -11,6 +11,9 @@
     const app = {
         IDADE_MAXIMA_ANOS: 50,
         user: null,
+        sortCampo: 'brinco',
+        sortDir: 'asc',
+        ultimoResultado: null,
         init() {
             if (!api.isAuthenticated()) {
                 window.location.href = '/';
@@ -30,11 +33,10 @@
             const input = document.getElementById('animalDataNascimento');
             if (!input)
                 return;
-            const hoje = new Date();
             const limite = new Date();
             limite.setFullYear(limite.getFullYear() - this.IDADE_MAXIMA_ANOS);
-            input.max = hoje.toISOString().split('T')[0];
-            input.min = limite.toISOString().split('T')[0];
+            input.max = Components.dataLocalIso();
+            input.min = Components.dataParaIsoLocal(limite);
         },
         // Retorna uma mensagem de erro se a data de nascimento for inválida, ou null se estiver ok.
         validarDataNascimento(dataStr) {
@@ -81,6 +83,66 @@
             clearTimeout(this.filterNomeDebounce);
             this.filterNomeDebounce = window.setTimeout(() => this.loadAnimais(), 400);
         },
+        // Clicar no título de uma coluna ordena por ela; clicar de novo inverte a ordem.
+        // Reordena a partir dos dados já carregados (sem novo fetch nem spinner),
+        // evitando a "piscada" na tela que acontecia ao recarregar tudo do zero.
+        ordenarPor(campo) {
+            if (this.sortCampo === campo) {
+                this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+            }
+            else {
+                this.sortCampo = campo;
+                this.sortDir = 'asc';
+            }
+            this.renderAnimais();
+        },
+        // Renderiza a tabela a partir do último resultado buscado da API (this.ultimoResultado),
+        // sem refazer a requisição — usado pela ordenação, que só precisa reordenar em memória.
+        renderAnimais() {
+            const resultado = this.ultimoResultado;
+            if (!resultado)
+                return;
+            const { animais: animaisOriginais, stats, racas, searchNome, sexo, raca, status } = resultado;
+            const container = el('animaisContent');
+            const animais = Components.ordenarLista(animaisOriginais, this.sortCampo, this.sortDir);
+            let html = `
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-cow"></i></div><div class="stat-value">${stats.total}</div><div class="stat-label">Total</div></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-venus"></i></div><div class="stat-value">${stats.totalFemea}</div><div class="stat-label">Fêmeas</div></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-mars"></i></div><div class="stat-value">${stats.totalMacho}</div><div class="stat-label">Machos</div></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-weight-scale"></i></div><div class="stat-value">${(stats.pesoMedio || 0).toFixed(0)} kg</div><div class="stat-label">Peso Médio</div></div>
+                </div>
+                <div class="filters">
+                    <div class="filter-group"><label>Nome</label><input type="text" id="filterNome" placeholder="Buscar por nome..." value="${searchNome}" oninput="app.debouncedLoadAnimais()" /></div>
+                    <div class="filter-group"><label>Sexo</label><select id="filterSexo" onchange="app.loadAnimais()"><option value="">Todos</option><option value="F" ${sexo === 'F' ? 'selected' : ''}>Fêmea</option><option value="M" ${sexo === 'M' ? 'selected' : ''}>Macho</option></select></div>
+                    <div class="filter-group"><label>Raça</label><select id="filterRaca" onchange="app.loadAnimais()"><option value="">Todas</option>${racas.map((r) => `<option value="${r}" ${raca === r ? 'selected' : ''}>${r}</option>`).join('')}</select></div>
+                    <div class="filter-group"><label>Status</label><select id="filterStatus" onchange="app.loadAnimais()"><option value="ativos" ${status === 'ativos' ? 'selected' : ''}>Ativos</option><option value="inativos" ${status === 'inativos' ? 'selected' : ''}>Inativos</option><option value="todos" ${status === 'todos' ? 'selected' : ''}>Todos</option></select></div>
+                    <div class="filter-actions"><button class="btn btn-secondary btn-sm btn-square" title="Limpar filtros" onclick="clearTimeout(app.filterNomeDebounce);document.getElementById('filterNome').value='';document.getElementById('filterSexo').value='';document.getElementById('filterRaca').value='';document.getElementById('filterStatus').value='ativos';app.loadAnimais();"><i class="fa-solid fa-xmark"></i></button></div>
+                </div>
+            `;
+            if (!animais || animais.length === 0) {
+                html += `<p class="text-muted text-center">Nenhum animal cadastrado.</p>`;
+            }
+            else {
+                const th = (label, campo) => Components.thOrdenavel(label, campo, this.sortCampo, this.sortDir, `app.ordenarPor('${campo}')`);
+                html += `<div class="table-responsive"><table><thead><tr>${th('Brinco', 'brinco')}${th('Nome', 'nome')}${th('Sexo', 'sexo')}${th('Raça', 'raca')}${th('Peso', 'peso')}${th('Idade', 'idade')}${th('Status', 'ativo')}<th>Ações</th></tr></thead><tbody>`;
+                animais.forEach(a => {
+                    const sexoLabel = a.sexo === 'F' ? '<i class="fa-solid fa-venus"></i> Fêmea' : '<i class="fa-solid fa-mars"></i> Macho';
+                    const statusBadge = a.ativo
+                        ? '<span class="badge badge-success">Ativo</span>'
+                        : '<span class="badge badge-danger">Inativo</span>';
+                    html += `<tr><td><strong>${a.brinco}</strong></td><td>${a.nome}</td><td>${sexoLabel}</td><td>${a.raca || 'N/A'}</td><td>${a.peso.toFixed(1)} kg</td><td>${a.idade || 0} anos</td><td>${statusBadge}</td><td><div class="actions"><button class="btn btn-sm btn-primary" onclick="app.editarAnimal(${a.brinco})"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-danger" onclick="app.deletarAnimal(${a.brinco})"><i class="fa-solid fa-trash"></i></button><button class="btn btn-sm btn-info" onclick="app.verArvore(${a.brinco})"><i class="fa-solid fa-sitemap"></i></button></div></td></tr>`;
+                });
+                html += `</tbody></table></div>`;
+            }
+            container.innerHTML = html;
+            // Restaura o foco no campo de nome após o filtro automático re-renderizar a tabela.
+            const nomeInputAtual = document.getElementById('filterNome');
+            if (nomeInputAtual && this._mantendoFocoNome) {
+                nomeInputAtual.focus();
+                nomeInputAtual.setSelectionRange(this._cursorPos, this._cursorPos);
+            }
+        },
         async loadAnimais() {
             // IMPORTANTE: ler os valores dos filtros ANTES de sobrescrever o container
             // com o spinner de carregamento (os inputs de filtro vivem dentro dele e
@@ -88,15 +150,16 @@
             const searchNome = document.getElementById('filterNome')?.value || '';
             const sexo = document.getElementById('filterSexo')?.value || '';
             const raca = document.getElementById('filterRaca')?.value || '';
+            const status = document.getElementById('filterStatus')?.value || 'ativos';
             // Preserva o foco e a posição do cursor no campo de nome,
             // já que o filtro agora dispara a cada digitação (com debounce).
             const nomeInputAtual = document.getElementById('filterNome');
-            const mantendoFocoNome = document.activeElement === nomeInputAtual;
-            const cursorPos = mantendoFocoNome ? nomeInputAtual.selectionStart : null;
+            this._mantendoFocoNome = document.activeElement === nomeInputAtual;
+            this._cursorPos = this._mantendoFocoNome ? nomeInputAtual.selectionStart : null;
             const container = el('animaisContent');
             container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando animais...</p></div>`;
             try {
-                const response = await api.getAnimais({ searchNome, sexo, raca });
+                const response = await api.getAnimais({ searchNome, sexo, raca, status });
                 const data = response.data?.data;
                 let animais = data?.animais || [];
                 animais = animais.map(a => ({
@@ -112,54 +175,57 @@
                     pesoMedio: data?.pesoMedio || 0
                 };
                 const racas = [...new Set(animais.map(a => a.raca).filter((r) => !!r))];
-                let html = `
-                    <div class="stats-grid">
-                        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-cow"></i></div><div class="stat-value">${stats.total}</div><div class="stat-label">Total</div></div>
-                        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-venus"></i></div><div class="stat-value">${stats.totalFemea}</div><div class="stat-label">Fêmeas</div></div>
-                        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-mars"></i></div><div class="stat-value">${stats.totalMacho}</div><div class="stat-label">Machos</div></div>
-                        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-weight-scale"></i></div><div class="stat-value">${(stats.pesoMedio || 0).toFixed(0)} kg</div><div class="stat-label">Peso Médio</div></div>
-                    </div>
-                    <div class="filters">
-                        <div class="filter-group"><label>Nome</label><input type="text" id="filterNome" placeholder="Buscar por nome..." value="${searchNome}" oninput="app.debouncedLoadAnimais()" /></div>
-                        <div class="filter-group"><label>Sexo</label><select id="filterSexo" onchange="app.loadAnimais()"><option value="">Todos</option><option value="F" ${sexo === 'F' ? 'selected' : ''}>Fêmea</option><option value="M" ${sexo === 'M' ? 'selected' : ''}>Macho</option></select></div>
-                        <div class="filter-group"><label>Raça</label><select id="filterRaca" onchange="app.loadAnimais()"><option value="">Todas</option>${racas.map(r => `<option value="${r}" ${raca === r ? 'selected' : ''}>${r}</option>`).join('')}</select></div>
-                        <div class="filter-actions"><button class="btn btn-secondary btn-sm" onclick="clearTimeout(app.filterNomeDebounce);document.getElementById('filterNome').value='';document.getElementById('filterSexo').value='';document.getElementById('filterRaca').value='';app.loadAnimais();"><i class="fa-solid fa-xmark"></i> Limpar</button></div>
-                    </div>
-                `;
-                if (!animais || animais.length === 0) {
-                    html += `<p class="text-muted text-center">Nenhum animal cadastrado.</p>`;
-                }
-                else {
-                    html += `<div class="table-responsive"><table><thead><tr><th>Brinco</th><th>Nome</th><th>Sexo</th><th>Raça</th><th>Peso</th><th>Idade</th><th>Status</th><th>Ações</th></tr></thead><tbody>`;
-                    animais.forEach(a => {
-                        const sexoLabel = a.sexo === 'F' ? '<i class="fa-solid fa-venus"></i> Fêmea' : '<i class="fa-solid fa-mars"></i> Macho';
-                        const status = a.ativo
-                            ? '<span class="badge badge-success">Ativo</span>'
-                            : '<span class="badge badge-danger">Inativo</span>';
-                        html += `<tr><td><strong>${a.brinco}</strong></td><td>${a.nome}</td><td>${sexoLabel}</td><td>${a.raca || 'N/A'}</td><td>${a.peso.toFixed(1)} kg</td><td>${a.idade || 0} anos</td><td>${status}</td><td><div class="actions"><button class="btn btn-sm btn-primary" onclick="app.editarAnimal(${a.brinco})"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-danger" onclick="app.deletarAnimal(${a.brinco})"><i class="fa-solid fa-trash"></i></button><button class="btn btn-sm btn-info" onclick="app.verArvore(${a.brinco})"><i class="fa-solid fa-sitemap"></i></button></div></td></tr>`;
-                    });
-                    html += `</tbody></table></div>`;
-                }
-                container.innerHTML = html;
-                // Restaura o foco no campo de nome após o filtro automático re-renderizar a tabela.
-                if (mantendoFocoNome) {
-                    const novoInputNome = document.getElementById('filterNome');
-                    if (novoInputNome) {
-                        novoInputNome.focus();
-                        novoInputNome.setSelectionRange(cursorPos, cursorPos);
-                    }
-                }
+                this.ultimoResultado = { animais, stats, racas, searchNome, sexo, raca, status };
+                this.renderAnimais();
             }
             catch (error) {
                 container.innerHTML = `<p class="text-muted text-center">Erro ao carregar animais: ${error.message}</p>`;
             }
         },
-        novoAnimal() {
+        // Popula os <select> de brinco do pai/mãe com os machos/fêmeas disponíveis
+        // (excluindo o próprio animal, no caso de edição) e pré-seleciona o valor atual.
+        async carregarSelectsPaiMae(excluirBrinco, paiSelecionado, maeSelecionado) {
+            try {
+                const [resMachos, resFemeas] = await Promise.all([
+                    api.getMachosParaSelecao(excluirBrinco),
+                    api.getFemeasParaSelecao(excluirBrinco)
+                ]);
+                const machos = resMachos.data?.data || [];
+                const femeas = resFemeas.data?.data || [];
+                const selectPai = el('animalBrincoPai');
+                selectPai.innerHTML =
+                    '<option value="">Nenhum</option>' +
+                        machos
+                            .map(m => `<option value="${m.brinco}" ${m.brinco === paiSelecionado ? 'selected' : ''}>${m.brinco} - ${m.nome}</option>`)
+                            .join('');
+                const selectMae = el('animalBrincoMae');
+                selectMae.innerHTML =
+                    '<option value="">Nenhuma</option>' +
+                        femeas
+                            .map(f => `<option value="${f.brinco}" ${f.brinco === maeSelecionado ? 'selected' : ''}>${f.brinco} - ${f.nome}</option>`)
+                            .join('');
+            }
+            catch (error) {
+                this.toast('Erro ao carregar lista de pai/mãe', 'error');
+            }
+        },
+        // Atualiza o texto ao lado do switch conforme o estado marcado/desmarcado.
+        atualizarLabelStatusAnimal() {
+            const checkbox = document.getElementById('animalAtivo');
+            const label = document.getElementById('animalAtivoLabel');
+            if (checkbox && label) {
+                label.textContent = checkbox.checked ? 'Ativo' : 'Inativo';
+            }
+        },
+        async novoAnimal() {
             el('modalAnimalTitle').innerHTML = '<i class="fa-solid fa-cow"></i> Novo Animal';
             el('animalSubmitBtn').textContent = 'Salvar';
             el('animalEditBrinco').value = '';
             el('animalBrinco').disabled = false;
             el('animalForm').reset();
+            el('animalAtivo').checked = true;
+            this.atualizarLabelStatusAnimal();
+            await this.carregarSelectsPaiMae();
             this.showModal('animal');
         },
         async editarAnimal(brinco) {
@@ -180,8 +246,9 @@
                 el('animalRaca').value = animal.raca || '';
                 el('animalPeso').value = String(animal.peso);
                 el('animalDataNascimento').value = animal.data_nascimento?.split('T')[0] || '';
-                el('animalBrincoPai').value = animal.brinco_pai ? String(animal.brinco_pai) : '';
-                el('animalBrincoMae').value = animal.brinco_mae ? String(animal.brinco_mae) : '';
+                el('animalAtivo').checked = !!animal.ativo;
+                this.atualizarLabelStatusAnimal();
+                await this.carregarSelectsPaiMae(animal.brinco, animal.brinco_pai, animal.brinco_mae);
                 this.showModal('animal');
             }
             catch (error) {
@@ -197,6 +264,7 @@
                 raca: el('animalRaca').value || undefined,
                 peso: parseFloat(el('animalPeso').value),
                 data_nascimento: el('animalDataNascimento').value,
+                ativo: el('animalAtivo').checked,
                 brinco_pai: el('animalBrincoPai').value
                     ? parseInt(el('animalBrincoPai').value)
                     : undefined,
@@ -249,17 +317,9 @@
                     this.toast('Árvore não encontrada', 'error');
                     return;
                 }
-                const animal = data.animal, pai = data.pai, mae = data.mae, filhos = data.filhos || [];
-                let html = `
-                    <div class="tree-grid">
-                        <div class="tree-card"><h4>${pai ? `<i class="fa-solid fa-person"></i> ${pai.nome}` : '<i class="fa-solid fa-circle-question"></i> Pai não informado'}</h4>${pai ? `<p><small>Brinco: ${pai.brinco}</small></p>` : ''}${pai?.pai ? `<p><small>Avô: ${pai.pai.nome}</small></p>` : ''}${pai?.mae ? `<p><small>Avó: ${pai.mae.nome}</small></p>` : ''}</div>
-                        <div class="tree-card-center"><h4><i class="fa-solid fa-cow"></i> ${animal.nome}</h4><p><small>Brinco: ${animal.brinco}</small></p><p><small>${animal.sexo === 'F' ? '<i class="fa-solid fa-venus"></i> Fêmea' : '<i class="fa-solid fa-mars"></i> Macho'}</small></p></div>
-                        <div class="tree-card"><h4>${mae ? `<i class="fa-solid fa-person-dress"></i> ${mae.nome}` : '<i class="fa-solid fa-circle-question"></i> Mãe não informada'}</h4>${mae ? `<p><small>Brinco: ${mae.brinco}</small></p>` : ''}${mae?.pai ? `<p><small>Avô: ${mae.pai.nome}</small></p>` : ''}${mae?.mae ? `<p><small>Avó: ${mae.mae.nome}</small></p>` : ''}</div>
-                    </div>
-                    ${filhos.length > 0
-                    ? `<div class="tree-children-block"><h4><i class="fa-solid fa-child"></i> Filhos (${filhos.length})</h4><div class="tree-children-list">${filhos.map(f => `<span class="badge badge-primary">${f.nome} (${f.brinco})</span>`).join('')}</div></div>`
-                    : ''}
-                    <div class="tree-back-action"><button class="btn btn-secondary btn-sm" onclick="app.loadAnimais()"><i class="fa-solid fa-arrow-left"></i> Voltar</button></div>
+                const html = `
+                    ${Components.renderArvoreGenealogica(data)}
+                    <div class="tree-back-action"><button class="btn btn-secondary btn-sm" onclick="app.loadAnimais()"><i class="fa-solid fa-arrow-left"></i> Voltar para a lista</button></div>
                 `;
                 el('animaisContent').innerHTML = html;
             }

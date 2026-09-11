@@ -3,6 +3,8 @@ import prisma from '../config/database';
 import fs from 'fs';
 import { parse } from 'csv-parse';
 import { stringify } from 'csv-stringify';
+import { friendlyMessage } from '../utils/errorMessage';
+import { DateUtils } from '../utils/dateUtils';
 
 interface MulterRequest extends Request {
   file?: Express.Multer.File;
@@ -34,14 +36,14 @@ export class ImportacaoController {
       });
 
       res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', `attachment; filename=animais_${new Date().toISOString().split('T')[0]}.csv`);
+      res.setHeader('Content-Disposition', `attachment; filename=animais_${DateUtils.formatarDataIso(new Date())}.csv`);
       return res.send(csv);
     } catch (error) {
       console.error('Erro ao exportar animais:', error);
       return res.status(500).json({
         success: false,
         message: 'Erro ao exportar animais',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -70,14 +72,17 @@ export class ImportacaoController {
       });
 
       res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', `attachment; filename=producoes_${new Date().toISOString().split('T')[0]}.csv`);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename=producoes_${DateUtils.formatarDataIso(new Date())}.csv`
+      );
       return res.send(csv);
     } catch (error) {
       console.error('Erro ao exportar produções:', error);
       return res.status(500).json({
         success: false,
         message: 'Erro ao exportar produções',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -119,7 +124,9 @@ export class ImportacaoController {
           resultados.sucesso++;
         } catch (error) {
           resultados.erro++;
-          resultados.erros.push(`Erro ao importar brinco ${record.brinco}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+          resultados.erros.push(
+            `Erro ao importar brinco ${record.brinco}: ${friendlyMessage(error, 'Erro desconhecido')}`
+          );
         }
       }
 
@@ -131,7 +138,7 @@ export class ImportacaoController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao importar animais',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -166,7 +173,7 @@ export class ImportacaoController {
           resultados.sucesso++;
         } catch (error) {
           resultados.erro++;
-          resultados.erros.push(`Erro ao importar produção: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+          resultados.erros.push(`Erro ao importar produção: ${friendlyMessage(error, 'Erro desconhecido')}`);
         }
       }
 
@@ -178,7 +185,7 @@ export class ImportacaoController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao importar produções',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -203,7 +210,7 @@ export class ImportacaoController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao baixar modelo',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -228,7 +235,7 @@ export class ImportacaoController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao baixar modelo',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }

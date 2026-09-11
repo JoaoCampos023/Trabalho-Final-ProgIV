@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { ProducaoService } from '../services/ProducaoService';
 import { PeriodoProducao } from '../models/ProducaoLeite';
+import { friendlyMessage } from '../utils/errorMessage';
 
 const producaoService = new ProducaoService();
 
@@ -44,7 +45,7 @@ export class ProducaoController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao listar produções',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -73,7 +74,7 @@ export class ProducaoController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao buscar produção',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -103,14 +104,11 @@ export class ProducaoController {
         }
       });
     } catch (error) {
-      const status = error instanceof Error &&
-        error.message.includes('não encontrado')
-        ? 404
-        : 500;
+      const status = error instanceof Error && error.message.includes('não encontrado') ? 404 : 500;
 
       return res.status(status).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Erro ao listar produções do animal'
+        message: friendlyMessage(error, 'Erro ao listar produções do animal')
       });
     }
   }
@@ -133,7 +131,7 @@ export class ProducaoController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao listar últimas produções',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -146,8 +144,8 @@ export class ProducaoController {
     try {
       const { animal_brinco, data_coleta, litros, periodo } = req.body;
 
-      // Validações básicas
-      if (!animal_brinco || !data_coleta || !litros || !periodo) {
+      // Validações básicas (litros pode ser 0 — só usa !litros derrubaria esse caso, já que 0 é falsy em JS)
+      if (!animal_brinco || !data_coleta || litros === undefined || litros === null || litros === '' || !periodo) {
         return res.status(400).json({
           success: false,
           message: 'Animal, data, litros e período são obrigatórios'
@@ -167,18 +165,19 @@ export class ProducaoController {
         data: producao
       });
     } catch (error) {
-      const status = error instanceof Error &&
+      const status =
+        error instanceof Error &&
         (error.message.includes('não encontrado') ||
-         error.message.includes('fêmea') ||
-         error.message.includes('futura') ||
-         error.message.includes('inativo') ||
-         error.message.includes('machos'))
-        ? 400
-        : 500;
+          error.message.includes('fêmea') ||
+          error.message.includes('futura') ||
+          error.message.includes('inativo') ||
+          error.message.includes('machos'))
+          ? 400
+          : 500;
 
       return res.status(status).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Erro ao registrar produção'
+        message: friendlyMessage(error, 'Erro ao registrar produção')
       });
     }
   }
@@ -205,17 +204,18 @@ export class ProducaoController {
         data: producao
       });
     } catch (error) {
-      const status = error instanceof Error &&
+      const status =
+        error instanceof Error &&
         (error.message.includes('não encontrada') ||
-         error.message.includes('fêmea') ||
-         error.message.includes('futura') ||
-         error.message.includes('inativo'))
-        ? 400
-        : 500;
+          error.message.includes('fêmea') ||
+          error.message.includes('futura') ||
+          error.message.includes('inativo'))
+          ? 400
+          : 500;
 
       return res.status(status).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Erro ao atualizar produção'
+        message: friendlyMessage(error, 'Erro ao atualizar produção')
       });
     }
   }
@@ -234,14 +234,11 @@ export class ProducaoController {
         message: 'Produção excluída com sucesso'
       });
     } catch (error) {
-      const status = error instanceof Error &&
-        error.message.includes('não encontrada')
-        ? 404
-        : 500;
+      const status = error instanceof Error && error.message.includes('não encontrada') ? 404 : 500;
 
       return res.status(status).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Erro ao excluir produção'
+        message: friendlyMessage(error, 'Erro ao excluir produção')
       });
     }
   }
@@ -263,7 +260,7 @@ export class ProducaoController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao obter top vacas',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -285,7 +282,7 @@ export class ProducaoController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao obter produção por dia',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -310,7 +307,7 @@ export class ProducaoController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao obter estatísticas',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -338,7 +335,7 @@ export class ProducaoController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao gerar relatório',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }

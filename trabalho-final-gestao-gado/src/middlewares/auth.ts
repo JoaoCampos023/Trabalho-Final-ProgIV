@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import { friendlyMessage } from '../utils/errorMessage';
 
 dotenv.config();
 
@@ -26,7 +27,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
   try {
     // Buscar token do header Authorization
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader) {
       res.status(401).json({
         success: false,
@@ -85,7 +86,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
     res.status(500).json({
       success: false,
       message: 'Erro ao validar autenticação',
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
+      error: friendlyMessage(error, 'Erro desconhecido')
     });
   }
 };

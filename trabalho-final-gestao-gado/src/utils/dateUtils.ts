@@ -13,10 +13,21 @@ export class DateUtils {
   }
 
   /**
-   * Formata uma data para o formato ISO (yyyy-mm-dd)
+   * Formata uma data para o formato ISO (yyyy-mm-dd) usando o horário LOCAL
+   * do processo (horário de Brasília, ver TZ em .env/Dockerfile).
+   *
+   * Importante: `data.toISOString()` sempre converte para UTC, não para o
+   * fuso local — usar isso para representar "o dia de hoje" quebra perto da
+   * meia-noite: como Brasília é UTC-3, entre ~21h e 23h59 o UTC já virou o
+   * dia seguinte, e `toISOString()` devolveria a data de amanhã em vez de
+   * hoje. Esse método usa os getters locais (`getFullYear`/`getMonth`/
+   * `getDate`), que respeitam o fuso do processo.
    */
   static formatarDataIso(data: Date): string {
-    return data.toISOString().split('T')[0];
+    const ano = data.getFullYear();
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const dia = String(data.getDate()).padStart(2, '0');
+    return `${ano}-${mes}-${dia}`;
   }
 
   /**

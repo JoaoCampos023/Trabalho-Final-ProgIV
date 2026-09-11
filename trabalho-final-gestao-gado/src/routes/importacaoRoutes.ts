@@ -15,8 +15,16 @@ router.get('/exportar/producoes', importacaoController.exportarProducoes.bind(im
 router.get('/exportar/rebanho', importacaoController.exportarRebanho.bind(importacaoController));
 
 // Importação
-router.post('/importar/animais', upload.single('arquivo'), importacaoController.importarAnimais.bind(importacaoController));
-router.post('/importar/producoes', upload.single('arquivo'), importacaoController.importarProducoes.bind(importacaoController));
+router.post(
+  '/importar/animais',
+  upload.single('arquivo'),
+  importacaoController.importarAnimais.bind(importacaoController)
+);
+router.post(
+  '/importar/producoes',
+  upload.single('arquivo'),
+  importacaoController.importarProducoes.bind(importacaoController)
+);
 
 // Modelos
 router.get('/modelos/animais', importacaoController.downloadModeloAnimais.bind(importacaoController));

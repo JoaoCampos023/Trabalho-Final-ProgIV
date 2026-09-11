@@ -14,6 +14,15 @@
         user: null,
         chartInstances: {},
         IDADE_MAXIMA_ANOS: 50,
+        sortCampoAnimais: 'brinco',
+        sortDirAnimais: 'asc',
+        ultimoResultadoAnimais: null,
+        sortCampoProducoes: 'data_coleta',
+        sortDirProducoes: 'desc',
+        ultimoResultadoProducoes: null,
+        sortCampoUsuarios: 'nome',
+        sortDirUsuarios: 'asc',
+        ultimoResultadoUsuarios: null,
         init() {
             if (!api.isAuthenticated()) {
                 console.log('🔒 Usuário não autenticado, redirecionando...');
@@ -53,11 +62,10 @@
             const input = document.getElementById('animalDataNascimento');
             if (!input)
                 return;
-            const hoje = new Date();
             const limite = new Date();
             limite.setFullYear(limite.getFullYear() - this.IDADE_MAXIMA_ANOS);
-            input.max = hoje.toISOString().split('T')[0];
-            input.min = limite.toISOString().split('T')[0];
+            input.max = Components.dataLocalIso();
+            input.min = Components.dataParaIsoLocal(limite);
         },
         // Retorna uma mensagem de erro se a data de nascimento for inválida, ou null se estiver ok.
         validarDataNascimento(dataStr) {
@@ -124,7 +132,11 @@
             const container = el('dashboardContent');
             container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando dashboard...</p></div>`;
             try {
-                const [animaisRes, producoesRes] = await Promise.all([api.getAnimais(), api.getProducoes(), api.getAnimalStats()]);
+                const [animaisRes, producoesRes] = await Promise.all([
+                    api.getAnimais(),
+                    api.getProducoes(),
+                    api.getAnimalStats()
+                ]);
                 const animais = animaisRes.data?.data?.animais || [];
                 const producoes = producoesRes.data?.data?.producoes || [];
                 const totalAnimais = animais.length;
@@ -144,14 +156,14 @@
                 for (let i = 6; i >= 0; i--) {
                     const dataObj = new Date();
                     dataObj.setDate(dataObj.getDate() - i);
-                    const isoStr = dataObj.toISOString().split('T')[0];
+                    const isoStr = Components.dataParaIsoLocal(dataObj);
                     const displayDate = isoStr.split('-').reverse().slice(0, 2).join('/');
                     const total = producoes
                         .filter(p => p.data_coleta?.split('T')[0] === isoStr)
                         .reduce((sum, p) => sum + (parseFloat(String(p.litros)) || 0), 0);
                     ultimos7Dias.push({ data: displayDate, total });
                 }
-                let html = `
+                const html = `
                     <div class="stats-grid">
                         <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-cow"></i></div><div class="stat-value">${totalAnimais}</div><div class="stat-label">Total de Animais</div></div>
                         <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-venus"></i></div><div class="stat-value">${totalFemea}</div><div class="stat-label">Fêmeas</div></div>
@@ -249,24 +261,80 @@
             clearTimeout(this.filterNomeDebounce);
             this.filterNomeDebounce = window.setTimeout(() => this.loadAnimais(), 400);
         },
+        // Reordena a partir dos dados já carregados (sem novo fetch/spinner) para não piscar a tela.
+        ordenarAnimaisPor(campo) {
+            if (this.sortCampoAnimais === campo) {
+                this.sortDirAnimais = this.sortDirAnimais === 'asc' ? 'desc' : 'asc';
+            }
+            else {
+                this.sortCampoAnimais = campo;
+                this.sortDirAnimais = 'asc';
+            }
+            this.renderAnimais();
+        },
+        renderAnimais() {
+            const resultado = this.ultimoResultadoAnimais;
+            if (!resultado)
+                return;
+            const { animais: animaisOriginais, stats, racas, searchNome, sexo, raca, status } = resultado;
+            const container = el('animaisContent');
+            const animais = Components.ordenarLista(animaisOriginais, this.sortCampoAnimais, this.sortDirAnimais);
+            let html = `
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-cow"></i></div><div class="stat-value">${stats.total}</div><div class="stat-label">Total</div></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-venus"></i></div><div class="stat-value">${stats.totalFemea}</div><div class="stat-label">Fêmeas</div></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-mars"></i></div><div class="stat-value">${stats.totalMacho}</div><div class="stat-label">Machos</div></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-weight-scale"></i></div><div class="stat-value">${(stats.pesoMedio || 0).toFixed(0)} kg</div><div class="stat-label">Peso Médio</div></div>
+                </div>
+                <div class="filters">
+                    <div class="filter-group"><label>Nome</label><input type="text" id="filterNome" placeholder="Buscar por nome..." value="${searchNome}" oninput="app.debouncedLoadAnimais()" /></div>
+                    <div class="filter-group"><label>Sexo</label><select id="filterSexo" onchange="app.loadAnimais()"><option value="">Todos</option><option value="F" ${sexo === 'F' ? 'selected' : ''}>Fêmea</option><option value="M" ${sexo === 'M' ? 'selected' : ''}>Macho</option></select></div>
+                    <div class="filter-group"><label>Raça</label><select id="filterRaca" onchange="app.loadAnimais()"><option value="">Todas</option>${racas.map((r) => `<option value="${r}" ${raca === r ? 'selected' : ''}>${r}</option>`).join('')}</select></div>
+                    <div class="filter-group"><label>Status</label><select id="filterStatus" onchange="app.loadAnimais()"><option value="ativos" ${status === 'ativos' ? 'selected' : ''}>Ativos</option><option value="inativos" ${status === 'inativos' ? 'selected' : ''}>Inativos</option><option value="todos" ${status === 'todos' ? 'selected' : ''}>Todos</option></select></div>
+                    <div class="filter-actions"><button class="btn btn-secondary btn-sm btn-square" title="Limpar filtros" onclick="clearTimeout(app.filterNomeDebounce);document.getElementById('filterNome').value='';document.getElementById('filterSexo').value='';document.getElementById('filterRaca').value='';document.getElementById('filterStatus').value='ativos';app.loadAnimais();"><i class="fa-solid fa-xmark"></i></button></div>
+                </div>
+            `;
+            if (!animais || animais.length === 0) {
+                html += `<p class="text-muted text-center">Nenhum animal cadastrado.</p>`;
+            }
+            else {
+                const th = (label, campo) => Components.thOrdenavel(label, campo, this.sortCampoAnimais, this.sortDirAnimais, `app.ordenarAnimaisPor('${campo}')`);
+                html += `<div class="table-responsive"><table><thead><tr>${th('Brinco', 'brinco')}${th('Nome', 'nome')}${th('Sexo', 'sexo')}${th('Raça', 'raca')}${th('Peso', 'peso')}${th('Idade', 'idade')}${th('Status', 'ativo')}<th>Ações</th></tr></thead><tbody>`;
+                animais.forEach(a => {
+                    const sexoLabel = a.sexo === 'F' ? '<i class="fa-solid fa-venus"></i> Fêmea' : '<i class="fa-solid fa-mars"></i> Macho';
+                    const statusBadge = a.ativo
+                        ? '<span class="badge badge-success">Ativo</span>'
+                        : '<span class="badge badge-danger">Inativo</span>';
+                    html += `<tr><td><strong>${a.brinco}</strong></td><td>${a.nome}</td><td>${sexoLabel}</td><td>${a.raca || 'N/A'}</td><td>${a.peso.toFixed(1)} kg</td><td>${a.idade} ${a.idade === 1 ? 'ano' : 'anos'}</td><td>${statusBadge}</td><td><div class="actions"><button class="btn btn-sm btn-primary" data-tooltip="Editar Animal" onclick="app.editarAnimal(${a.brinco})"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-danger" data-tooltip="Excluir Animal" onclick="app.deletarAnimal(${a.brinco})"><i class="fa-solid fa-trash"></i></button><button class="btn btn-sm btn-info" data-tooltip="Ver Árvore" onclick="app.verArvore(${a.brinco})"><i class="fa-solid fa-sitemap"></i></button></div></td></tr>`;
+                });
+                html += `</tbody></table></div>`;
+            }
+            container.innerHTML = html;
+            const nomeInputAtual = document.getElementById('filterNome');
+            if (nomeInputAtual && this._mantendoFocoNome) {
+                nomeInputAtual.focus();
+                nomeInputAtual.setSelectionRange(this._cursorPos, this._cursorPos);
+            }
+        },
         async loadAnimais() {
             const searchNome = document.getElementById('filterNome')?.value || '';
             const sexo = document.getElementById('filterSexo')?.value || '';
             const raca = document.getElementById('filterRaca')?.value || '';
+            const status = document.getElementById('filterStatus')?.value || 'ativos';
             const container = el('animaisContent');
             if (!this.todasRacas || this.todasRacas.length === 0) {
-                const allRes = await api.getAnimais();
+                const allRes = await api.getAnimais({ status: 'todos' });
                 const todosAnimais = allRes.data?.data?.animais || [];
                 this.todasRacas = [...new Set(todosAnimais.map(a => a.raca).filter((r) => !!r))];
             }
             // Preserva o foco e a posição do cursor no campo de nome, já que o filtro
             // dispara a cada digitação (com debounce).
             const nomeInputAtual = document.getElementById('filterNome');
-            const mantendoFocoNome = document.activeElement === nomeInputAtual;
-            const cursorPos = mantendoFocoNome ? nomeInputAtual.selectionStart : null;
+            this._mantendoFocoNome = document.activeElement === nomeInputAtual;
+            this._cursorPos = this._mantendoFocoNome ? nomeInputAtual.selectionStart : null;
             container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando animais...</p></div>`;
             try {
-                const response = await api.getAnimais({ searchNome, sexo, raca });
+                const response = await api.getAnimais({ searchNome, sexo, raca, status });
                 const data = response.data?.data;
                 let animais = data?.animais || [];
                 animais = animais.map(a => {
@@ -282,42 +350,8 @@
                     pesoMedio: data?.pesoMedio || 0
                 };
                 const racas = this.todasRacas || [];
-                let html = `
-                    <div class="stats-grid">
-                        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-cow"></i></div><div class="stat-value">${stats.total}</div><div class="stat-label">Total</div></div>
-                        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-venus"></i></div><div class="stat-value">${stats.totalFemea}</div><div class="stat-label">Fêmeas</div></div>
-                        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-mars"></i></div><div class="stat-value">${stats.totalMacho}</div><div class="stat-label">Machos</div></div>
-                        <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-weight-scale"></i></div><div class="stat-value">${(stats.pesoMedio || 0).toFixed(0)} kg</div><div class="stat-label">Peso Médio</div></div>
-                    </div>
-                    <div class="filters">
-                        <div class="filter-group"><label>Nome</label><input type="text" id="filterNome" placeholder="Buscar por nome..." value="${searchNome}" oninput="app.debouncedLoadAnimais()" /></div>
-                        <div class="filter-group"><label>Sexo</label><select id="filterSexo" onchange="app.loadAnimais()"><option value="">Todos</option><option value="F" ${sexo === 'F' ? 'selected' : ''}>Fêmea</option><option value="M" ${sexo === 'M' ? 'selected' : ''}>Macho</option></select></div>
-                        <div class="filter-group"><label>Raça</label><select id="filterRaca" onchange="app.loadAnimais()"><option value="">Todas</option>${racas.map(r => `<option value="${r}" ${raca === r ? 'selected' : ''}>${r}</option>`).join('')}</select></div>
-                        <div class="filter-actions"><button class="btn btn-secondary btn-sm" title="Limpar filtros" onclick="clearTimeout(app.filterNomeDebounce);document.getElementById('filterNome').value='';document.getElementById('filterSexo').value='';document.getElementById('filterRaca').value='';app.loadAnimais();"><i class="fa-solid fa-xmark"></i> Limpar</button></div>
-                    </div>
-                `;
-                if (!animais || animais.length === 0) {
-                    html += `<p class="text-muted text-center">Nenhum animal cadastrado.</p>`;
-                }
-                else {
-                    html += `<div class="table-responsive"><table><thead><tr><th>Brinco</th><th>Nome</th><th>Sexo</th><th>Raça</th><th>Peso</th><th>Idade</th><th>Status</th><th>Ações</th></tr></thead><tbody>`;
-                    animais.forEach(a => {
-                        const sexoLabel = a.sexo === 'F' ? '<i class="fa-solid fa-venus"></i> Fêmea' : '<i class="fa-solid fa-mars"></i> Macho';
-                        const status = a.ativo
-                            ? '<span class="badge badge-success">Ativo</span>'
-                            : '<span class="badge badge-danger">Inativo</span>';
-                        html += `<tr><td><strong>${a.brinco}</strong></td><td>${a.nome}</td><td>${sexoLabel}</td><td>${a.raca || 'N/A'}</td><td>${a.peso.toFixed(1)} kg</td><td>${a.idade} ${a.idade === 1 ? 'ano' : 'anos'}</td><td>${status}</td><td><div class="actions"><button class="btn btn-sm btn-primary" data-tooltip="Editar Animal" onclick="app.editarAnimal(${a.brinco})"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-danger" data-tooltip="Excluir Animal" onclick="app.deletarAnimal(${a.brinco})"><i class="fa-solid fa-trash"></i></button><button class="btn btn-sm btn-info" data-tooltip="Ver Árvore" onclick="app.verArvore(${a.brinco})"><i class="fa-solid fa-sitemap"></i></button></div></td></tr>`;
-                    });
-                    html += `</tbody></table></div>`;
-                }
-                container.innerHTML = html;
-                if (mantendoFocoNome) {
-                    const novoInputNome = document.getElementById('filterNome');
-                    if (novoInputNome) {
-                        novoInputNome.focus();
-                        novoInputNome.setSelectionRange(cursorPos, cursorPos);
-                    }
-                }
+                this.ultimoResultadoAnimais = { animais, stats, racas, searchNome, sexo, raca, status };
+                this.renderAnimais();
             }
             catch (error) {
                 container.innerHTML = `<p class="text-muted text-center">Erro ao carregar animais: ${error.message}</p>`;
@@ -326,6 +360,42 @@
         // ============================================
         // PRODUÇÕES
         // ============================================
+        // Reordena a partir dos dados já carregados (sem novo fetch/spinner) para não piscar a tela.
+        ordenarProducoesPor(campo) {
+            if (this.sortCampoProducoes === campo) {
+                this.sortDirProducoes = this.sortDirProducoes === 'asc' ? 'desc' : 'asc';
+            }
+            else {
+                this.sortCampoProducoes = campo;
+                this.sortDirProducoes = 'asc';
+            }
+            this.renderProducoes();
+        },
+        renderProducoes() {
+            const resultado = this.ultimoResultadoProducoes;
+            if (!resultado)
+                return;
+            const container = el('producoesContent');
+            if (resultado.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">Nenhuma produção registrada.</p>';
+                return;
+            }
+            const totalLitros = resultado.reduce((sum, p) => sum + p.litros, 0);
+            const periodoLabel = {
+                Manha: '<i class="fa-solid fa-cloud-sun"></i> Manhã',
+                Tarde: '<i class="fa-solid fa-sun"></i> Tarde',
+                Noite: '<i class="fa-solid fa-moon"></i> Noite'
+            };
+            const producoes = Components.ordenarLista(resultado, this.sortCampoProducoes, this.sortDirProducoes, (p, campo) => (campo === 'animal' ? p.animal?.nome || p.animal_brinco : p[campo]));
+            const th = (label, campo) => Components.thOrdenavel(label, campo, this.sortCampoProducoes, this.sortDirProducoes, `app.ordenarProducoesPor('${campo}')`);
+            let html = `<div class="table-responsive"><table><thead><tr>${th('ID', 'id')}${th('Animal', 'animal')}${th('Data', 'data_coleta')}${th('Período', 'periodo')}${th('Litros', 'litros')}<th>Ações</th></tr></thead><tbody>`;
+            producoes.forEach(p => {
+                const periodo = periodoLabel[p.periodo] || p.periodo;
+                html += `<tr><td>${p.id}</td><td>${p.animal?.nome || p.animal_brinco}</td><td>${new Date(p.data_coleta).toLocaleDateString()}</td><td>${periodo}</td><td><strong>${p.litros.toFixed(1)} L</strong></td><td><div class="actions"><button class="btn btn-sm btn-primary" data-tooltip="Editar Produção" onclick="app.editarProducao(${p.id})"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-danger" data-tooltip="Excluir Produção" onclick="app.deletarProducao(${p.id})"><i class="fa-solid fa-trash"></i></button></div></td></tr>`;
+            });
+            html += `</tbody><tfoot><tr><td colspan="4" class="table-footer-label">Total:</td><td class="table-footer-value">${totalLitros.toFixed(1)} L</td><td></td></tr></tfoot></table></div>`;
+            container.innerHTML = html;
+        },
         async loadProducoes() {
             const container = el('producoesContent');
             container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando produções...</p></div>`;
@@ -336,23 +406,8 @@
                     ...p,
                     litros: typeof p.litros === 'number' ? p.litros : parseFloat(String(p.litros)) || 0
                 }));
-                if (!producoes || producoes.length === 0) {
-                    container.innerHTML = '<p class="text-muted text-center">Nenhuma produção registrada.</p>';
-                    return;
-                }
-                const totalLitros = producoes.reduce((sum, p) => sum + p.litros, 0);
-                const periodoLabel = {
-                    Manha: '<i class="fa-solid fa-cloud-sun"></i> Manhã',
-                    Tarde: '<i class="fa-solid fa-sun"></i> Tarde',
-                    Noite: '<i class="fa-solid fa-moon"></i> Noite'
-                };
-                let html = `<div class="table-responsive"><table><thead><tr><th>ID</th><th>Animal</th><th>Data</th><th>Período</th><th>Litros</th><th>Ações</th></tr></thead><tbody>`;
-                producoes.forEach(p => {
-                    const periodo = periodoLabel[p.periodo] || p.periodo;
-                    html += `<tr><td>${p.id}</td><td>${p.animal?.nome || p.animal_brinco}</td><td>${new Date(p.data_coleta).toLocaleDateString()}</td><td>${periodo}</td><td><strong>${p.litros.toFixed(1)} L</strong></td><td><div class="actions"><button class="btn btn-sm btn-primary" data-tooltip="Editar Produção" onclick="app.editarProducao(${p.id})"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-danger" data-tooltip="Excluir Produção" onclick="app.deletarProducao(${p.id})"><i class="fa-solid fa-trash"></i></button></div></td></tr>`;
-                });
-                html += `</tbody><tfoot><tr><td colspan="4" class="table-footer-label">Total:</td><td class="table-footer-value">${totalLitros.toFixed(1)} L</td><td></td></tr></tfoot></table></div>`;
-                container.innerHTML = html;
+                this.ultimoResultadoProducoes = producoes;
+                this.renderProducoes();
             }
             catch (error) {
                 container.innerHTML = `<p class="text-muted text-center">Erro ao carregar produções: ${error.message}</p>`;
@@ -387,7 +442,7 @@
                     '<i class="fa-solid fa-award"></i>',
                     '<i class="fa-solid fa-award"></i>'
                 ];
-                let html = `
+                const html = `
                     <div class="stats-grid">
                         <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-cow"></i></div><div class="stat-value">${totalAnimais}</div><div class="stat-label">Total de Animais</div></div>
                         <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-venus"></i></div><div class="stat-value">${totalFemea}</div><div class="stat-label">Fêmeas</div></div>
@@ -448,28 +503,49 @@
         // ============================================
         // USUÁRIOS
         // ============================================
+        // Reordena a partir dos dados já carregados (sem novo fetch/spinner) para não piscar a tela.
+        ordenarUsuariosPor(campo) {
+            if (this.sortCampoUsuarios === campo) {
+                this.sortDirUsuarios = this.sortDirUsuarios === 'asc' ? 'desc' : 'asc';
+            }
+            else {
+                this.sortCampoUsuarios = campo;
+                this.sortDirUsuarios = 'asc';
+            }
+            this.renderUsuarios();
+        },
+        renderUsuarios() {
+            const resultado = this.ultimoResultadoUsuarios;
+            if (!resultado)
+                return;
+            const container = el('usuariosContent');
+            if (resultado.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">Nenhum usuário cadastrado.</p>';
+                return;
+            }
+            const users = Components.ordenarLista(resultado, this.sortCampoUsuarios, this.sortDirUsuarios);
+            const th = (label, campo) => Components.thOrdenavel(label, campo, this.sortCampoUsuarios, this.sortDirUsuarios, `app.ordenarUsuariosPor('${campo}')`);
+            let html = `<div class="table-responsive"><table><thead><tr>${th('Nome', 'nome')}${th('Email', 'email')}${th('Perfil', 'role')}${th('Status', 'ativo')}<th>Ações</th></tr></thead><tbody>`;
+            users.forEach(u => {
+                const role = u.role === 'Admin'
+                    ? '<span class="badge badge-danger">Admin</span>'
+                    : '<span class="badge badge-info">Cliente</span>';
+                const status = u.ativo
+                    ? '<span class="badge badge-success">Ativo</span>'
+                    : '<span class="badge badge-danger">Inativo</span>';
+                html += `<tr><td><strong>${u.nome}</strong></td><td>${u.email}</td><td>${role}</td><td>${status}</td><td><div class="actions"><button class="btn btn-sm btn-warning" data-tooltip="Alternar Status" onclick="app.toggleUserStatus('${u.id}')"><i class="fa-solid fa-arrows-rotate"></i></button><button class="btn btn-sm btn-danger" data-tooltip="Excluir Usuário" onclick="app.deletarUsuario('${u.id}')"><i class="fa-solid fa-trash"></i></button></div></td></tr>`;
+            });
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        },
         async loadUsuarios() {
             const container = el('usuariosContent');
             container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Carregando usuários...</p></div>`;
             try {
                 const response = await api.getUsers();
                 const users = response.data?.data || [];
-                if (!users || users.length === 0) {
-                    container.innerHTML = '<p class="text-muted text-center">Nenhum usuário cadastrado.</p>';
-                    return;
-                }
-                let html = `<div class="table-responsive"><table><thead><tr><th>Nome</th><th>Email</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead><tbody>`;
-                users.forEach(u => {
-                    const role = u.role === 'Admin'
-                        ? '<span class="badge badge-danger">Admin</span>'
-                        : '<span class="badge badge-info">Cliente</span>';
-                    const status = u.ativo
-                        ? '<span class="badge badge-success">Ativo</span>'
-                        : '<span class="badge badge-danger">Inativo</span>';
-                    html += `<tr><td><strong>${u.nome}</strong></td><td>${u.email}</td><td>${role}</td><td>${status}</td><td><div class="actions"><button class="btn btn-sm btn-warning" data-tooltip="Alternar Status" onclick="app.toggleUserStatus('${u.id}')"><i class="fa-solid fa-arrows-rotate"></i></button><button class="btn btn-sm btn-danger" data-tooltip="Excluir Usuário" onclick="app.deletarUsuario('${u.id}')"><i class="fa-solid fa-trash"></i></button></div></td></tr>`;
-                });
-                html += `</tbody></table></div>`;
-                container.innerHTML = html;
+                this.ultimoResultadoUsuarios = users;
+                this.renderUsuarios();
             }
             catch (error) {
                 container.innerHTML = `<p class="text-muted text-center">Erro ao carregar usuários: ${error.message}</p>`;
@@ -478,12 +554,50 @@
         // ============================================
         // ANIMAIS - CRUD
         // ============================================
-        novoAnimal() {
+        // Popula os <select> de brinco do pai/mãe com os machos/fêmeas disponíveis
+        // (excluindo o próprio animal, no caso de edição) e pré-seleciona o valor atual.
+        async carregarSelectsPaiMae(excluirBrinco, paiSelecionado, maeSelecionado) {
+            try {
+                const [resMachos, resFemeas] = await Promise.all([
+                    api.getMachosParaSelecao(excluirBrinco),
+                    api.getFemeasParaSelecao(excluirBrinco)
+                ]);
+                const machos = resMachos.data?.data || [];
+                const femeas = resFemeas.data?.data || [];
+                const selectPai = el('animalBrincoPai');
+                selectPai.innerHTML =
+                    '<option value="">Nenhum</option>' +
+                        machos
+                            .map(m => `<option value="${m.brinco}" ${m.brinco === paiSelecionado ? 'selected' : ''}>${m.brinco} - ${m.nome}</option>`)
+                            .join('');
+                const selectMae = el('animalBrincoMae');
+                selectMae.innerHTML =
+                    '<option value="">Nenhuma</option>' +
+                        femeas
+                            .map(f => `<option value="${f.brinco}" ${f.brinco === maeSelecionado ? 'selected' : ''}>${f.brinco} - ${f.nome}</option>`)
+                            .join('');
+            }
+            catch (error) {
+                this.toast('Erro ao carregar lista de pai/mãe', 'error');
+            }
+        },
+        // Atualiza o texto ao lado do switch conforme o estado marcado/desmarcado.
+        atualizarLabelStatusAnimal() {
+            const checkbox = document.getElementById('animalAtivo');
+            const label = document.getElementById('animalAtivoLabel');
+            if (checkbox && label) {
+                label.textContent = checkbox.checked ? 'Ativo' : 'Inativo';
+            }
+        },
+        async novoAnimal() {
             el('modalAnimalTitle').innerHTML = '<i class="fa-solid fa-cow"></i> Novo Animal';
             el('animalSubmitBtn').textContent = 'Salvar';
             el('animalEditBrinco').value = '';
             el('animalBrinco').disabled = false;
             el('animalForm').reset();
+            el('animalAtivo').checked = true;
+            this.atualizarLabelStatusAnimal();
+            await this.carregarSelectsPaiMae();
             this.showModal('animal');
         },
         async editarAnimal(brinco) {
@@ -504,8 +618,9 @@
                 el('animalRaca').value = animal.raca || '';
                 el('animalPeso').value = String(animal.peso);
                 el('animalDataNascimento').value = animal.data_nascimento?.split('T')[0] || '';
-                el('animalBrincoPai').value = animal.brinco_pai ? String(animal.brinco_pai) : '';
-                el('animalBrincoMae').value = animal.brinco_mae ? String(animal.brinco_mae) : '';
+                el('animalAtivo').checked = !!animal.ativo;
+                this.atualizarLabelStatusAnimal();
+                await this.carregarSelectsPaiMae(animal.brinco, animal.brinco_pai, animal.brinco_mae);
                 this.showModal('animal');
             }
             catch (error) {
@@ -521,6 +636,7 @@
                 raca: el('animalRaca').value || undefined,
                 peso: parseFloat(el('animalPeso').value),
                 data_nascimento: el('animalDataNascimento').value,
+                ativo: el('animalAtivo').checked,
                 brinco_pai: el('animalBrincoPai').value
                     ? parseInt(el('animalBrincoPai').value)
                     : undefined,
@@ -577,17 +693,9 @@
                     this.toast('Árvore não encontrada', 'error');
                     return;
                 }
-                const animal = data.animal, pai = data.pai, mae = data.mae, filhos = data.filhos || [];
-                let html = `
-                    <div class="tree-grid">
-                        <div class="tree-card"><h4>${pai ? `<i class="fa-solid fa-person"></i> ${pai.nome}` : '<i class="fa-solid fa-circle-question"></i> Pai não informado'}</h4>${pai ? `<p><small>Brinco: ${pai.brinco}</small></p>` : ''}${pai?.pai ? `<p><small>Avô: ${pai.pai.nome}</small></p>` : ''}${pai?.mae ? `<p><small>Avó: ${pai.mae.nome}</small></p>` : ''}</div>
-                        <div class="tree-card-center"><h4><i class="fa-solid fa-cow"></i> ${animal.nome}</h4><p><small>Brinco: ${animal.brinco}</small></p><p><small>${animal.sexo === 'F' ? '<i class="fa-solid fa-venus"></i> Fêmea' : '<i class="fa-solid fa-mars"></i> Macho'}</small></p></div>
-                        <div class="tree-card"><h4>${mae ? `<i class="fa-solid fa-person-dress"></i> ${mae.nome}` : '<i class="fa-solid fa-circle-question"></i> Mãe não informada'}</h4>${mae ? `<p><small>Brinco: ${mae.brinco}</small></p>` : ''}${mae?.pai ? `<p><small>Avô: ${mae.pai.nome}</small></p>` : ''}${mae?.mae ? `<p><small>Avó: ${mae.mae.nome}</small></p>` : ''}</div>
-                    </div>
-                    ${filhos.length > 0
-                    ? `<div class="tree-children-block"><h4><i class="fa-solid fa-child"></i> Filhos (${filhos.length})</h4><div class="tree-children-list">${filhos.map(f => `<span class="badge badge-primary">${f.nome} (${f.brinco})</span>`).join('')}</div></div>`
-                    : ''}
-                    <div class="tree-back-action"><button class="btn btn-secondary btn-sm" onclick="app.loadAnimais()"><i class="fa-solid fa-arrow-left"></i> Voltar</button></div>
+                const html = `
+                    ${Components.renderArvoreGenealogica(data)}
+                    <div class="tree-back-action"><button class="btn btn-secondary btn-sm" onclick="app.loadAnimais()"><i class="fa-solid fa-arrow-left"></i> Voltar para a lista</button></div>
                 `;
                 el('animaisContent').innerHTML = html;
             }
@@ -611,7 +719,7 @@
                 el('producaoSubmitBtn').textContent = 'Salvar';
                 el('producaoEditId').value = '';
                 el('producaoForm').reset();
-                el('producaoData').value = new Date().toISOString().split('T')[0];
+                el('producaoData').value = Components.dataLocalIso();
                 this.showModal('producao');
             }
             catch (error) {

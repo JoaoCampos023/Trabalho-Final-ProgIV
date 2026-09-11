@@ -1,6 +1,7 @@
 import prisma from '../config/database';
 import { ProducaoLeite, IProducaoLeite, PeriodoProducao } from '../models/ProducaoLeite';
 import { Animal } from '../models/Animal';
+import { DateUtils } from '../utils/dateUtils';
 
 // Função auxiliar para converter dados do Prisma para ProducaoLeite
 function toProducao(row: any): ProducaoLeite {
@@ -127,11 +128,7 @@ export class ProducaoRepository {
   /**
    * Calcular total de litros por período
    */
-  async getTotalPorPeriodo(
-    dataInicio: Date,
-    dataFim: Date,
-    periodo?: PeriodoProducao
-  ): Promise<number> {
+  async getTotalPorPeriodo(dataInicio: Date, dataFim: Date, periodo?: PeriodoProducao): Promise<number> {
     const where: any = {
       data_coleta: { gte: dataInicio, lte: dataFim }
     };
@@ -152,8 +149,8 @@ export class ProducaoRepository {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - dias);
 
-    const results = await prisma.$queryRaw<{ data: string; total: number }[]>`
-      SELECT 
+    const results = await prisma.$queryRaw<{ data: string | Date; total: number }[]>`
+      SELECT
         DATE(data_coleta) as data,
         COALESCE(SUM(litros), 0) as total
       FROM producoes_leite
@@ -163,13 +160,22 @@ export class ProducaoRepository {
     `;
 
     // Preencher dias sem produção
-    const resultMap = new Map(results.map(r => [r.data, Number(r.total)]));
+    // (o driver do Postgres devolve DATE(...) como objeto Date, não string — usar
+    // isso direto como chave nunca bate com a busca por string abaixo)
+    const resultMap = new Map(
+      results.map(r => {
+        const chave = r.data instanceof Date ? r.data.toISOString().split('T')[0] : String(r.data).split('T')[0];
+        return [chave, Number(r.total)];
+      })
+    );
     const finalResults: { data: string; total: number }[] = [];
 
     for (let i = dias - 1; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
+      // formatarDataIso usa getters locais (horário de Brasília), não toISOString
+      // (que é sempre UTC e "vira o dia" 3h antes da meia-noite local).
+      const dateStr = DateUtils.formatarDataIso(date);
       finalResults.push({
         data: dateStr,
         total: resultMap.get(dateStr) || 0

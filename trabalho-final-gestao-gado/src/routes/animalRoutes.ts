@@ -25,11 +25,9 @@ router.use(authMiddleware);
 // Listar todos os animais com filtros
 router.get('/', animalController.listarTodos.bind(animalController));
 
-// Buscar animal por brinco
-router.get('/:brinco', animalController.buscarPorBrinco.bind(animalController));
-
-// Buscar árvore genealógica
-router.get('/:brinco/tree', animalController.buscarArvoreGenealogica.bind(animalController));
+// IMPORTANTE: rotas literais de um segmento (/stats, /machos/selecao, ...)
+// precisam vir ANTES de '/:brinco', senão o Express casa "stats" como se
+// fosse o valor de :brinco e a rota nunca é alcançada.
 
 // Buscar machos para seleção (pais)
 router.get('/machos/selecao', animalController.buscarMachosParaSelecao.bind(animalController));
@@ -39,6 +37,12 @@ router.get('/femeas/selecao', animalController.buscarFemeasParaSelecao.bind(anim
 
 // Estatísticas do rebanho
 router.get('/stats', animalController.getStats.bind(animalController));
+
+// Buscar árvore genealógica
+router.get('/:brinco/tree', animalController.buscarArvoreGenealogica.bind(animalController));
+
+// Buscar animal por brinco
+router.get('/:brinco', animalController.buscarPorBrinco.bind(animalController));
 
 // ============================================
 // ROTAS DE ESCRITA (CRUD)

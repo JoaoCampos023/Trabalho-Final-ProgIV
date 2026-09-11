@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { UserService } from '../services/UserService';
+import { friendlyMessage } from '../utils/errorMessage';
 
 const userService = new UserService();
 
@@ -23,7 +24,7 @@ export class UserController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao listar usuários',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -39,8 +40,7 @@ export class UserController {
       const nome = req.query.nome as string;
       const email = req.query.email as string;
       const role = req.query.role as string;
-      const ativo = req.query.ativo === 'true' ? true : 
-                    req.query.ativo === 'false' ? false : undefined;
+      const ativo = req.query.ativo === 'true' ? true : req.query.ativo === 'false' ? false : undefined;
 
       const result = await userService.listarComFiltros(page, limit, {
         nome,
@@ -65,7 +65,7 @@ export class UserController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao listar usuários',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -94,7 +94,7 @@ export class UserController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao buscar usuário',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -129,16 +129,15 @@ export class UserController {
         data: user.toPublicJSON()
       });
     } catch (error) {
-      const status = error instanceof Error && 
-        (error.message.includes('CPF') || 
-         error.message.includes('Email') || 
-         error.message.includes('cadastrado'))
-        ? 400
-        : 500;
+      const status =
+        error instanceof Error &&
+        (error.message.includes('CPF') || error.message.includes('Email') || error.message.includes('cadastrado'))
+          ? 400
+          : 500;
 
       return res.status(status).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Erro ao criar usuário'
+        message: friendlyMessage(error, 'Erro ao criar usuário')
       });
     }
   }
@@ -165,16 +164,17 @@ export class UserController {
         data: user.toPublicJSON()
       });
     } catch (error) {
-      const status = error instanceof Error &&
+      const status =
+        error instanceof Error &&
         (error.message.includes('não encontrado') ||
-         error.message.includes('CPF') ||
-         error.message.includes('Administrador'))
-        ? 400
-        : 500;
+          error.message.includes('CPF') ||
+          error.message.includes('Administrador'))
+          ? 400
+          : 500;
 
       return res.status(status).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Erro ao atualizar usuário'
+        message: friendlyMessage(error, 'Erro ao atualizar usuário')
       });
     }
   }
@@ -194,15 +194,14 @@ export class UserController {
         data: user.toPublicJSON()
       });
     } catch (error) {
-      const status = error instanceof Error &&
-        (error.message.includes('não encontrado') ||
-         error.message.includes('Administrador'))
-        ? 400
-        : 500;
+      const status =
+        error instanceof Error && (error.message.includes('não encontrado') || error.message.includes('Administrador'))
+          ? 400
+          : 500;
 
       return res.status(status).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Erro ao alterar status'
+        message: friendlyMessage(error, 'Erro ao alterar status')
       });
     }
   }
@@ -225,15 +224,14 @@ export class UserController {
         }
       });
     } catch (error) {
-      const status = error instanceof Error &&
-        (error.message.includes('não encontrado') ||
-         error.message.includes('Administrador'))
-        ? 400
-        : 500;
+      const status =
+        error instanceof Error && (error.message.includes('não encontrado') || error.message.includes('Administrador'))
+          ? 400
+          : 500;
 
       return res.status(status).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Erro ao resetar senha'
+        message: friendlyMessage(error, 'Erro ao resetar senha')
       });
     }
   }
@@ -252,15 +250,14 @@ export class UserController {
         message: 'Usuário excluído com sucesso'
       });
     } catch (error) {
-      const status = error instanceof Error &&
-        (error.message.includes('não encontrado') ||
-         error.message.includes('Administrador'))
-        ? 400
-        : 500;
+      const status =
+        error instanceof Error && (error.message.includes('não encontrado') || error.message.includes('Administrador'))
+          ? 400
+          : 500;
 
       return res.status(status).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Erro ao excluir usuário'
+        message: friendlyMessage(error, 'Erro ao excluir usuário')
       });
     }
   }
@@ -281,7 +278,7 @@ export class UserController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao obter estatísticas',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }

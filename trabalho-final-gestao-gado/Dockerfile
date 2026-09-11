@@ -30,8 +30,14 @@ FROM node:20-slim AS runtime
 
 WORKDIR /app
 ENV NODE_ENV=production
+# Fuso horário padrão do container (horário de Brasília) — o .env pode
+# sobrescrever via env_file/environment do docker-compose, mas isso garante
+# que "hoje"/"agora" já nascem corretos mesmo sem TZ definida em lugar nenhum.
+ENV TZ=America/Sao_Paulo
 
-RUN apt-get update -y && apt-get install -y --no-install-recommends openssl \
+# tzdata é necessário para o Node reconhecer fusos horários (America/Sao_Paulo);
+# a imagem slim não vem com o banco de fusos instalado por padrão.
+RUN apt-get update -y && apt-get install -y --no-install-recommends openssl tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 # node_modules já vem com o Prisma Client gerado (etapa build) — reaproveita

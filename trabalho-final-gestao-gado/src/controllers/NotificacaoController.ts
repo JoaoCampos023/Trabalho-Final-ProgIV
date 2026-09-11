@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { friendlyMessage } from '../utils/errorMessage';
 
 export class NotificacaoController {
   async getAlertas(_req: Request, res: Response): Promise<Response> {
@@ -14,7 +15,7 @@ export class NotificacaoController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao buscar alertas',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -28,7 +29,7 @@ export class NotificacaoController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao marcar alerta como lido',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -46,7 +47,7 @@ export class NotificacaoController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao enviar email',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -64,7 +65,7 @@ export class NotificacaoController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao enviar WhatsApp',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -87,7 +88,7 @@ export class NotificacaoController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao atualizar configurações',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }

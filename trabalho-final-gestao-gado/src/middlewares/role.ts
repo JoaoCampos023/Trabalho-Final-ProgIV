@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
+import { friendlyMessage } from '../utils/errorMessage';
 
 /**
  * Middleware de autorização por role
  * Verifica se o usuário tem uma das roles permitidas
- * 
+ *
  * @param allowedRoles - Array de roles permitidas (ex: ['Admin', 'Cliente'])
  */
 export const roleMiddleware = (allowedRoles: string[]) => {
@@ -32,7 +33,7 @@ export const roleMiddleware = (allowedRoles: string[]) => {
       res.status(500).json({
         success: false,
         message: 'Erro ao verificar permissões',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   };

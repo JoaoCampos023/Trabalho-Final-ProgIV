@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { UserService } from '../services/UserService';
+import { friendlyMessage } from '../utils/errorMessage';
 
 const router = Router();
 const userService = new UserService();
@@ -30,15 +31,14 @@ router.post('/login', async (req: Request, res: Response): Promise<Response> => 
       }
     });
   } catch (error) {
-    const status = error instanceof Error &&
-      (error.message.includes('inválidos') ||
-       error.message.includes('desativada'))
-      ? 401
-      : 500;
+    const status =
+      error instanceof Error && (error.message.includes('inválidos') || error.message.includes('desativada'))
+        ? 401
+        : 500;
 
     return res.status(status).json({
       success: false,
-      message: error instanceof Error ? error.message : 'Erro ao fazer login'
+      message: friendlyMessage(error, 'Erro ao fazer login')
     });
   }
 });
@@ -87,16 +87,15 @@ router.post('/register', async (req: Request, res: Response): Promise<Response> 
       }
     });
   } catch (error) {
-    const status = error instanceof Error &&
-      (error.message.includes('CPF') ||
-       error.message.includes('Email') ||
-       error.message.includes('cadastrado'))
-      ? 400
-      : 500;
+    const status =
+      error instanceof Error &&
+      (error.message.includes('CPF') || error.message.includes('Email') || error.message.includes('cadastrado'))
+        ? 400
+        : 500;
 
     return res.status(status).json({
       success: false,
-      message: error instanceof Error ? error.message : 'Erro ao registrar usuário'
+      message: friendlyMessage(error, 'Erro ao registrar usuário')
     });
   }
 });

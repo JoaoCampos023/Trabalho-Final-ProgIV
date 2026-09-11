@@ -10,218 +10,228 @@
 const API_URL = 'http://localhost:3000/api';
 
 class Api {
-    token: string | null;
+  token: string | null;
 
-    constructor() {
-        this.token = localStorage.getItem('token');
+  constructor() {
+    this.token = localStorage.getItem('token');
+  }
+
+  getHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    return headers;
+  }
+
+  setToken(token: string): void {
+    this.token = token;
+    localStorage.setItem('token', token);
+  }
+
+  clearToken(): void {
+    this.token = null;
+    localStorage.removeItem('token');
+  }
+
+  isAuthenticated(): boolean {
+    return !!this.token;
+  }
+
+  async request<T = any>(method: string, endpoint: string, body: unknown = null): Promise<ApiResult<T>> {
+    const url = `${API_URL}${endpoint}`;
+    const options: RequestInit = { method, headers: this.getHeaders() };
+    if (body) {
+      options.body = JSON.stringify(body);
     }
 
-    getHeaders(): Record<string, string> {
-        const headers: Record<string, string> = {
-            'Content-Type': 'application/json'
-        };
-        if (this.token) {
-            headers['Authorization'] = `Bearer ${this.token}`;
-        }
-        return headers;
+    const response = await fetch(url, options);
+    let data: ApiEnvelope<T>;
+    try {
+      data = await response.json();
+    } catch {
+      data = { error: 'Resposta inválida' };
     }
 
-    setToken(token: string): void {
-        this.token = token;
-        localStorage.setItem('token', token);
+    return { data, status: response.status };
+  }
+
+  cleanParams(filters: Record<string, unknown>): string {
+    const clean: Record<string, string> = {};
+    for (const key in filters) {
+      const value = filters[key];
+      if (value !== undefined && value !== null && value !== '') {
+        clean[key] = String(value);
+      }
     }
+    return new URLSearchParams(clean).toString();
+  }
 
-    clearToken(): void {
-        this.token = null;
-        localStorage.removeItem('token');
-    }
+  // ============================================
+  // AUTH
+  // ============================================
+  async register(data: { nome: string; email: string; password: string; cpf: string; role?: Role }) {
+    return this.request<{ user: Usuario; token: string }>('POST', '/auth/register', data);
+  }
 
-    isAuthenticated(): boolean {
-        return !!this.token;
-    }
+  async login(data: { email: string; password: string }) {
+    return this.request<{ user: Usuario; token: string }>('POST', '/auth/login', data);
+  }
 
-    async request<T = any>(method: string, endpoint: string, body: unknown = null): Promise<ApiResult<T>> {
-        const url = `${API_URL}${endpoint}`;
-        const options: RequestInit = { method, headers: this.getHeaders() };
-        if (body) {
-            options.body = JSON.stringify(body);
-        }
+  // ============================================
+  // USERS (Admin)
+  // ============================================
+  async getUsers() {
+    return this.request<Usuario[]>('GET', '/users');
+  }
 
-        const response = await fetch(url, options);
-        let data: ApiEnvelope<T>;
-        try {
-            data = await response.json();
-        } catch {
-            data = { error: 'Resposta inválida' };
-        }
+  async getUser(id: string) {
+    return this.request<Usuario>('GET', `/users/${id}`);
+  }
 
-        return { data, status: response.status };
-    }
+  async createUser(data: { nome: string; email: string; password: string; cpf: string; role?: Role }) {
+    return this.request<Usuario>('POST', '/users', data);
+  }
 
-    cleanParams(filters: Record<string, unknown>): string {
-        const clean: Record<string, string> = {};
-        for (const key in filters) {
-            const value = filters[key];
-            if (value !== undefined && value !== null && value !== '') {
-                clean[key] = String(value);
-            }
-        }
-        return new URLSearchParams(clean).toString();
-    }
+  async updateUser(id: string, data: Partial<Pick<Usuario, 'nome' | 'cpf' | 'role' | 'ativo'>>) {
+    return this.request<Usuario>('PUT', `/users/${id}`, data);
+  }
 
-    // ============================================
-    // AUTH
-    // ============================================
-    async register(data: { nome: string; email: string; password: string; cpf: string; role?: Role }) {
-        return this.request<{ user: Usuario; token: string }>('POST', '/auth/register', data);
-    }
+  async deleteUser(id: string) {
+    return this.request<void>('DELETE', `/users/${id}`);
+  }
 
-    async login(data: { email: string; password: string }) {
-        return this.request<{ user: Usuario; token: string }>('POST', '/auth/login', data);
-    }
+  async toggleUserStatus(id: string) {
+    return this.request<Usuario>('PATCH', `/users/${id}/toggle-status`);
+  }
 
-    // ============================================
-    // USERS (Admin)
-    // ============================================
-    async getUsers() {
-        return this.request<Usuario[]>('GET', '/users');
-    }
+  async resetUserPassword(id: string) {
+    return this.request<{ novaSenha: string; usuario: Usuario }>('POST', `/users/${id}/reset-password`);
+  }
 
-    async getUser(id: string) {
-        return this.request<Usuario>('GET', `/users/${id}`);
-    }
+  // ============================================
+  // ANIMAIS
+  // ============================================
+  async getAnimais(filters: Record<string, unknown> = {}) {
+    const params = this.cleanParams(filters);
+    const endpoint = params ? `/animais?${params}` : '/animais';
+    return this.request<{
+      animais: Animal[];
+      total: number;
+      totalFemea: number;
+      totalMacho: number;
+      pesoMedio: number;
+    }>('GET', endpoint);
+  }
 
-    async createUser(data: { nome: string; email: string; password: string; cpf: string; role?: Role }) {
-        return this.request<Usuario>('POST', '/users', data);
-    }
+  async getAnimal(brinco: number) {
+    return this.request<Animal>('GET', `/animais/${brinco}`);
+  }
 
-    async updateUser(id: string, data: Partial<Pick<Usuario, 'nome' | 'cpf' | 'role' | 'ativo'>>) {
-        return this.request<Usuario>('PUT', `/users/${id}`, data);
-    }
+  async getAnimalTree(brinco: number) {
+    return this.request<ArvoreGenealogica>('GET', `/animais/${brinco}/tree`);
+  }
 
-    async deleteUser(id: string) {
-        return this.request<void>('DELETE', `/users/${id}`);
-    }
+  async createAnimal(data: Partial<Animal>) {
+    return this.request<Animal>('POST', '/animais', data);
+  }
 
-    async toggleUserStatus(id: string) {
-        return this.request<Usuario>('PATCH', `/users/${id}/toggle-status`);
-    }
+  async updateAnimal(brinco: number, data: Partial<Animal>) {
+    return this.request<Animal>('PUT', `/animais/${brinco}`, data);
+  }
 
-    async resetUserPassword(id: string) {
-        return this.request<{ novaSenha: string; usuario: Usuario }>('POST', `/users/${id}/reset-password`);
-    }
+  async deleteAnimal(brinco: number) {
+    return this.request<void>('DELETE', `/animais/${brinco}`);
+  }
 
-    // ============================================
-    // ANIMAIS
-    // ============================================
-    async getAnimais(filters: Record<string, unknown> = {}) {
-        const params = this.cleanParams(filters);
-        const endpoint = params ? `/animais?${params}` : '/animais';
-        return this.request<{
-            animais: Animal[];
-            total: number;
-            totalFemea: number;
-            totalMacho: number;
-            pesoMedio: number;
-        }>('GET', endpoint);
-    }
+  async getAnimalStats() {
+    return this.request('GET', '/animais/stats');
+  }
 
-    async getAnimal(brinco: number) {
-        return this.request<Animal>('GET', `/animais/${brinco}`);
-    }
+  async getMachosParaSelecao(excluirBrinco?: number) {
+    const endpoint = excluirBrinco ? `/animais/machos/selecao?excluir=${excluirBrinco}` : '/animais/machos/selecao';
+    return this.request<Pick<Animal, 'brinco' | 'nome' | 'sexo'>[]>('GET', endpoint);
+  }
 
-    async getAnimalTree(brinco: number) {
-        return this.request<ArvoreGenealogica>('GET', `/animais/${brinco}/tree`);
-    }
+  async getFemeasParaSelecao(excluirBrinco?: number) {
+    const endpoint = excluirBrinco ? `/animais/femeas/selecao?excluir=${excluirBrinco}` : '/animais/femeas/selecao';
+    return this.request<Pick<Animal, 'brinco' | 'nome' | 'sexo'>[]>('GET', endpoint);
+  }
 
-    async createAnimal(data: Partial<Animal>) {
-        return this.request<Animal>('POST', '/animais', data);
-    }
+  // ============================================
+  // PRODUÇÕES
+  // ============================================
+  async getProducoes(filters: Record<string, unknown> = {}) {
+    const params = this.cleanParams(filters);
+    const endpoint = params ? `/producoes?${params}` : '/producoes';
+    return this.request<{ producoes: ProducaoLeite[] }>('GET', endpoint);
+  }
 
-    async updateAnimal(brinco: number, data: Partial<Animal>) {
-        return this.request<Animal>('PUT', `/animais/${brinco}`, data);
-    }
+  async getProducao(id: number) {
+    return this.request<ProducaoLeite>('GET', `/producoes/${id}`);
+  }
 
-    async deleteAnimal(brinco: number) {
-        return this.request<void>('DELETE', `/animais/${brinco}`);
-    }
+  async getProducoesByAnimal(brinco: number) {
+    return this.request<ProducaoLeite[]>('GET', `/producoes/animal/${brinco}`);
+  }
 
-    async getAnimalStats() {
-        return this.request('GET', '/animais/stats');
-    }
+  async getUltimasProducoes(quantidade = 10) {
+    return this.request<ProducaoLeite[]>('GET', `/producoes/ultimas/${quantidade}`);
+  }
 
-    // ============================================
-    // PRODUÇÕES
-    // ============================================
-    async getProducoes(filters: Record<string, unknown> = {}) {
-        const params = this.cleanParams(filters);
-        const endpoint = params ? `/producoes?${params}` : '/producoes';
-        return this.request<{ producoes: ProducaoLeite[] }>('GET', endpoint);
-    }
+  async createProducao(data: Partial<ProducaoLeite>) {
+    return this.request<ProducaoLeite>('POST', '/producoes', data);
+  }
 
-    async getProducao(id: number) {
-        return this.request<ProducaoLeite>('GET', `/producoes/${id}`);
-    }
+  async updateProducao(id: number, data: Partial<ProducaoLeite>) {
+    return this.request<ProducaoLeite>('PUT', `/producoes/${id}`, data);
+  }
 
-    async getProducoesByAnimal(brinco: number) {
-        return this.request<ProducaoLeite[]>('GET', `/producoes/animal/${brinco}`);
-    }
+  async deleteProducao(id: number) {
+    return this.request<void>('DELETE', `/producoes/${id}`);
+  }
 
-    async getUltimasProducoes(quantidade = 10) {
-        return this.request<ProducaoLeite[]>('GET', `/producoes/ultimas/${quantidade}`);
-    }
+  async getProducaoStats() {
+    return this.request('GET', '/producoes/stats');
+  }
 
-    async createProducao(data: Partial<ProducaoLeite>) {
-        return this.request<ProducaoLeite>('POST', '/producoes', data);
-    }
+  async getTopVacas(limit = 5) {
+    return this.request<{ nome: string; producao: number; total?: number }[]>(
+      'GET',
+      `/producoes/top-vacas?limit=${limit}`
+    );
+  }
 
-    async updateProducao(id: number, data: Partial<ProducaoLeite>) {
-        return this.request<ProducaoLeite>('PUT', `/producoes/${id}`, data);
-    }
+  async getProducaoPorDia(dias = 7) {
+    return this.request<{ data: string; total: number }[]>('GET', `/producoes/producao-dia?dias=${dias}`);
+  }
 
-    async deleteProducao(id: number) {
-        return this.request<void>('DELETE', `/producoes/${id}`);
-    }
+  async getRelatorio(filters: Record<string, unknown> = {}) {
+    const params = this.cleanParams(filters);
+    const endpoint = params ? `/producoes/relatorio?${params}` : '/producoes/relatorio';
+    return this.request('GET', endpoint);
+  }
 
-    async getProducaoStats() {
-        return this.request('GET', '/producoes/stats');
-    }
+  // ============================================
+  // RELATÓRIOS
+  // ============================================
+  async getRelatorioProducao(filters: Record<string, unknown> = {}) {
+    const params = this.cleanParams(filters);
+    const endpoint = params ? `/relatorios/producao?${params}` : '/relatorios/producao';
+    return this.request<{ producoes: ProducaoLeite[]; stats?: { totalLitros: number } }>('GET', endpoint);
+  }
 
-    async getTopVacas(limit = 5) {
-        return this.request<{ nome: string; producao: number; total?: number }[]>(
-            'GET',
-            `/producoes/top-vacas?limit=${limit}`
-        );
-    }
+  async getRelatorioRebanho(filters: Record<string, unknown> = {}) {
+    const params = this.cleanParams(filters);
+    const endpoint = params ? `/relatorios/rebanho?${params}` : '/relatorios/rebanho';
+    return this.request('GET', endpoint);
+  }
 
-    async getProducaoPorDia(dias = 7) {
-        return this.request<{ data: string; total: number }[]>('GET', `/producoes/producao-dia?dias=${dias}`);
-    }
-
-    async getRelatorio(filters: Record<string, unknown> = {}) {
-        const params = this.cleanParams(filters);
-        const endpoint = params ? `/producoes/relatorio?${params}` : '/producoes/relatorio';
-        return this.request('GET', endpoint);
-    }
-
-    // ============================================
-    // RELATÓRIOS
-    // ============================================
-    async getRelatorioProducao(filters: Record<string, unknown> = {}) {
-        const params = this.cleanParams(filters);
-        const endpoint = params ? `/relatorios/producao?${params}` : '/relatorios/producao';
-        return this.request<{ stats?: { totalLitros: number } }>('GET', endpoint);
-    }
-
-    async getRelatorioRebanho(filters: Record<string, unknown> = {}) {
-        const params = this.cleanParams(filters);
-        const endpoint = params ? `/relatorios/rebanho?${params}` : '/relatorios/rebanho';
-        return this.request('GET', endpoint);
-    }
-
-    async getGraficosProducao(dias = 7) {
-        return this.request<{ data: string; total: number }[]>('GET', `/relatorios/graficos/producao?dias=${dias}`);
-    }
+  async getGraficosProducao(dias = 7) {
+    return this.request<{ data: string; total: number }[]>('GET', `/relatorios/graficos/producao?dias=${dias}`);
+  }
 }
 
 const api = new Api();

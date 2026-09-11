@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { AnimalService } from '../services/AnimalService';
+import { friendlyMessage } from '../utils/errorMessage';
 
 const animalService = new AnimalService();
 
@@ -25,6 +26,8 @@ export class AnimalController {
       const ordenarPor = getParam(req.query.ordenarPor) || 'brinco';
       const ordemParam = getParam(req.query.ordem);
       const ordem = ordemParam === 'desc' ? 'desc' : 'asc';
+      const statusParam = getParam(req.query.status);
+      const status = statusParam === 'inativos' || statusParam === 'todos' ? statusParam : 'ativos';
 
       const animais = await animalService.listarComFiltros(
         searchNome,
@@ -32,7 +35,8 @@ export class AnimalController {
         raca,
         faixaPeso,
         ordenarPor,
-        ordem
+        ordem,
+        status
       );
 
       const total = animais.length;
@@ -68,7 +72,7 @@ export class AnimalController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao listar animais',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -80,7 +84,7 @@ export class AnimalController {
   async buscarPorBrinco(req: Request, res: Response): Promise<Response> {
     try {
       const brinco = parseInt(getParam(req.params.brinco));
-      
+
       if (isNaN(brinco)) {
         return res.status(400).json({
           success: false,
@@ -106,7 +110,7 @@ export class AnimalController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao buscar animal',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -118,7 +122,7 @@ export class AnimalController {
   async buscarArvoreGenealogica(req: Request, res: Response): Promise<Response> {
     try {
       const brinco = parseInt(getParam(req.params.brinco));
-      
+
       if (isNaN(brinco)) {
         return res.status(400).json({
           success: false,
@@ -142,24 +146,25 @@ export class AnimalController {
           sexo: animal.sexo,
           data_nascimento: animal.data_nascimento
         },
-        pai: animal.pai ? {
-          brinco: animal.pai.brinco,
-          nome: animal.pai.nome,
-          sexo: animal.pai.sexo,
-          pai: animal.pai.pai || null,
-          mae: animal.pai.mae || null
-        } : null,
-        mae: animal.mae ? {
-          brinco: animal.mae.brinco,
-          nome: animal.mae.nome,
-          sexo: animal.mae.sexo,
-          pai: animal.mae.pai || null,
-          mae: animal.mae.mae || null
-        } : null,
-        filhos: [
-          ...(animal.filhos_por_pai || []),
-          ...(animal.filhos_por_mae || [])
-        ].map(f => ({
+        pai: animal.pai
+          ? {
+              brinco: animal.pai.brinco,
+              nome: animal.pai.nome,
+              sexo: animal.pai.sexo,
+              pai: animal.pai.pai || null,
+              mae: animal.pai.mae || null
+            }
+          : null,
+        mae: animal.mae
+          ? {
+              brinco: animal.mae.brinco,
+              nome: animal.mae.nome,
+              sexo: animal.mae.sexo,
+              pai: animal.mae.pai || null,
+              mae: animal.mae.mae || null
+            }
+          : null,
+        filhos: [...(animal.filhos_por_pai || []), ...(animal.filhos_por_mae || [])].map(f => ({
           brinco: f.brinco,
           nome: f.nome,
           sexo: f.sexo
@@ -175,7 +180,7 @@ export class AnimalController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao buscar árvore genealógica',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -203,7 +208,7 @@ export class AnimalController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao buscar machos para seleção',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -231,7 +236,7 @@ export class AnimalController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao buscar fêmeas para seleção',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }
@@ -242,7 +247,7 @@ export class AnimalController {
    */
   async criar(req: Request, res: Response): Promise<Response> {
     try {
-      const { brinco, nome, sexo, raca, peso, data_nascimento, brinco_pai, brinco_mae } = req.body;
+      const { brinco, nome, sexo, raca, peso, data_nascimento, ativo, brinco_pai, brinco_mae } = req.body;
 
       if (!brinco || !nome || !sexo || peso === undefined || !data_nascimento) {
         return res.status(400).json({
@@ -258,7 +263,7 @@ export class AnimalController {
         raca: raca || undefined,
         peso: parseFloat(peso),
         data_nascimento: new Date(data_nascimento),
-        ativo: true,
+        ativo: ativo === undefined ? true : ativo === 'false' ? false : !!ativo,
         brinco_pai: brinco_pai ? parseInt(brinco_pai) : undefined,
         brinco_mae: brinco_mae ? parseInt(brinco_mae) : undefined
       });
@@ -270,17 +275,18 @@ export class AnimalController {
       });
     } catch (error) {
       console.error('Erro ao cadastrar animal:', error);
-      const status = error instanceof Error &&
+      const status =
+        error instanceof Error &&
         (error.message.includes('obrigatório') ||
-         error.message.includes('existe') ||
-         error.message.includes('inconsistência') ||
-         error.message.includes('consanguinidade'))
-        ? 400
-        : 500;
+          error.message.includes('existe') ||
+          error.message.includes('inconsistência') ||
+          error.message.includes('consanguinidade'))
+          ? 400
+          : 500;
 
       return res.status(status).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Erro ao cadastrar animal'
+        message: friendlyMessage(error, 'Erro ao cadastrar animal')
       });
     }
   }
@@ -292,7 +298,7 @@ export class AnimalController {
   async atualizar(req: Request, res: Response): Promise<Response> {
     try {
       const brinco = parseInt(getParam(req.params.brinco));
-      
+
       if (isNaN(brinco)) {
         return res.status(400).json({
           success: false,
@@ -320,16 +326,17 @@ export class AnimalController {
       });
     } catch (error) {
       console.error('Erro ao atualizar animal:', error);
-      const status = error instanceof Error &&
+      const status =
+        error instanceof Error &&
         (error.message.includes('não encontrado') ||
-         error.message.includes('obrigatório') ||
-         error.message.includes('inconsistência'))
-        ? 400
-        : 500;
+          error.message.includes('obrigatório') ||
+          error.message.includes('inconsistência'))
+          ? 400
+          : 500;
 
       return res.status(status).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Erro ao atualizar animal'
+        message: friendlyMessage(error, 'Erro ao atualizar animal')
       });
     }
   }
@@ -341,7 +348,7 @@ export class AnimalController {
   async remover(req: Request, res: Response): Promise<Response> {
     try {
       const brinco = parseInt(getParam(req.params.brinco));
-      
+
       if (isNaN(brinco)) {
         return res.status(400).json({
           success: false,
@@ -360,7 +367,7 @@ export class AnimalController {
       const status = error instanceof Error && error.message.includes('não encontrado') ? 404 : 500;
       return res.status(status).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Erro ao remover animal'
+        message: friendlyMessage(error, 'Erro ao remover animal')
       });
     }
   }
@@ -372,7 +379,7 @@ export class AnimalController {
   async excluirPermanentemente(req: Request, res: Response): Promise<Response> {
     try {
       const brinco = parseInt(getParam(req.params.brinco));
-      
+
       if (isNaN(brinco)) {
         return res.status(400).json({
           success: false,
@@ -391,7 +398,7 @@ export class AnimalController {
       const status = error instanceof Error && error.message.includes('não encontrado') ? 404 : 500;
       return res.status(status).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Erro ao excluir animal'
+        message: friendlyMessage(error, 'Erro ao excluir animal')
       });
     }
   }
@@ -413,7 +420,7 @@ export class AnimalController {
       return res.status(500).json({
         success: false,
         message: 'Erro ao obter estatísticas',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: friendlyMessage(error, 'Erro desconhecido')
       });
     }
   }

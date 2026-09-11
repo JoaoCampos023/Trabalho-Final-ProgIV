@@ -71,7 +71,7 @@
                     '<i class="fa-solid fa-award"></i>',
                     '<i class="fa-solid fa-award"></i>'
                 ];
-                let html = `
+                const html = `
                     <div class="stats-grid">
                         <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-cow"></i></div><div class="stat-value">${totalAnimais}</div><div class="stat-label">Total de Animais</div></div>
                         <div class="stat-card"><div class="stat-icon"><i class="fa-solid fa-venus"></i></div><div class="stat-value">${totalFemea}</div><div class="stat-label">Fêmeas</div></div>

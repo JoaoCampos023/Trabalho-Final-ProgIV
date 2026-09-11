@@ -5,7 +5,7 @@ const wss = new WebSocketServer({ port: 8080 });
 
 const clients = new Set<WebSocket>();
 
-wss.on('connection', (ws) => {
+wss.on('connection', ws => {
   console.log('📡 Cliente conectado ao WebSocket');
   clients.add(ws);
 
@@ -28,14 +28,16 @@ async function sendDashboardData(ws: WebSocket) {
       _sum: { litros: true }
     });
 
-    ws.send(JSON.stringify({
-      type: 'dashboard',
-      data: {
-        totalAnimais: stats._count.brinco || 0,
-        totalLitros: producoes._sum.litros || 0,
-        timestamp: new Date().toISOString()
-      }
-    }));
+    ws.send(
+      JSON.stringify({
+        type: 'dashboard',
+        data: {
+          totalAnimais: stats._count.brinco || 0,
+          totalLitros: producoes._sum.litros || 0,
+          timestamp: new Date().toISOString()
+        }
+      })
+    );
   } catch (error) {
     console.error('Erro ao enviar dados:', error);
   }
