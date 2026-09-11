@@ -478,7 +478,7 @@ Todas as rotas abaixo são prefixadas com `/api`. 🔒 = requer `Authorization: 
 
 ---
 
-## 🔄 Roadmap & Próximas Melhorias
+## 🔄 Roadmap
 
 - [x] ✅ CRUD completo de animais, produções e usuários
 - [x] ✅ Árvore genealógica
@@ -491,10 +491,8 @@ Todas as rotas abaixo são prefixadas com `/api`. 🔒 = requer `Authorization: 
 - [x] ✅ Suporte a contêineres com **Docker** e **Docker Compose**
 - [x] ✅ Seed de dados de exemplo, automático em banco vazio
 - [x] ✅ Padronização de lint (ESLint compartilhado backend/frontend, `npm run lint` sem erros) e config de formatação (Prettier) — reformatação do código existente ainda pendente (`npm run format` não foi aplicado em massa)
-- [ ] 🔄 Cobertura de testes unitários e de integração com **Jest**
-- [ ] 🔄 Módulo de exportação automática (agendada) de relatórios em **PDF**
-- [ ] 🔄 Validar se o WebSocket (`src/websocket/server.ts`) está de fato integrado ao fluxo de notificações ou é só esqueleto
-- [ ] 🔄 Microsserviço em .NET para relatórios
+- [x] ✅ Testes unitários e de integração com Jest (validators, utilitários e regras de negócio principais dos services)
+- [x] ✅ WebSocket unificado em `/ws` (`src/app.ts`) — o duplicado em `src/websocket/` foi removido
 
 ---
 
