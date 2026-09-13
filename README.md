@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/status-em%20desenvolvimento-yellow?style=for-the-badge&logo=git" alt="Status">
+  <img src="https://img.shields.io/badge/status-conclu%C3%ADdo-brightgreen?style=for-the-badge&logo=git" alt="Status">
   <img src="https://img.shields.io/badge/Node.js-18%2B-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js">
   <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
   <img src="https://img.shields.io/badge/PostgreSQL-15%2B-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
@@ -22,9 +22,11 @@
   <a href="#-instalação-e-configuração">Instalação</a> •
   <a href="#-rodando-com-docker">Docker</a> •
   <a href="#-endpoints-da-api">Endpoints API</a> •
-  <a href="#-contribuição">Contribuição</a>
+  <a href="#-scripts-do-projeto">Scripts</a> •
+  <a href="#-roadmap">Roadmap</a> •
+  <a href="#-licença">Licença</a> •
+  <a href="#-autores">Autores</a>
 </p>
-
 
 ---
 
@@ -32,7 +34,7 @@
 
 O **Gestão de Gado** é uma plataforma web desenvolvida para otimizar o manejo pecuário, facilitando o acompanhamento detalhado da saúde do rebanho, genealogia e produtividade leiteira diária.
 
-Desenvolvido com foco em **simplicidade**, **eficiência** e **segurança**, o sistema oferece uma interface intuitiva para produtores rurais e uma arquitetura backend em camadas (Controller → Service → Repository), com todo o frontend também escrito em TypeScript.
+Desenvolvido com foco em **simplicidade**, **eficiência** e **segurança**, o sistema oferece uma interface intuitiva para produtores rurais e uma arquitetura backend em camadas (Controller → Service → Repository), com todo o frontend escrito em TypeScript sobre uma arquitetura MPA (Multi-Page Application).
 
 ### ✨ Principais Funcionalidades
 
@@ -41,8 +43,11 @@ Desenvolvido com foco em **simplicidade**, **eficiência** e **segurança**, o s
 | 🐮 **Controle de Rebanho** | Cadastro centralizado, histórico individual e ficha técnica completa de cada animal |
 | 🥛 **Gestão de Produção** | Monitoramento e histórico diário da ordenha com registro por período (manhã/tarde/noite) |
 | 🧬 **Árvore Genealógica** | Rastreamento estruturado de ascendência com visualização de pais, avós e filhos |
-| 📊 **Dashboards & Relatórios** | Visualização analítica de métricas vitais, rankings de produtividade e gráficos interativos |
-| 🔐 **Controle de Acesso (RBAC)** | Autenticação via JWT com dois níveis de permissão (`Admin` e `Cliente`), papel armazenado como enum no banco |
+| 📊 **Dashboards & Relatórios** | Métricas vitais, rankings de produtividade, gráficos interativos e exportação em **PDF/Excel** |
+| 📥 **Importação/Exportação CSV** | Carga massiva e backup de dados de animais e registros de produção via CSV |
+| 👤 **Menu de Usuário em Dropdown** | Avatar dinâmico com iniciais do nome, cor codificada por papel e logout centralizado |
+| 🌐 **Integrações Externas** | Consulta automática de endereço via **ViaCEP** e validação estrutural de **CPF** |
+| 🔐 **Controle de Acesso (RBAC)** | Autenticação via JWT com dois níveis de permissão (`Admin` e `Cliente`), salvaguardado por proteção ao admin principal |
 | 📱 **Responsivo** | Interface adaptada para desktop, tablet e dispositivos móveis |
 
 ---
@@ -57,30 +62,35 @@ Desenvolvido com foco em **simplicidade**, **eficiência** e **segurança**, o s
 | **Express.js** | 5.x | Framework web |
 | **PostgreSQL** | 15+ (imagem Docker usa 16) | Banco de dados relacional |
 | **Prisma ORM** | 5.x | ORM, migrations e client tipado para acesso ao banco |
-| **JWT** (`jsonwebtoken`) | - | Autenticação e autorização |
-| **bcryptjs** | - | Hash de senhas |
-| **ws** | - | Servidor WebSocket (notificações/dashboard em tempo real) |
-| **multer** + **csv-parse**/**csv-stringify** | - | Importação/exportação de dados em CSV |
+| **JWT** (`jsonwebtoken`) | - | Autenticação e autorização stateless |
+| **bcryptjs** | - | Hash de senhas para segurança |
+| **ws** | - | Servidor WebSocket unificado (notificações/dashboard em tempo real) |
+| **PDFKit** | - | Geração dinâmica de relatórios em PDF server-side |
+| **ExcelJS** | - | Geração de planilhas em `.xlsx` server-side |
+| **multer** + **csv-parse**/**csv-stringify** | - | Upload, parsing e geração de arquivos CSV |
 
 ### Frontend
-Todo o frontend é escrito em **TypeScript** (`public/ts/`) e compilado para JavaScript puro (`public/js/`, saída de build — não é código-fonte editado manualmente). São páginas HTML servidas de forma estática pelo próprio Express, sem framework de UI (React/Vue) nem bundler — só `tsc` compilando script por script.
+Todo o frontend é escrito em **TypeScript** (`public/ts/`) e compilado para JavaScript puro (`public/js/`, saída de build — não é código-fonte editado manualmente). São páginas HTML servidas de forma estática pelo próprio Express (arquitetura MPA), sem framework de UI pesado (React/Vue) nem bundler — apenas `tsc` compilando script por script.
 
 | Tecnologia | Descrição |
 |------------|-----------|
-| **HTML5 Semântico** | Estruturação das páginas |
-| **CSS3 Moderno** | Estilização com Flexbox e Grid (`public/css/`) |
+| **HTML5 Semântico** | Estruturação das páginas estáticas |
+| **CSS3 Moderno** | Estilização responsiva com Flexbox e Grid (`public/css/`) |
 | **TypeScript (compilado para JS vanilla)** | Interatividade e consumo de API — ver `public/ts/` |
 | **Chart.js** (via CDN) | Gráficos interativos no dashboard e relatórios |
-| **Font Awesome Free** (via CDN) | Ícones da interface |
+| **Font Awesome Free** (via CDN) | Ícones da interface gráfica |
 
-### Ferramentas de Desenvolvimento e Infraestrutura
+### Ferramentas de Testes, Desenvolvimento e Infraestrutura
 | Ferramenta | Descrição |
 |------------|-----------|
+| **Jest** + **supertest** + **ts-jest** | Suíte de testes unitários e de integração |
+| **ESLint** | Análise estática e padronização de código |
+| **Prettier** | Formatação automática e padronizada de código |
 | **tsx** | Execução rápida de TypeScript sem compilação prévia (usado em dev e pelo seed) |
-| **Nodemon** | Live reload durante desenvolvimento |
+| **Nodemon** | Live reload do backend durante o desenvolvimento |
 | **Dotenv** | Gerenciamento de variáveis de ambiente a partir do `.env` |
 | **Prisma Migrate** | Versionamento e aplicação de migrations do banco |
-| **Docker** / **Docker Compose** | Build e orquestração de `backend` + `db` (ver [seção Docker](#-rodando-com-docker)) |
+| **Docker** / **Docker Compose** | Build multi-stage e orquestração de `backend` + `db` (ver [seção Docker](#-rodando-com-docker)) |
 
 ---
 
@@ -90,15 +100,15 @@ Todo o frontend é escrito em **TypeScript** (`public/ts/`) e compilado para Jav
 trabalho-final-gestao-gado/
 │
 ├── 📁 public/                          # Servido estaticamente pelo Express (app.use(express.static('public')))
-│   ├── 📁 app/                         # Páginas autenticadas (SPA/MPA)
-│   │   ├── dashboard.html              # SPA com todas as seções (Dashboard, Rebanho, Produções, Relatórios, Usuários)
-│   │   ├── animais.html                # Página standalone do Rebanho
-│   │   ├── producoes.html              # Página standalone de Produções
-│   │   ├── relatorios.html             # Página standalone de Relatórios
-│   │   └── usuarios.html               # Página standalone de Usuários (Admin)
+│   ├── 📁 app/                         # Páginas autenticadas (MPA - Multi-Page Application)
+│   │   ├── dashboard.html              # Apenas o Dashboard (cards de resumo + gráficos)
+│   │   ├── animais.html                # Gestão e listagem de Rebanho
+│   │   ├── producoes.html              # Controle de Produção de leite
+│   │   ├── relatorios.html             # Relatórios analíticos com filtros e exportação PDF/Excel
+│   │   └── usuarios.html               # Gestão de Usuários (restrito a Admin)
 │   │
 │   ├── 📁 css/
-│   │   ├── style.css                   # Estilos compartilhados das páginas /app
+│   │   ├── style.css                   # Estilos compartilhados das páginas /app (incluindo avatar e dropdown)
 │   │   └── landing.css                 # Estilos da landing page
 │   │
 │   ├── 📁 ts/                          # ⚠️ Código-fonte do frontend (edite aqui)
@@ -140,10 +150,8 @@ trabalho-final-gestao-gado/
 │   │
 │   ├── 📁 utils/                       # cpfValidator, emailValidator, dateUtils, passwordGenerator
 │   │
-│   ├── 📁 websocket/
-│   │   └── server.ts
 │   │
-│   └── app.ts                          # Entrypoint: middlewares, rotas, WebSocket, auto-seed, listen
+│   └── app.ts                          # Entrypoint: middlewares, rotas, WebSocket unificado (/ws), auto-seed, listen
 │
 ├── 📁 prisma/
 │   ├── schema.prisma                   # Models User/Animal/ProducaoLeite + enum Role
@@ -151,17 +159,18 @@ trabalho-final-gestao-gado/
 │   └── 📁 migrations/                  # Migrations versionadas e commitadas no Git
 │
 ├── 🐳 Dockerfile                       # Build multi-stage do backend (compila TS de src/ e public/ts/)
-├── 🐳 docker-compose.yml               # Orquestra backend + db (PostgreSQL), volume nomeado
-├── 🐳 docker-entrypoint.sh             # `prisma migrate deploy` + start, a cada boot do container
+├── 🐳 docker-compose.yml              # Orquestra backend + db (PostgreSQL), volume nomeado
+├── 🐳 docker-entrypoint.sh            # prisma migrate deploy + start, a cada boot do container
 ├── 🐳 .dockerignore
 │
-├── 📄 .env                             # Local, nunca commitado (git-ignorado)
-├── 📄 .env.example                     # Modelo com todas as variáveis — copie para .env
+├── 📄 .env                            # Local, nunca commitado (git-ignorado)
+├── 📄 .env.example                    # Modelo com todas as variáveis — copie para .env
 ├── 📄 .gitignore
+├── 📄 eslint.config.js                # Configuração compartilhada do ESLint
 ├── 📄 nodemon.json
 ├── 📄 package.json
-├── 📄 tsconfig.json                    # Config do backend (src/ → dist/)
-└── 📄 tsconfig.frontend.json           # Config do frontend (public/ts/ → public/js/)
+├── 📄 tsconfig.json                   # Config do backend (src/ → dist/)
+└── 📄 tsconfig.frontend.json          # Config do frontend (public/ts/ → public/js/)
 ```
 
 ---
