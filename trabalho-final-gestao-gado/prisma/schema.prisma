@@ -7,9 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================
-// ENUM: PAPEL DO USUÁRIO
-// ============================================
+// Enum de papel do usuário. Modelado como enum do banco (e não como
+// string livre) para o Postgres rejeitar valores inválidos no INSERT —
+// sem isso, um bug no backend poderia gravar "Admim" (typo) e ninguém
+// perceber até a próxima checagem de permissão falhar.
 enum Role {
   Admin
   Cliente
@@ -22,6 +23,7 @@ model User {
   id          String   @id @default(uuid())
   nome        String   @db.VarChar(100)
   email       String   @unique @db.VarChar(100)
+  // Sempre armazenamos o hash bcrypt, nunca a senha em texto puro.
   senha_hash  String   @db.VarChar(255)
   cpf         String   @unique @db.VarChar(14)
   ativo       Boolean  @default(true)
@@ -29,6 +31,7 @@ model User {
   criado_em   DateTime @default(now())
   atualizado_em DateTime @updatedAt
 
+  // Nome da tabela no plural, minúsculo, seguindo o padrão do resto do schema.
   @@map("users")
 }
 
@@ -36,19 +39,31 @@ model User {
 // MODEL: ANIMAL
 // ============================================
 model Animal {
+  // O brinco é o identificador natural do animal no mundo real — usar como
+  // PK (em vez de gerar um id separado) reflete o domínio e evita ter dois
+  // identificadores para a mesma coisa.
   brinco          Int      @id
   nome            String   @db.VarChar(50)
+
+  // Char(1) em vez de enum: só existem "M" e "F", e um char fixo ocupa
+  // menos espaço que um enum do Postgres (que é armazenado como int + cast).
   sexo            String   @db.Char(1)
   raca            String?  @db.VarChar(50)
   peso            Decimal? @db.Decimal(10, 2)
   data_nascimento DateTime @db.Date
   ativo           Boolean  @default(true)
+
+  // Pai/mãe são armazenados por brinco (o id natural do animal), e são
+  // opcionais porque nem todo animal tem linhagem cadastrada (ex.: animal
+  // comprado de fora sem registro de origem).
   brinco_pai      Int?
   brinco_mae      Int?
   criado_em       DateTime @default(now())
   atualizado_em   DateTime @updatedAt
 
-  // Relacionamentos para árvore genealógica
+  // Relacionamentos para árvore genealógica. Os nomes "Pai"/"Mae" nos
+  // relations são necessários porque o Prisma exige nomes distintos quando
+  // há duas auto-relações no mesmo model (pai e mãe apontando para Animal).
   pai        Animal?           @relation("Pai", fields: [brinco_pai], references: [brinco])
   mae        Animal?           @relation("Mae", fields: [brinco_mae], references: [brinco])
   filhos_pai Animal[]          @relation("Pai")
@@ -65,12 +80,17 @@ model Animal {
 model ProducaoLeite {
   id             Int      @id @default(autoincrement())
   animal_brinco  Int
+  // Date (sem hora) porque a "ordenha" acontece num dia, não num instante.
+  // O turno (manhã/tarde/noite) diferencia registros do mesmo dia.
   data_coleta    DateTime @db.Date
   litros         Decimal  @db.Decimal(10, 2)
   periodo        String   @db.VarChar(10)
   criado_em      DateTime @default(now())
   atualizado_em  DateTime @updatedAt
 
+  // onDelete: Cascade — se o animal for excluído fisicamente, suas produções
+  // vão junto. O soft delete (ativo=false) não aciona cascade, então o
+  // histórico é preservado no caso normal.
   animal Animal @relation(fields: [animal_brinco], references: [brinco], onDelete: Cascade)
 
   @@map("producoes_leite")

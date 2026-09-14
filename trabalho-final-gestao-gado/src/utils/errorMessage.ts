@@ -43,6 +43,7 @@ function isTechnicalError(error: Error): boolean {
 
   // Mensagens em outro idioma/formato técnico que vazam do driver do banco
   // (ex.: "estouro de campo numeric", em português mas ainda assim cru).
+  // crua do Postgres — o usuário não tem contexto para entender o que fazer.
   if (msg.includes('estouro de campo') || msg.includes('syntax error at or near')) {
     return true;
   }

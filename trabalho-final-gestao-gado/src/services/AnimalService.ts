@@ -2,7 +2,12 @@ import { AnimalRepository } from '../repositories/AnimalRepository';
 import { ProducaoRepository } from '../repositories/ProducaoRepository';
 import { Animal, IAnimal } from '../models/Animal';
 
+
+// 50 anos é o teto que usamos para rejeitar datas de nascimento absurdas.
+// Nenhum bovino chega perto disso, então qualquer coisa acima indica erro
+// de digitação — rejeita no cadastro em vez de deixar passar.
 const IDADE_MAXIMA_ANOS = 50;
+
 // Coluna "peso" é Decimal(10,2) no banco — até 8 dígitos antes da vírgula.
 // Na prática nenhum bovino pesa isso; usamos um teto bem generoso (5 toneladas)
 // só pra rejeitar valores digitados errado antes de virarem erro cru do Postgres.
@@ -17,17 +22,19 @@ export class AnimalService {
     this.producaoRepository = new ProducaoRepository();
   }
 
-  /**
-   * Validar data de nascimento
-   * - Não pode ser no futuro.
-   * - Não pode ser absurdamente antiga (idade resultante maior que IDADE_MAXIMA_ANOS).
-   */
+  // Validar data de nascimento
+  // Não pode ser no futuro.
+  // Não pode ser absurdamente antiga (idade resultante maior que IDADE_MAXIMA_ANOS).
+  
   private validarDataNascimento(dataNascimento: Date): void {
     const hoje = new Date();
     if (dataNascimento > hoje) {
       throw new Error('A data de nascimento não pode ser no futuro.');
     }
 
+    // Comparação com data-limite em vez de subtrair anos da data informada:
+    // evita bug de 29 de fevereiro em ano bissexto (2024-02-29 - 50 anos
+    // não existe; usar setFullYear com o ano certo resolve).
     const dataLimite = new Date(hoje);
     dataLimite.setFullYear(dataLimite.getFullYear() - IDADE_MAXIMA_ANOS);
     if (dataNascimento < dataLimite) {
@@ -35,9 +42,11 @@ export class AnimalService {
     }
   }
 
-  /**
-   * Validar linhagem (igual ao projeto original em C#)
-   */
+  // Valida a linhagem do animal. Cobre quatro casos que tornariam os dados inconsistentes:
+  // 1. Evitar auto-relacionamentos diretos (um animal não pode ser pai ou mãe de si mesmo).
+  // 2. Impedir consanguinidade direta (pai e mãe não podem ser o mesmo animal).
+  // 3. Validar que o pai é macho e a mãe é fêmea, e que ambos nasceram antes do filho.
+  // 4. Impedir cruzamento incestuoso de Primeiro Grau invertido (um animal não pode ser filho de um animal do qual ele já consta como ancestral).
   private async validarLinhagem(animal: Partial<IAnimal>): Promise<void> {
     // 1. Evitar auto-relacionamentos diretos
     if (animal.brinco_pai === animal.brinco) {
@@ -95,16 +104,12 @@ export class AnimalService {
     }
   }
 
-  /**
-   * Listar todos os animais ativos
-   */
+  // Listar todos os animais ativos
   async listarTodos(): Promise<Animal[]> {
     return await this.animalRepository.findAll();
   }
 
-  /**
-   * Listar animais com filtros
-   */
+  // Listar animais com filtros
   async listarComFiltros(
     searchNome?: string,
     sexo?: 'M' | 'F',
@@ -176,44 +181,33 @@ export class AnimalService {
     return animais;
   }
 
-  /**
-   * Buscar animal por brinco
-   */
+  // Buscar animal por brinco
   async buscarPorBrinco(brinco: number): Promise<Animal | null> {
     return await this.animalRepository.findByBrinco(brinco);
   }
 
-  /**
-   * Buscar com pais (para árvore genealógica)
-   */
+  // Buscar com pais (para árvore genealógica)
   async buscarComPais(brinco: number): Promise<Animal | null> {
     return await this.animalRepository.findWithParents(brinco);
   }
 
-  /**
-   * Buscar árvore genealógica completa
-   */
+  // Buscar árvore genealógica completa
   async buscarArvoreGenealogica(brinco: number): Promise<Animal | null> {
     return await this.animalRepository.findFamilyTree(brinco);
   }
 
-  /**
-   * Buscar machos para seleção
-   */
+  // Buscar machos para seleção
   async buscarMachosParaSelecao(excluirBrinco?: number): Promise<Animal[]> {
     return await this.animalRepository.findMachosParaSelecao(excluirBrinco);
   }
 
-  /**
-   * Buscar fêmeas para seleção
-   */
+
+  // Buscar fêmeas para seleção
   async buscarFemeasParaSelecao(excluirBrinco?: number): Promise<Animal[]> {
     return await this.animalRepository.findFemeasParaSelecao(excluirBrinco);
   }
 
-  /**
-   * Cadastrar um novo animal
-   */
+  // Cadastrar um novo animal
   async cadastrarAnimal(data: Omit<IAnimal, 'criado_em' | 'atualizado_em'>): Promise<Animal> {
     // Validar dados básicos
     if (!data.nome || data.nome.trim().length === 0) {
@@ -243,9 +237,7 @@ export class AnimalService {
     return await this.animalRepository.create(data);
   }
 
-  /**
-   * Atualizar um animal
-   */
+  // Atualizar um animal
   async atualizarAnimal(brinco: number, data: Partial<IAnimal>): Promise<Animal> {
     const animalExistente = await this.animalRepository.findByBrinco(brinco);
     if (!animalExistente) {
@@ -290,9 +282,7 @@ export class AnimalService {
     return updated;
   }
 
-  /**
-   * Remover animal (soft delete)
-   */
+  // Remover animal (soft delete)
   async removerAnimal(brinco: number): Promise<void> {
     const animal = await this.animalRepository.findByBrinco(brinco);
     if (!animal) {
@@ -305,9 +295,7 @@ export class AnimalService {
     }
   }
 
-  /**
-   * Excluir animal (físico)
-   */
+  //  Excluir animal (físico)
   async excluirAnimal(brinco: number): Promise<void> {
     const animal = await this.animalRepository.findByBrinco(brinco);
     if (!animal) {
@@ -320,9 +308,7 @@ export class AnimalService {
     }
   }
 
-  /**
-   * Obter estatísticas do rebanho
-   */
+  // Obter estatísticas do rebanho
   async getStats(): Promise<{
     total: number;
     totalMacho: number;

@@ -17,6 +17,8 @@ const prisma = new PrismaClient();
 seedDatabase(prisma)
   .catch(e => {
     console.error('❌ Erro ao rodar o seed:', e);
+    // process.exitCode em vez de process.exit: garante que o finally rode
+    // (desconectar o Prisma) antes do processo encerrar de fato.
     process.exitCode = 1;
   })
   .finally(async () => {
