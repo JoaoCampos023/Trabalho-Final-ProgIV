@@ -7,6 +7,16 @@ import { DateUtils } from '../utils/dateUtils';
 
 const relatorioService = new RelatorioService();
 
+// ---------------------------------------------------------------------------
+// Constantes de layout do PDF (em pontos; 1 pt = 1/72 pol).
+// Centralizar aqui evita "número mágico" espalhado pelo código quando
+// alguém precisar ajustar o layout depois.
+// ---------------------------------------------------------------------------
+const PAGE_MARGIN = 40;
+const LINE_HEIGHT = 16;      // altura padrão de uma linha de tabela
+const HEADER_FONT_SIZE = 9;
+const BODY_FONT_SIZE = 9;
+
 /** Normaliza params do Express (string | string[] | undefined → string). */
 function getParam(v: unknown): string {
   if (typeof v === 'string') return v;
@@ -46,6 +56,60 @@ function descreverFiltros(f: FiltrosProducao): string {
   if (f.animalBrinco) partes.push(`Animal: ${f.animalBrinco}`);
   if (f.periodo) partes.push(`Período do dia: ${f.periodo}`);
   return partes.length > 0 ? partes.join('  |  ') : 'Sem filtros (histórico completo)';
+}
+
+/**
+ * Desenha o cabeçalho de uma seção (título azul em negrito).
+ * Devolve o Y depois do cabeçalho, para o chamador continuar de onde parou.
+ */
+function desenharTituloSecao(doc: PDFKit.PDFDocument, titulo: string): number {
+  doc.fontSize(12).fillColor('#0d6efd').text(titulo, PAGE_MARGIN, doc.y);
+  doc.moveDown(0.4);
+  doc.fillColor('#333');
+  return doc.y;
+}
+
+/**
+ * Desenha uma linha de tabela com colunas em X fixo.
+ *
+ * Por que assim: `pdfkit` não tem "tabela" nativa. O jeito correto de alinhar
+ * colunas é chamar `doc.text()` passando a posição X de cada célula, e depois
+ * avançar o Y manualmente. Sem isso, as células ficam empilhadas na mesma Y e
+ * o texto sai grudado ("IDAnimalDataPeríodoLitros...").
+ *
+ * Devolve o novo Y para o chamador continuar de onde parou.
+ */
+function desenharLinhaTabela(
+  doc: PDFKit.PDFDocument,
+  valores: string[],
+  colunas: { x: number; width: number }[]
+): number {
+  const y = doc.y;
+  valores.forEach((valor, i) => {
+    // O parâmetro `lineBreak: false` impede o pdfkit de quebrar o texto em
+    // múltiplas linhas — queremos uma linha só por célula, com o texto
+    // truncado se não couber (raro, mas seguro).
+    doc.text(valor, colunas[i].x, y, { width: colunas[i].width, lineBreak: false });
+  });
+  return y + LINE_HEIGHT;
+}
+
+/**
+ * Verifica se ainda cabe uma linha de altura `altura` na página atual.
+ * Se não couber, cria nova página e devolve `true` (indicando que o chamador
+ * precisa reimprimir o cabeçalho da tabela).
+ *
+ * Por que existe: sem isso, o pdfkit corta no meio da linha quando o texto
+ * passa da margem inferior — foi o que produziu as páginas 2-6 do PDF
+ * quebrado (com fragmentos como "87", "Bonita", "07/09/2026").
+ */
+function precisaNovaPagina(doc: PDFKit.PDFDocument, altura = LINE_HEIGHT): boolean {
+  const limite = doc.page.height - PAGE_MARGIN;
+  if (doc.y + altura > limite) {
+    doc.addPage();
+    return true;
+  }
+  return false;
 }
 
 export class RelatorioController {
@@ -102,12 +166,7 @@ export class RelatorioController {
   // PDF
   // ============================================================
 
-  /**
-   * PDF do relatório de produção.
-   *
-   * Por que pdfkit: gera direto no servidor, sem headless browser. As tabelas
-   * são simples (texto + números), então não vale o peso de HTML→PDF.
-   */
+  /** PDF do relatório de produção — reescrito com tabela alinhada e paginação. */
   async exportarProducaoPDF(req: Request, res: Response): Promise<void> {
     try {
       const filtros = parseFiltrosProducao(req);
@@ -117,18 +176,23 @@ export class RelatorioController {
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename=relatorio-producao-${DateUtils.hojeIso()}.pdf`);
 
-      const doc = new PDFDocument({ size: 'A4', margin: 40 });
+      const doc = new PDFDocument({ size: 'A4', margin: PAGE_MARGIN });
       doc.pipe(res);
 
-      // ---- Cabeçalho ----
-      doc.fontSize(18).fillColor('#0d6efd').text('Gestão de Gado');
+      // Fonte base. Fixar explicitamente evita que o pdfkit use fonte
+      // diferente para caracteres especiais e gere aquela linha de lixo
+      // Unicode que apareceu na primeira página do PDF quebrado.
+      doc.font('Helvetica');
+
+      // ---------- Cabeçalho ----------
+      doc.fontSize(18).fillColor('#0d6efd').text('Gestão de Gado', PAGE_MARGIN, PAGE_MARGIN);
       doc.fontSize(14).fillColor('#333').text('Relatório de Produção de Leite');
       doc.fontSize(9).fillColor('#666').text(`Filtros: ${descreverFiltros(filtros)}`);
       doc.text(`Gerado em: ${DateUtils.formatarDataBr(new Date())}`);
-      doc.moveDown();
+      doc.moveDown(1);
 
-      // ---- Resumo ----
-      doc.fontSize(12).fillColor('#0d6efd').text('Resumo');
+      // ---------- Resumo ----------
+      desenharTituloSecao(doc, 'Resumo');
       doc.fontSize(10).fillColor('#333');
       doc.text(`Total de litros: ${stats.totalLitros.toFixed(1)} L`);
       doc.text(`Registros: ${stats.totalRegistros}`);
@@ -140,53 +204,73 @@ export class RelatorioController {
         const [a, m, d] = stats.picoDia.split('-');
         doc.text(`Pico: ${stats.picoLitros.toFixed(1)} L em ${d}/${m}/${a}`);
       }
-      doc.moveDown();
+      doc.moveDown(1);
 
-      // ---- Top 5 ----
-      doc.fontSize(12).fillColor('#0d6efd').text('Top 5 Vacas Produtoras');
+      // ---------- Top 5 ----------
+      desenharTituloSecao(doc, 'Top 5 Vacas Produtoras');
       doc.fontSize(10).fillColor('#333');
       topAnimais.forEach((v, i) => doc.text(`${i + 1}. ${v.nome} — ${v.total.toFixed(1)} L`));
-      doc.moveDown();
+      doc.moveDown(1);
 
-      // ---- Série diária ----
-      doc.fontSize(12).fillColor('#0d6efd').text('Produção por Dia');
+      // ---------- Série diária ----------
+      desenharTituloSecao(doc, 'Produção por Dia');
       doc.fontSize(9).fillColor('#333');
       serie.forEach(d => {
         const [a, m, dia] = d.data.split('-');
         doc.text(`${dia}/${m}/${a}: ${d.total.toFixed(1)} L`);
       });
-      doc.moveDown();
+      doc.moveDown(1);
 
-      // ---- Tabela ----
-      doc.fontSize(12).fillColor('#0d6efd').text(`Produções (${producoes.length})`);
-      doc.moveDown(0.5);
+      // ---------- Tabela de produções ----------
+      desenharTituloSecao(doc, `Produções (${producoes.length})`);
 
-      const colX = [40, 130, 230, 310, 400];
-      doc.fontSize(9).fillColor('#666');
-      doc.text('ID', colX[0], doc.y, { width: 80 });
-      doc.text('Animal', colX[1], doc.y, { width: 90 });
-      doc.text('Data', colX[2], doc.y, { width: 80 });
-      doc.text('Período', colX[3], doc.y, { width: 80 });
-      doc.text('Litros', colX[4], doc.y, { width: 80 });
-      doc.moveDown(0.3);
-      doc.fillColor('#333');
+      // X e largura de cada coluna (em pontos, a partir da margem esquerda).
+      // 40 = margem | 40+70=110 | 110+90=200 | 200+70=270 | 270+70=340
+      const colunas = [
+        { x: PAGE_MARGIN + 0, width: 60 },   // ID
+        { x: PAGE_MARGIN + 70, width: 90 },  // Animal
+        { x: PAGE_MARGIN + 170, width: 80 }, // Data
+        { x: PAGE_MARGIN + 260, width: 70 }, // Período
+        { x: PAGE_MARGIN + 340, width: 60 }  // Litros
+      ];
 
-      producoes.slice(0, 300).forEach(p => {
-        const y = doc.y;
-        doc.text(String(p.id), colX[0], y, { width: 80 });
-        doc.text(p.animal?.nome || String(p.animal_brinco), colX[1], y, { width: 90 });
-        doc.text(DateUtils.formatarDataBr(p.data_coleta), colX[2], y, { width: 80 });
-        doc.text(p.periodo, colX[3], y, { width: 80 });
-        doc.text(Number(p.litros).toFixed(1), colX[4], y, { width: 80 });
+      // Desenha o cabeçalho da tabela. `reimprimirCabecalho` é chamada
+      // sempre que uma nova página é criada, para a tabela continuar
+      // legível em PDFs com muitas linhas.
+      const reimprimirCabecalho = () => {
+        doc.fontSize(HEADER_FONT_SIZE).fillColor('#666').font('Helvetica-Bold');
+        doc.y = desenharLinhaTabela(doc, ['ID', 'Animal', 'Data', 'Período', 'Litros'], colunas);
+        doc.font('Helvetica').fillColor('#333').fontSize(BODY_FONT_SIZE);
+      };
+      reimprimirCabecalho();
+
+      // Limite de 300 linhas para o PDF não virar 100 páginas. A lista
+      // completa fica disponível no Excel.
+      const MAX_LINHAS = 300;
+      const linhas = producoes.slice(0, MAX_LINHAS);
+
+      linhas.forEach(p => {
+        // Se não couber mais uma linha, cria página nova e reimprime o
+        // cabeçalho — aí a tabela continua legível em vez de quebrar no meio.
+        if (precisaNovaPagina(doc)) reimprimirCabecalho();
+
+        const linha = [
+          String(p.id),
+          (p.animal?.nome || String(p.animal_brinco)).slice(0, 14),
+          DateUtils.formatarDataBr(p.data_coleta),
+          p.periodo,
+          Number(p.litros).toFixed(1)
+        ];
+        doc.y = desenharLinhaTabela(doc, linha, colunas);
       });
 
-      if (producoes.length > 300) {
-        doc.moveDown();
+      if (producoes.length > MAX_LINHAS) {
+        doc.moveDown(1);
         doc
           .fontSize(8)
           .fillColor('#999')
           .text(
-            `Mostrando as 300 primeiras linhas de ${producoes.length}. Use a exportação Excel para a lista completa.`
+            `Mostrando as ${MAX_LINHAS} primeiras linhas de ${producoes.length}. Use a exportação Excel para a lista completa.`
           );
       }
 
@@ -203,7 +287,7 @@ export class RelatorioController {
     }
   }
 
-  /** PDF do rebanho: cabeçalho, resumo, distribuição por raça e lista. */
+  /** PDF do rebanho — mesma correção de tabela alinhada. */
   async exportarRebanhoPDF(req: Request, res: Response): Promise<void> {
     try {
       const filtros = parseFiltrosRebanho(req);
@@ -212,10 +296,11 @@ export class RelatorioController {
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename=relatorio-rebanho-${DateUtils.hojeIso()}.pdf`);
 
-      const doc = new PDFDocument({ size: 'A4', margin: 40 });
+      const doc = new PDFDocument({ size: 'A4', margin: PAGE_MARGIN });
       doc.pipe(res);
+      doc.font('Helvetica');
 
-      doc.fontSize(18).fillColor('#0d6efd').text('Gestão de Gado');
+      doc.fontSize(18).fillColor('#0d6efd').text('Gestão de Gado', PAGE_MARGIN, PAGE_MARGIN);
       doc.fontSize(14).fillColor('#333').text('Relatório do Rebanho');
 
       const descFiltros: string[] = [];
@@ -227,44 +312,54 @@ export class RelatorioController {
         .fillColor('#666')
         .text(`Filtros: ${descFiltros.length ? descFiltros.join('  |  ') : 'Sem filtros'}`);
       doc.text(`Gerado em: ${DateUtils.formatarDataBr(new Date())}`);
-      doc.moveDown();
+      doc.moveDown(1);
 
-      doc.fontSize(12).fillColor('#0d6efd').text('Resumo');
+      desenharTituloSecao(doc, 'Resumo');
       doc.fontSize(10).fillColor('#333');
       doc.text(`Total de animais: ${stats.total}`);
       doc.text(`Fêmeas: ${stats.totalFemea}`);
       doc.text(`Machos: ${stats.totalMacho}`);
       doc.text(`Peso médio: ${stats.pesoMedio.toFixed(1)} kg`);
-      doc.moveDown();
+      doc.moveDown(1);
 
-      doc.fontSize(12).fillColor('#0d6efd').text('Distribuição por Raça');
+      desenharTituloSecao(doc, 'Distribuição por Raça');
       doc.fontSize(10).fillColor('#333');
       porRaca.forEach(r => doc.text(`${r.raca}: ${r.quantidade}`));
-      doc.moveDown();
+      doc.moveDown(1);
 
-      doc.fontSize(12).fillColor('#0d6efd').text(`Animais (${animais.length})`);
-      doc.moveDown(0.5);
+      desenharTituloSecao(doc, `Animais (${animais.length})`);
 
-      const colX = [40, 120, 220, 300, 380, 460];
-      doc.fontSize(9).fillColor('#666');
-      doc.text('Brinco', colX[0], doc.y, { width: 80 });
-      doc.text('Nome', colX[1], doc.y, { width: 100 });
-      doc.text('Sexo', colX[2], doc.y, { width: 80 });
-      doc.text('Raça', colX[3], doc.y, { width: 80 });
-      doc.text('Peso', colX[4], doc.y, { width: 80 });
-      doc.text('Idade', colX[5], doc.y, { width: 80 });
-      doc.moveDown(0.3);
-      doc.fillColor('#333');
+      const colunas = [
+        { x: PAGE_MARGIN + 0, width: 60 },   // Brinco
+        { x: PAGE_MARGIN + 70, width: 120 }, // Nome
+        { x: PAGE_MARGIN + 200, width: 60 }, // Sexo
+        { x: PAGE_MARGIN + 270, width: 90 }, // Raça
+        { x: PAGE_MARGIN + 370, width: 60 }, // Peso
+        { x: PAGE_MARGIN + 440, width: 60 }  // Idade
+      ];
+
+      const reimprimirCabecalho = () => {
+        doc.fontSize(HEADER_FONT_SIZE).fillColor('#666').font('Helvetica-Bold');
+        doc.y = desenharLinhaTabela(doc, ['Brinco', 'Nome', 'Sexo', 'Raça', 'Peso', 'Idade'], colunas);
+        doc.font('Helvetica').fillColor('#333').fontSize(BODY_FONT_SIZE);
+      };
+      reimprimirCabecalho();
 
       animais.forEach(a => {
-        const y = doc.y;
+        if (precisaNovaPagina(doc)) reimprimirCabecalho();
         const idade = DateUtils.calcularIdade(a.data_nascimento);
-        doc.text(String(a.brinco), colX[0], y, { width: 80 });
-        doc.text(a.nome, colX[1], y, { width: 100 });
-        doc.text(a.sexo === 'F' ? 'Fêmea' : 'Macho', colX[2], y, { width: 80 });
-        doc.text(a.raca || 'N/A', colX[3], y, { width: 80 });
-        doc.text(`${Number(a.peso).toFixed(0)} kg`, colX[4], y, { width: 80 });
-        doc.text(`${idade}`, colX[5], y, { width: 80 });
+        doc.y = desenharLinhaTabela(
+          doc,
+          [
+            String(a.brinco),
+            a.nome.slice(0, 18),
+            a.sexo === 'F' ? 'Fêmea' : 'Macho',
+            (a.raca || 'N/A').slice(0, 14),
+            `${Number(a.peso).toFixed(0)} kg`,
+            `${idade}`
+          ],
+          colunas
+        );
       });
 
       doc.end();
@@ -284,12 +379,7 @@ export class RelatorioController {
   // EXCEL
   // ============================================================
 
-  /**
-   * Excel do relatório de produção.
-   *
-   * Por que exceljs: gera .xlsx real, com múltiplas abas e cabeçalho
-   * estilizado. O usuário abre no Excel/Sheets e já filtra direto.
-   */
+  /** Excel do relatório de produção (inalterado). */
   async exportarProducaoExcel(req: Request, res: Response): Promise<void> {
     try {
       const filtros = parseFiltrosProducao(req);
@@ -300,7 +390,6 @@ export class RelatorioController {
       wb.creator = 'Gestão de Gado';
       wb.created = new Date();
 
-      // ---- Aba Resumo ----
       const wsResumo = wb.addWorksheet('Resumo');
       wsResumo.columns = [
         { header: 'Indicador', key: 'k', width: 30 },
@@ -324,7 +413,6 @@ export class RelatorioController {
         { k: 'Dia do pico', v: stats.picoDia }
       ]);
 
-      // ---- Aba Produções ----
       const wsProd = wb.addWorksheet('Produções');
       wsProd.columns = [
         { header: 'ID', key: 'id', width: 8 },
@@ -346,7 +434,6 @@ export class RelatorioController {
         });
       });
 
-      // ---- Aba Top Vacas ----
       const wsTop = wb.addWorksheet('Top Vacas');
       wsTop.columns = [
         { header: 'Posição', key: 'pos', width: 10 },
@@ -356,7 +443,6 @@ export class RelatorioController {
       wsTop.getRow(1).font = { bold: true };
       topAnimais.forEach((v, i) => wsTop.addRow({ pos: i + 1, nome: v.nome, total: v.total }));
 
-      // ---- Aba Série Diária ----
       const wsSerie = wb.addWorksheet('Série Diária');
       wsSerie.columns = [
         { header: 'Data', key: 'data', width: 12 },
@@ -381,7 +467,7 @@ export class RelatorioController {
     }
   }
 
-  /** Excel do rebanho: abas Resumo / Animais / Por Raça. */
+  /** Excel do rebanho (inalterado). */
   async exportarRebanhoExcel(req: Request, res: Response): Promise<void> {
     try {
       const filtros = parseFiltrosRebanho(req);

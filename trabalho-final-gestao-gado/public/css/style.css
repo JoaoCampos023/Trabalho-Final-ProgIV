@@ -1388,3 +1388,63 @@ body {
     min-width: 240px;
   }
 }
+
+/* ============================================
+   MENU DO USUÁRIO EM MOBILE
+   ============================================
+   Em telas pequenas, o dropdown flutuante (position: absolute) pode sair
+   da viewport quando o menu hambúrguer também está aberto. Solução:
+   em mobile, o dropdown deixa de ser flutuante e vira parte do fluxo,
+   empurrando o conteúdo — sempre visível, nunca "vaza". */
+
+@media (max-width: 768px) {
+  /* O bloco do usuário centraliza no mobile. */
+  .navbar-auth {
+    width: 100%;
+    justify-content: center;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: 8px;
+  }
+
+  .user-menu {
+    width: 100%;
+  }
+
+  .user-menu-trigger {
+    width: 100%;
+    justify-content: center;
+    padding: 8px 12px;
+  }
+
+  /* Mostra o nome e o badge também no mobile, já que agora tem espaço. */
+  .user-menu-trigger .user-name,
+  .user-menu-trigger .user-role-badge {
+    display: inline-flex;
+  }
+
+  /* Dropdown deixa de ser absolute e vira parte do fluxo (empurra conteúdo).
+     Sem position: absolute, não há como "vazar" pra fora da tela. */
+  .user-menu-dropdown {
+    position: static;
+    width: 100%;
+    margin-top: 8px;
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+    display: none; /* controlado por .user-menu.open */
+  }
+
+  .user-menu.open .user-menu-dropdown {
+    display: block;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Como não tem mais o estado fechado "invisível mas presente", o toggle
+     usa display: none/block. O transition deixa de fazer sentido, então
+     removemos para não ter fade estranho. */
+  .user-menu-dropdown {
+    transition: none;
+  }
+}

@@ -244,5 +244,11 @@
     }
   };
 
-  document.addEventListener('DOMContentLoaded', () => app.init());
+  document.addEventListener('DOMContentLoaded', () => {
+    // Expõe `app` em window para os onclick inline do HTML encontrarem os
+    // métodos (ex.: onclick="app.novaProducao()"). Sem isso, todos os
+    // botões da página ficam inertes.
+    (window as any).app = app;
+    app.init();
+  });
 })();

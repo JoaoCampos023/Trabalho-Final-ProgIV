@@ -20,6 +20,9 @@ window.addEventListener('scroll', () => {
 // ============================================
 // MOBILE TOGGLE
 // ============================================
+// Não clonamos mais os botões de auth aqui — eles já existem dentro do
+// menu desde o HTML (ver `index.html`, bloco `.navbar-menu > .mobile-auth-group`).
+// O CSS decide se aparecem (mobile com menu aberto) ou não (desktop).
 document.getElementById('mobileToggle')?.addEventListener('click', () => {
     document.getElementById('navMenu')?.classList.toggle('open');
 });
@@ -152,6 +155,16 @@ document.getElementById('regCpf')?.addEventListener('input', function (e) {
         target.value = value;
     }
 });
+// ============================================
+// EXPORTA FUNÇÕES PARA O ESCOPO GLOBAL
+// ============================================
+// Os onclick inline do index.html (ex.: onclick="handleLogin()") precisam
+// dessas funções em window. Sem isso, os botões do modal não funcionam.
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.switchModal = switchModal;
+window.handleLogin = handleLogin;
+window.handleRegister = handleRegister;
 // ============================================
 // VERIFICAR SE JÁ ESTÁ LOGADO
 // ============================================

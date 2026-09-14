@@ -336,6 +336,12 @@
             document.body.style.overflow = '';
         }
     };
-    document.addEventListener('DOMContentLoaded', () => app.init());
+    document.addEventListener('DOMContentLoaded', () => {
+        // Expõe `app` em window para os onclick/onchange inline do HTML
+        // (ex.: onchange="app.loadAnimais()") encontrarem os métodos.
+        // Sem isso, todos os botões e filtros da página ficam inertes.
+        window.app = app;
+        app.init();
+    });
 })();
 //# sourceMappingURL=animais.js.map

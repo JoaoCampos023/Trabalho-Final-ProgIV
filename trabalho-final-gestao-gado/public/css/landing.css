@@ -105,6 +105,12 @@ body {
   cursor: pointer;
 }
 
+/* Botões de auth dentro do menu mobile — escondidos por padrão.
+   Só aparecem quando o hambúrguer abre em telas pequenas (ver @media). */
+.mobile-auth-group {
+  display: none;
+}
+
 /* ---------- BUTTONS ---------- */
 .btn {
   display: inline-flex;
@@ -262,7 +268,6 @@ body {
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* Hero Illustration */
 .hero-image {
   display: flex;
   justify-content: center;
@@ -717,11 +722,35 @@ body {
     margin: 0 auto;
   }
 
+  /* Esconde o grupo de botões do topo e mostra o do menu mobile. */
+  .navbar-landing .navbar-auth {
+    display: none;
+  }
+
+  .navbar-landing .mobile-auth-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 4px;
+  }
+
+  .navbar-landing .mobile-auth-group .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
   .navbar-menu {
     display: none;
     flex-direction: column;
+    gap: 8px;
     width: 100%;
-    padding: 20px 0;
+    padding: 16px;
+    background: rgba(26, 26, 46, 0.98);
+    border-radius: 12px;
+    margin-top: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 
   .navbar-menu.open {
@@ -768,16 +797,6 @@ body {
   }
 
   .hero-buttons .btn {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .navbar-auth {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .navbar-auth .btn {
     width: 100%;
     justify-content: center;
   }
