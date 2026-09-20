@@ -1,0 +1,56 @@
+# Render Blueprint — define toda a infraestrutura do projeto.
+# O Render lê este arquivo quando você conecta o repositório e cria:
+#   1. Um banco PostgreSQL gratuito
+#   2. Um Web Service que roda o backend (que também serve o frontend)
+#
+# Documentação: https://render.com/docs/blueprint-spec
+
+databases:
+  - name: gestao-gado-db
+    databaseName: gestao_gado
+    user: gestao_user
+    plan: free
+    # Nota: o banco free expira em 30 dias. Se o projeto for durar mais,
+    # faça backup manual dos dados ou migre para um plano pago.
+
+services:
+  - type: web
+    name: gestao-gado
+    runtime: node
+    plan: free
+    # buildCommand roda uma vez durante o deploy:
+    #   - npm install: instala dependências (inclui devDependencies, necessárias
+    #     para o build do TypeScript)
+    #   - npx prisma generate: gera o Prisma Client a partir do schema
+    #   - npm run build: compila backend (tsc) e frontend (tsc -p tsconfig.frontend.json)
+    buildCommand: npm install && npx prisma generate && npm run build
+    # startCommand roda a cada boot do serviço:
+    #   - npx prisma migrate deploy: aplica as migrations pendentes no banco
+    #     (idempotente — seguro rodar em todo boot)
+    #   - npm start: inicia o servidor Node (node dist/app.js)
+    startCommand: npx prisma migrate deploy && npm start
+    # healthCheckPath: o Render pinga este endpoint para saber se o serviço
+    # subiu corretamente. Se falhar, o deploy é cancelado e o anterior
+    # continua no ar (zero-downtime) [citation:6].
+    healthCheckPath: /api/health
+    envVars:
+      # Conexão com o banco. O Render injeta automaticamente a URL interna
+      # do banco criado no bloco `databases` acima.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gestao-gado-db
+          property: connectionString
+      # Fuso horário do processo Node — obrigatório para o projeto, que
+      # depende de America/Sao_Paulo para cálculo de idade e datas.
+      - key: TZ
+        value: America/Sao_Paulo
+      # Porta — o Render define automaticamente, mas garantimos o fallback.
+      - key: PORT
+        value: 3000
+      # Segredo do JWT: o Render gera um valor aleatório automaticamente.
+      # NUNCA use o valor de desenvolvimento em produção.
+      - key: JWT_SECRET
+        generateValue: true
+      # Auto-seed: ativado por padrão. Se quiser desativar, mude para "false".
+      - key: AUTO_SEED
+        value: "true"
