@@ -1,11 +1,12 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/status-conclu%C3%ADdo-brightgreen?style=for-the-badge&logo=git" alt="Status">
+  <img src="https://img.shields.io/badge/status-online-brightgreen?style=for-the-badge&logo=git" alt="Status">
   <img src="https://img.shields.io/badge/Node.js-18%2B-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js">
   <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
   <img src="https://img.shields.io/badge/PostgreSQL-15%2B-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
   <img src="https://img.shields.io/badge/Express.js-5.x-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express.js">
   <img src="https://img.shields.io/badge/Prisma-5.x-2D3748?style=for-the-badge&logo=prisma&logoColor=white" alt="Prisma">
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/Render-deployed-46E3B7?style=for-the-badge&logo=render&logoColor=white" alt="Render">
 </p>
 
 <p align="center">
@@ -13,14 +14,19 @@
   <p align="center">
     <strong>Sistema inteligente e completo para controle de rebanho e gestão da produção leiteira.</strong>
   </p>
+  <p align="center">
+    🌐 <a href="https://gestao-gado.onrender.com"><strong>Acesse o sistema online</strong></a>
+  </p>
 </p>
 
 <p align="center">
   <a href="#-sobre-o-projeto">Sobre</a> •
+  <a href="#-demo-online">Demo</a> •
   <a href="#-tecnologias-utilizadas">Tecnologias</a> •
   <a href="#-estrutura-do-projeto">Estrutura</a> •
   <a href="#-instalação-e-configuração">Instalação</a> •
   <a href="#-rodando-com-docker">Docker</a> •
+  <a href="#-deploy-no-render">Deploy</a> •
   <a href="#-endpoints-da-api">Endpoints API</a> •
   <a href="#-scripts-do-projeto">Scripts</a> •
   <a href="#-roadmap">Roadmap</a> •
@@ -49,6 +55,28 @@ Desenvolvido com foco em **simplicidade**, **eficiência** e **segurança**, o s
 | 🌐 **Integrações Externas** | Consulta automática de endereço via **ViaCEP** e validação estrutural de **CPF** |
 | 🔐 **Controle de Acesso (RBAC)** | Autenticação via JWT com dois níveis de permissão (`Admin` e `Cliente`), salvaguardado por proteção ao admin principal |
 | 📱 **Responsivo** | Interface adaptada para desktop, tablet e dispositivos móveis |
+
+---
+
+## 🎮 Demo Online
+
+O sistema está publicado e pode ser acessado diretamente pelo navegador:
+
+| Recurso | URL |
+|---------|-----|
+| **🌐 Landing Page** | https://gestao-gado.onrender.com |
+| **🐄 Dashboard** | https://gestao-gado.onrender.com/app/dashboard.html |
+| **🐮 Rebanho** | https://gestao-gado.onrender.com/app/animais.html |
+| **🥛 Produções** | https://gestao-gado.onrender.com/app/producoes.html |
+| **📋 Relatórios** | https://gestao-gado.onrender.com/app/relatorios.html |
+| **👤 Usuários** | https://gestao-gado.onrender.com/app/usuarios.html |
+| **❤️ Health Check** | https://gestao-gado.onrender.com/api/health |
+
+**Credenciais de teste** (dados do seed):
+- **Admin:** `admin@gmail.com` / `123456`
+- **Cliente:** `maria.souza@fazenda.com.br` / `123456`
+
+> ⏱️ **Atenção:** a hospedagem é no plano gratuito do Render, que coloca o serviço em "modo suspenso" após 15 minutos sem acesso. A **primeira requisição** após esse período pode levar cerca de **1 minuto** para responder (tempo de "acordar"). Basta aguardar e recarregar a página.
 
 ---
 
@@ -91,6 +119,7 @@ Todo o frontend é escrito em **TypeScript** (`public/ts/`) e compilado para Jav
 | **Dotenv** | Gerenciamento de variáveis de ambiente a partir do `.env` |
 | **Prisma Migrate** | Versionamento e aplicação de migrations do banco |
 | **Docker** / **Docker Compose** | Build multi-stage e orquestração de `backend` + `db` (ver [seção Docker](#-rodando-com-docker)) |
+| **Render** | Hospedagem em produção (web service + PostgreSQL gerenciado) |
 
 ---
 
@@ -143,13 +172,18 @@ trabalho-final-gestao-gado/
 │   │
 │   ├── 📁 routes/                      # Um arquivo por recurso, todos sob /api (ver Endpoints da API)
 │   │
-│   ├── 📁 services/                    # AnimalService, ProducaoService, UserService, NotificacaoService (regras de negócio)
+│   ├── 📁 services/                    # AnimalService, ProducaoService, UserService, RelatorioService (regras de negócio)
 │   │
 │   ├── 📁 database/
 │   │   └── seed.ts                     # Lógica do seed de dados de exemplo (usuários, animais, produções)
 │   │
-│   ├── 📁 utils/                       # cpfValidator, emailValidator, dateUtils, passwordGenerator
+│   ├── 📁 utils/                       # cpfValidator, emailValidator, dateUtils, passwordGenerator, errorMessage
 │   │
+│   ├── 📁 __tests__/                   # Testes (unit, services, integration)
+│   │   ├── setup.ts
+│   │   ├── unit/
+│   │   ├── services/
+│   │   └── integration/
 │   │
 │   └── app.ts                          # Entrypoint: middlewares, rotas, WebSocket unificado (/ws), auto-seed, listen
 │
@@ -167,8 +201,10 @@ trabalho-final-gestao-gado/
 ├── 📄 .env.example                    # Modelo com todas as variáveis — copie para .env
 ├── 📄 .gitignore
 ├── 📄 eslint.config.js                # Configuração compartilhada do ESLint
+├── 📄 jest.config.js                  # Configuração da suíte de testes
 ├── 📄 nodemon.json
 ├── 📄 package.json
+├── 📄 render.yaml                     # Blueprint do deploy no Render (banco + web service)
 ├── 📄 tsconfig.json                   # Config do backend (src/ → dist/)
 └── 📄 tsconfig.frontend.json          # Config do frontend (public/ts/ → public/js/)
 ```
@@ -245,6 +281,8 @@ npm run seed
 
 Isso cria 4 usuários, 14 animais (com genealogia de 3 gerações) e ~130 registros de produção de leite. Veja os logins de teste no final da execução do comando, ou em `src/database/seed.ts`.
 
+> ⚠️ **Importante:** o seed é **idempotente** — se rodar de novo com o banco populado, ele limpa os dados anteriores (animais, produções e usuários) antes de reinserir. Não use em produção com dados reais.
+
 #### 7. Inicie o servidor
 
 ```bash
@@ -316,6 +354,43 @@ docker compose exec backend npx prisma studio    # abrir o Prisma Studio de dent
 
 ---
 
+## ☁️ Deploy no Render
+
+O sistema está publicado no [Render](https://render.com) usando o plano gratuito, com banco PostgreSQL gerenciado. O deploy é automatizado via `render.yaml` (Infrastructure as Code).
+
+### Arquitetura do deploy
+
+- **Web Service (Node)** — roda o backend Express (que também serve o frontend estático). Builda com `npm install && npx prisma generate && npm run build`, e inicia com `npx prisma migrate deploy && npm start`.
+- **PostgreSQL gerenciado** — banco dedicado, conectado via variável `DATABASE_URL` (URL interna).
+
+### Variáveis de ambiente configuradas no Render
+
+| Variável | Valor |
+|----------|-------|
+| `DATABASE_URL` | URL interna do PostgreSQL gerenciado |
+| `TZ` | `America/Sao_Paulo` |
+| `JWT_SECRET` | gerado automaticamente (valor forte) |
+| `AUTO_SEED` | `true` |
+| `NODE_ENV` | `production` |
+
+### Limitações do plano gratuito
+
+- O serviço **suspende após 15 minutos** sem tráfego. A primeira requisição após esse período leva ~1 minuto.
+- O banco PostgreSQL gratuito **expira após 30 dias**. Para uso contínuo, é necessário fazer backup periódico ou migrar para o plano pago.
+- Sem SSH e sem disco persistente.
+
+### Como fazer deploy da sua própria cópia
+
+1. Faça fork do repositório no GitHub.
+2. Crie uma conta no Render e conecte sua conta do GitHub.
+3. Clique em **"New +"** → **"Blueprint"** e aponte para o fork.
+4. O Render lê o `render.yaml` e provisiona tudo automaticamente (banco + web service + variáveis).
+5. Aguarde o primeiro build (~5-10 min).
+
+Documentação completa do blueprint: https://render.com/docs/blueprint-spec
+
+---
+
 ## 🔐 Autenticação & Permissões
 
 Não existe usuário admin fixo criado automaticamente fora do seed. Para obter acesso:
@@ -330,6 +405,16 @@ Não existe usuário admin fixo criado automaticamente fora do seed. Para obter 
 |--------|-----------|
 | **Admin** | Acesso total ao sistema, incluindo gerenciamento de usuários |
 | **Cliente** | Acesso às funcionalidades principais (animais, produções, relatórios) |
+
+### Proteções do Administrador Principal
+
+O primeiro usuário `Admin` criado pelo seed é tratado como "Administrador Principal" e possui proteções especiais:
+- Não pode ser **excluído**.
+- Não pode ser **desativado**.
+- Não pode ser **rebaixado** para `Cliente`.
+- Não pode ter a **senha resetada** por outro admin.
+
+Além disso, qualquer admin logado **não pode excluir nem desativar a si mesmo**. Essas regras estão implementadas em duas camadas: na UI (botões desabilitados) e no backend (validação real no `UserService`).
 
 ---
 
@@ -409,6 +494,7 @@ Todas as rotas abaixo são prefixadas com `/api`. 🔒 = requer `Authorization: 
 | `GET` | `/producao/excel` | Exportar relatório de produção em Excel | 🔒 |
 | `GET` | `/rebanho` | Relatório do rebanho | 🔒 |
 | `GET` | `/rebanho/pdf` | Exportar relatório do rebanho em PDF | 🔒 |
+| `GET` | `/rebanho/excel` | Exportar relatório do rebanho em Excel | 🔒 |
 | `GET` | `/graficos/producao` | Dados para gráfico de produção | 🔒 |
 | `GET` | `/graficos/rebanho` | Dados para gráfico do rebanho | 🔒 |
 | `GET` | `/dashboard` | Dados agregados para o dashboard | 🔒 |
@@ -472,6 +558,9 @@ Todas as rotas abaixo são prefixadas com `/api`. 🔒 = requer `Authorization: 
 | **Build (só frontend)** | `npm run build:frontend` | Só `tsc` do frontend (`tsconfig.frontend.json`) |
 | **Watch frontend** | `npm run watch:frontend` | Recompila `public/ts/` a cada alteração |
 | **Start** | `npm start` | Executa a versão compilada (`node dist/app.js`) — use depois de `npm run build` |
+| **Test** | `npm test` | Roda a suíte de testes com Jest |
+| **Test (watch)** | `npm run test:watch` | Roda testes em modo watch (recompila a cada mudança) |
+| **Test (coverage)** | `npm run test:coverage` | Roda testes gerando relatório de cobertura em `coverage/` |
 | **Seed** | `npm run seed` | Popula o banco com dados de exemplo (equivalente a `npx prisma db seed`) |
 | **Prisma Studio** | `npx prisma studio` | Abre interface visual do banco de dados |
 | **Prisma Generate** | `npx prisma generate` | (Re)gera o Prisma Client depois de mudar o `schema.prisma` |
@@ -489,19 +578,25 @@ Todas as rotas abaixo são prefixadas com `/api`. 🔒 = requer `Authorization: 
 
 ## 🔄 Roadmap
 
-- [x] ✅ CRUD completo de animais, produções e usuários
-- [x] ✅ Árvore genealógica
-- [x] ✅ Dashboard com gráficos
-- [x] ✅ Relatórios e estatísticas
-- [x] ✅ Importação/Exportação CSV
-- [x] ✅ APIs externas (ViaCEP, validação CPF)
-- [x] ✅ Frontend migrado para TypeScript
-- [x] ✅ Ícones (Font Awesome) no lugar de emoji na interface
-- [x] ✅ Suporte a contêineres com **Docker** e **Docker Compose**
-- [x] ✅ Seed de dados de exemplo, automático em banco vazio
-- [x] ✅ Padronização de lint (ESLint compartilhado backend/frontend, `npm run lint` sem erros) e config de formatação (Prettier) — reformatação do código existente ainda pendente (`npm run format` não foi aplicado em massa)
-- [x] ✅ Testes unitários e de integração com Jest (validators, utilitários e regras de negócio principais dos services)
-- [x] ✅ WebSocket unificado em `/ws` (`src/app.ts`) — o duplicado em `src/websocket/` foi removido
+### ✅ Concluído
+
+- [x] CRUD completo de animais, produções e usuários
+- [x] Árvore genealógica (pais, avós e filhos; navegação entre gerações)
+- [x] Dashboard com gráficos (produção dos últimos 7 dias e top 5 vacas)
+- [x] Relatórios analíticos com filtros (período, animal, turno), KPIs, gráfico por turno e exportação em PDF e Excel
+- [x] Importação/Exportação CSV
+- [x] APIs externas (ViaCEP, validação de CPF)
+- [x] Frontend em TypeScript
+- [x] Ícones (Font Awesome) no lugar de emoji na interface
+- [x] Suporte a contêineres com Docker e Docker Compose
+- [x] Seed de dados de exemplo, automático em banco vazio (idempotente)
+- [x] Padronização de lint (ESLint backend + frontend, `npm run lint` sem erros)
+- [x] Formatação com Prettier (`npm run format`)
+- [x] Arquitetura MPA: cada aba com URL própria, F5 funcional e código isolado
+- [x] Menu de usuário em dropdown com avatar de iniciais, cor por papel e logout centralizado
+- [x] Testes unitários e de integração com Jest (validators, utilitários e regras de negócio principais dos services)
+- [x] WebSocket unificado em `/ws` (`src/app.ts`) — o duplicado em `src/websocket/` foi removido
+- [x] Deploy em produção no Render (web service + PostgreSQL gerenciado) com blueprint `render.yaml`
 
 ---
 
@@ -518,7 +613,7 @@ Este projeto foi desenvolvido como trabalho acadêmico. Todos os direitos reserv
   <strong>Kalil Massignani da Rosa</strong><br>
   <strong>Silvio Bolzani</strong><br>
   <strong>Matheus Henrique Friebel</strong><br>
-  Ciencias da Computação / Programação IV
+  Ciências da Computação / Programação IV
 </p>
 
 ---
