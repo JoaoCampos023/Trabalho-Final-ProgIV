@@ -627,13 +627,6 @@ Todas as rotas abaixo são prefixadas com `/api`. 🔒 = requer `Authorization: 
 - [x] Deploy em produção no Render (web service + PostgreSQL gerenciado) com blueprint `render.yaml`
 - [x] Vídeo de apresentação publicado no YouTube
 
-### 🔮 Backlog (sem prazo, dependem de decisão de produto)
-
-- [ ] Integração do WebSocket com o fluxo de notificações em tempo real (hoje o WS envia apenas o resumo do dashboard; o front ainda não o consome). Só será implementado se for objetivo do produto.
-- [ ] Expansão da cobertura de testes (rotas, mais services, integração com banco dedicado)
-- [ ] CI/CD automatizado (rodar lint + testes + build a cada push)
-- [ ] Backup automatizado do banco de produção (limitação do plano free do Render)
-
 ---
 
 ## 📝 Licença
