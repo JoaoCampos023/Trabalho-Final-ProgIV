@@ -7,6 +7,7 @@
   <img src="https://img.shields.io/badge/Prisma-5.x-2D3748?style=for-the-badge&logo=prisma&logoColor=white" alt="Prisma">
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
   <img src="https://img.shields.io/badge/Render-deployed-46E3B7?style=for-the-badge&logo=render&logoColor=white" alt="Render">
+  <img src="https://img.shields.io/badge/YouTube-apresenta%C3%A7%C3%A3o-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Vídeo de apresentação">
 </p>
 
 <p align="center">
@@ -16,12 +17,15 @@
   </p>
   <p align="center">
     🌐 <a href="https://gestao-gado.onrender.com"><strong>Acesse o sistema online</strong></a>
+    &nbsp;•&nbsp;
+    🎥 <a href="https://youtu.be/PBLtmJHoTXM"><strong>Assista à apresentação</strong></a>
   </p>
 </p>
 
 <p align="center">
   <a href="#-sobre-o-projeto">Sobre</a> •
   <a href="#-demo-online">Demo</a> •
+  <a href="#-vídeo-de-apresentação">Vídeo</a> •
   <a href="#-tecnologias-utilizadas">Tecnologias</a> •
   <a href="#-estrutura-do-projeto">Estrutura</a> •
   <a href="#-instalação-e-configuração">Instalação</a> •
@@ -77,6 +81,30 @@ O sistema está publicado e pode ser acessado diretamente pelo navegador:
 - **Cliente:** `maria.souza@fazenda.com.br` / `123456`
 
 > ⏱️ **Atenção:** a hospedagem é no plano gratuito do Render, que coloca o serviço em "modo suspenso" após 15 minutos sem acesso. A **primeira requisição** após esse período pode levar cerca de **1 minuto** para responder (tempo de "acordar"). Basta aguardar e recarregar a página.
+
+---
+
+## 🎥 Vídeo de Apresentação
+
+Demonstração completa do sistema em funcionamento:
+
+<p align="center">
+  <a href="https://youtu.be/PBLtmJHoTXM">
+    <img src="https://img.youtube.com/vi/PBLtmJHoTXM/maxresdefault.jpg" alt="Vídeo de apresentação do Gestão de Gado" width="720">
+  </a>
+</p>
+
+<p align="center">
+  ▶️ <a href="https://youtu.be/PBLtmJHoTXM"><strong>Assistir no YouTube</strong></a>
+</p>
+
+**O vídeo cobre:**
+- 🏠 Visão geral da landing page
+- 🔐 Fluxo de autenticação (login e registro)
+- 📊 Dashboard com gráficos em tempo real
+- 🐄 Gestão do rebanho e árvore genealógica
+- 📋 Relatórios analíticos com exportação PDF/Excel
+- 👤 Painel de gestão de usuários
 
 ---
 
@@ -597,6 +625,14 @@ Todas as rotas abaixo são prefixadas com `/api`. 🔒 = requer `Authorization: 
 - [x] Testes unitários e de integração com Jest (validators, utilitários e regras de negócio principais dos services)
 - [x] WebSocket unificado em `/ws` (`src/app.ts`) — o duplicado em `src/websocket/` foi removido
 - [x] Deploy em produção no Render (web service + PostgreSQL gerenciado) com blueprint `render.yaml`
+- [x] Vídeo de apresentação publicado no YouTube
+
+### 🔮 Backlog (sem prazo, dependem de decisão de produto)
+
+- [ ] Integração do WebSocket com o fluxo de notificações em tempo real (hoje o WS envia apenas o resumo do dashboard; o front ainda não o consome). Só será implementado se for objetivo do produto.
+- [ ] Expansão da cobertura de testes (rotas, mais services, integração com banco dedicado)
+- [ ] CI/CD automatizado (rodar lint + testes + build a cada push)
+- [ ] Backup automatizado do banco de produção (limitação do plano free do Render)
 
 ---
 
